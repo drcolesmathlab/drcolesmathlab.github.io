@@ -81,23 +81,36 @@ Changes from upstream, all applied by the vendoring script:
 The jungle palette is deliberately **not** harmonised to the Math Lab tokens — it is the
 game's art direction, not site chrome.
 
----
+### Balancing Act: Solve the Linear Equations — `apps/balancing-act/`
 
-## Planned apps
+Original work by Dr. Cole. Vendored by `tools/vendor-balancing-act.js`.
 
-Listed on the home page as "In progress" and not yet vendored. Recorded here so the
-licensing position is settled before it lands.
+No third-party code at all. The balance character is inline SVG, every sound is
+synthesised with the Web Audio API, and there is not a single image, font or audio file
+in the payload — six text files, 67 KB.
 
-### Balancing Act: Solve the Linear Equations
+**Its upstream `tpt-package/` directory must never be copied here.** It holds commercial
+classroom material published under the "ThriveForge Academy" name — another party's logo,
+Terms-of-Use PDFs for a paid product, and ~69 MB of gameplay video. This repository is
+public in order to serve GitHub Pages, so copying that folder would publish someone
+else's commercial assets.
 
-Original work by Dr. Cole. No third-party runtime code; the character is inline SVG and
-all audio is synthesised with the Web Audio API.
+The vendoring script therefore copies **six files by name, never a directory**, and then
+asserts that nothing else arrived and that no `tpt`/`thriveforge`/`.mov`/`.pdf` file is
+present. That check is the point of the script existing at all.
 
-**Its `tpt-package/` directory must never be copied into this repository.** It contains
-commercial classroom material published under the "ThriveForge Academy" name, including
-another party's logo, Terms-of-Use PDFs, and ~69 MB of gameplay video. This repository is
-public in order to serve GitHub Pages. Copy the six source files by name — `index.html`,
-`style.css`, and the four files in `js/` — never the folder.
+Changes from upstream:
+
+- palette remapped to the Math Lab tokens. Cosmetic rather than corrective — every pair
+  already cleared WCAG AA. The one real gain is `--dim`, 4.61:1 → 5.22:1 on the panel.
+- `#message` marked `role="status" aria-live="polite"`, so prompts and right/wrong
+  results are announced. Attribute-only; no JavaScript was changed.
+- a `prefers-reduced-motion` guard: the decorative dazed-stars spin is removed, the
+  informative beam tilt is collapsed to near-instant rather than dropped.
+- page title and `theme-color` namespaced to the site.
+
+The monospace font stack is deliberately kept — it aligns the equation ledger into
+columns, which is the whole point of the column method the app teaches.
 
 ---
 

@@ -33,6 +33,7 @@ tools/site.config.js        SINGLE SOURCE OF TRUTH — read this first
 tools/apply-site-chrome.js  regenerates every shared region of every page
 tools/build-transform-lab.js  vendors Transform Lab (ES modules → one classic script)
 tools/vendor-tiger-trail.js   vendors Tiger Trail (copy + five documented patches)
+tools/vendor-balancing-act.js vendors Balancing Act (copies six files BY NAME — see below)
 tools/check-external.js     the no-external-origins gate
 tools/og-cards.html         card templates
 tools/build-og-cards.js     screenshots them into assets/
@@ -264,3 +265,7 @@ Then, manually:
 - **Namespace new localStorage keys** as `mathlab.<slug>.<key>`. Same-origin iframes all
   share one storage area. The existing apps happen not to collide; the generator asserts
   it stays that way.
+- **Never `cp -R` the Balancing Act source folder.** Its upstream `tpt-package/` holds
+  ~69 MB of video plus another party's commercial branding and Terms-of-Use PDFs, and
+  this repo is public. `tools/vendor-balancing-act.js` copies six files by name and then
+  asserts nothing else came along — keep it that way if you ever re-vendor.

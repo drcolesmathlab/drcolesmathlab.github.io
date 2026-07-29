@@ -1,31 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tiger Trail: Jungle Math Runner — Dr. Cole's Math Lab</title>
+/*
+ * Balancing Act styles, vendored from the upstream project's style.css.
+ *
+ * Changes from upstream:
+ *   - palette remapped to the Math Lab tokens (same family, different hexes —
+ *     cosmetic, since every pair already passed AA; --dim improves 4.61 -> 5.22)
+ *   - a prefers-reduced-motion guard on the tilt/fall/dazed animations
+ *
+ * The monospace font stack is deliberately kept: it aligns the equation ledger
+ * into columns, which is the point of the column method this app teaches.
+ */
 
-<!-- META:START -->
-<link rel="canonical" href="https://drcolesmathlab.github.io/tiger-trail.html">
-<meta name="description" content="A 3D endless runner that drills multiples and factors. Playable in the browser, no sign-up.">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Dr. Cole's Math Lab">
-<meta property="og:url" content="https://drcolesmathlab.github.io/tiger-trail.html">
-<meta property="og:title" content="Tiger Trail: Jungle Math Runner — Dr. Cole's Math Lab">
-<meta property="og:description" content="A 3D endless runner that drills multiples and factors. Playable in the browser, no sign-up.">
-<meta property="og:image" content="https://drcolesmathlab.github.io/assets/og-tiger-trail.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Tiger Trail: Jungle Math Runner — Dr. Cole's Math Lab">
-<meta name="twitter:description" content="A 3D endless runner that drills multiples and factors. Playable in the browser, no sign-up.">
-<meta name="twitter:image" content="https://drcolesmathlab.github.io/assets/og-tiger-trail.png">
-<meta name="theme-color" content="#050610">
-<!-- META:END -->
-
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,4 100,40 82,100 18,100 0,40' fill='%2300d4ff'/></svg>">
-
-<style>
 /* FONTS:START */
 /* Nunito + Space Mono, SIL Open Font License, inlined as base64 so the page has
    zero external requests and renders correctly opened straight from disk.
@@ -54,612 +38,274 @@
 }
 /* FONTS:END */
 
-/* SITE CHROME:START */
-/* ═══════════════════════════════════════════════════════════════════════════
-   DESIGN TOKENS
-   Carried from Dr. Cole's Transform Lab. One deliberate change: --mu was
-   #6b7498, which measures 4.40:1 on --bg and 4.23:1 on --sf — below the 4.5:1
-   WCAG AA floor for normal text, and it carries subtitles, card copy, tags and
-   footer meta. #7a83a8 measures 5.42:1 / 5.22:1. Full table in README.md.
-   ═══════════════════════════════════════════════════════════════════════════ */
-:root{
-  --bg:#050610;
-  --sf:#0c0b1d;
-  --sf2:#141328;
-  --tc:#00d4ff;
-  --tc2:rgba(0,212,255,.12);
-  --rc:#00ff7f;
-  --rc2:rgba(0,255,127,.12);
-  --oc:#ffcc00;
-  --oc2:rgba(255,204,0,.12);
-  --dc:#ff3355;
-  --dc2:rgba(255,51,85,.12);
-  --ax:#bb55ff;
-  --ax2:rgba(187,85,255,.12);
-  --or:#ff9500;
-  --or2:rgba(255,149,0,.12);
-  --pre:#ffffff;
-  --tx:#eef2ff;
-  --mu:#7a83a8;
-  --maxw:1080px;
-  --scroll-offset:60px;   /* shared by the sticky nav's top and every section's
-                             scroll-margin-top, so an anchor jump lands where the
-                             nav highlight says it will */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #050610;
+  --panel: #0c0b1d;
+  --edge: #141328;
+  --cyan: #00d4ff;
+  --magenta: #bb55ff;
+  --green: #00ff7f;
+  --yellow: #ffcc00;
+  --red: #ff3355;
+  --text: #eef2ff;
+  --dim: #7a83a8;
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(120% 90% at 50% 0%, #101024 0%, var(--bg) 65%);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
+  display: flex;
+  justify-content: center;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#app {
+  width: min(560px, 100%);
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px calc(10px + env(safe-area-inset-bottom));
+  overflow: hidden;               /* never let content spill past the viewport */
 }
 
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+/* ---------- HUD ---------- */
+#hud {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; font-size: .8rem; letter-spacing: .08em;
+}
+#hudLeft { display: flex; align-items: center; gap: 8px; }
+#modeLabel { color: var(--magenta); text-shadow: 0 0 4px var(--magenta); }
+#scoreBox { display: flex; gap: 14px; color: var(--dim); }
+#scoreBox b { color: var(--yellow); text-shadow: 0 0 4px var(--yellow); }
 
-body{
-  font-family:'Nunito','Avenir Next','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
-  background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;
-  line-height:1.6;-webkit-font-smoothing:antialiased;
+/* ---------- stage / character ---------- */
+#stage { line-height: 0; flex: 0 1 auto; min-height: 0; }
+/* character scales down on short screens so the work window & keypad keep room */
+#scene { width: 100%; height: auto; max-height: min(190px, 22vh); display: block; margin: 0 auto; }
+.ground { stroke: var(--dim); stroke-width: 2; stroke-dasharray: 6 8; opacity: .5; }
+.pole { stroke: #223154; stroke-width: 4; stroke-linecap: round; }
+.beam {
+  stroke: var(--cyan); stroke-width: 4; stroke-linecap: round;
+  filter: drop-shadow(0 0 5px var(--cyan));
+  transition: stroke .3s;
+}
+.warn .beam { stroke: var(--red); filter: drop-shadow(0 0 6px var(--red)); }
+.win .beam { stroke: var(--green); filter: drop-shadow(0 0 9px var(--green)); }
+.crashed .beam { stroke: var(--red); opacity: .6; }
+.load {
+  transform-box: view-box;
+  opacity: 0;
+  transition: opacity .4s ease, transform .5s cubic-bezier(.34, 1.4, .4, 1);
+}
+#loadL { transform-origin: 110px 150px; }
+#loadR { transform-origin: 290px 150px; }
+.load-cord { stroke: var(--dim); stroke-width: 2; opacity: .7; }
+.load-block {
+  fill: var(--red); opacity: .9;
+  filter: drop-shadow(0 0 6px var(--red));
+}
+.guy {
+  stroke: var(--green); stroke-width: 3; stroke-linecap: round; fill: none;
+  filter: drop-shadow(0 0 4px var(--green));
+}
+#tiltG {
+  transform-box: view-box;
+  transform-origin: 50% 65.2%;
+  transition: transform .5s cubic-bezier(.34, 1.4, .4, 1);
+}
+#guy { transform-box: view-box; transform-origin: 50% 65.2%; }
+#guy.wobble { animation: wobble .45s ease-in-out infinite alternate; }
+@keyframes wobble { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+#guy.jump { animation: jump .55s ease; }
+@keyframes jump {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-14px); }
+  100% { transform: translateY(0); }
+}
+#guy.fall {
+  animation: guyFall .75s cubic-bezier(.5, .05, .9, .4) forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes guyFall { to { transform: translate(72px, 84px) rotate(130deg); } }
+#stars {
+  transform-box: view-box;
+  transform-origin: 70.5% 82%;
+  animation: spin 1.4s linear infinite;
+}
+#stars text { fill: var(--yellow); font-size: 13px; filter: drop-shadow(0 0 4px var(--yellow)); }
+@keyframes spin { to { transform: rotate(360deg); } }
+#stage.shake { animation: shake .4s linear; }
+@keyframes shake {
+  0%, 100% { transform: none; }
+  20% { transform: translate(-6px, 2px); }
+  40% { transform: translate(5px, -2px); }
+  60% { transform: translate(-4px, 1px); }
+  80% { transform: translate(3px, 0); }
 }
 
-/* Brand atmosphere: scanline stripes + a soft vignette. Decorative and
-   pointer-transparent, sitting behind everything via z-index. */
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent 3px)}
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse at 50% 8%,rgba(255,255,255,.045) 0,transparent 55%)}
-
-.wrap{position:relative;z-index:1;width:100%;max-width:var(--maxw);margin:0 auto;padding:0 22px}
-
-/* ── Typography ──────────────────────────────────────────────────────────── */
-h2{font-size:clamp(1.35rem,3vw,1.75rem);font-weight:900;letter-spacing:-.4px;color:var(--pre)}
-h3{font-size:1.06rem;font-weight:800;color:var(--pre)}
-p{color:var(--tx)}
-a{color:var(--tc)}
-strong{color:var(--pre);font-weight:800}
-code,kbd,.mono{font-family:'Space Mono','SF Mono',Consolas,monospace}
-kbd{background:var(--sf2);border:1px solid #26243f;border-radius:5px;
-  padding:1px 6px;font-size:.82em;color:var(--pre);white-space:nowrap}
-
-/* ── Accessibility utilities ─────────────────────────────────────────────── */
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
-  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-
-/* The card grids and pill rows are marked up as lists so assistive tech announces
-   "list, 3 items" — but they are styled as grids, so the markers come off. Prose
-   lists inside .prose keep theirs. */
-.hero-facts,.app-grid,.app-tags,.about-grid,.page-nav ul{list-style:none}
-
-/* The skip link is the first focusable element on every page. It is off-screen
-   until focused, then becomes a solid chip in the top-left. */
-.skip-link{position:absolute;left:12px;top:-100px;z-index:100;
-  background:var(--tc);color:#04202b;font-weight:900;padding:12px 18px;
-  border-radius:0 0 10px 10px;text-decoration:none;transition:top .15s}
-.skip-link:focus{top:0}
-
-:focus-visible{outline:3px solid var(--tc);outline-offset:3px;border-radius:4px}
-
-/* ── Top bar (app pages only) ────────────────────────────────────────────── */
-/* Deliberately NOT sticky. The in-page nav below owns position:sticky, so there
-   is exactly one sticky element and the --scroll-offset math stays honest. */
-.topbar{border-bottom:1px solid var(--sf2);background:rgba(5,6,16,.6)}
-.topbar .wrap{display:flex;align-items:center;justify-content:space-between;
-  gap:14px;min-height:52px;flex-wrap:wrap}
-.topbar a{display:inline-flex;align-items:center;gap:7px;color:var(--mu);
-  text-decoration:none;font-weight:800;font-size:.86rem;white-space:nowrap;
-  padding:11px 4px;min-height:44px}
-.topbar .ico{flex:0 0 auto;width:16px;height:16px}
-.topbar a:hover{color:var(--tc)}
-.topbar .crumb-meta{color:var(--mu);font-size:.78rem;font-weight:700;
-  font-family:'Space Mono','SF Mono',Consolas,monospace;letter-spacing:.3px}
-
-/* ── Header / wordmark ───────────────────────────────────────────────────── */
-header.site{text-align:center;padding:26px 0 20px}
-.logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;justify-content:center}
-.logo-pre,.logo h1,.logo .wordmark{
-  font-size:clamp(1.8rem,5vw,2.6rem);font-weight:900;letter-spacing:-1px;line-height:1.1;
-  background:linear-gradient(90deg,#00d4ff,#00ff7f 45%,#ff3355);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+/* ---------- message ---------- */
+#message {
+  min-height: 1.3em; text-align: center; font-size: .85rem;
+  color: var(--dim); transition: color .2s; letter-spacing: .04em;
 }
-.logo-icon{width:36px;height:36px;flex:0 0 36px;
-  background:linear-gradient(135deg,#00d4ff,#ff3355);
-  clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px #00d4ff)}
-@keyframes spin{to{transform:rotate(360deg)}}
-.subtitle{color:var(--mu);font-size:.92rem;font-weight:700;margin-top:6px}
+#message.bad { color: var(--red); text-shadow: 0 0 4px var(--red); }
+#message.good { color: var(--green); text-shadow: 0 0 4px var(--green); }
 
-/* ── Hero facts ──────────────────────────────────────────────────────────── */
-.hero-facts{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:18px 0 4px}
-.hero-fact{display:inline-flex;align-items:center;gap:7px;background:var(--sf);
-  border:1px solid var(--sf2);border-radius:50px;padding:7px 15px;
-  color:var(--tx);font-size:.8rem;font-weight:700}
-.hero-fact .ico{width:15px;height:15px;color:var(--tc);flex:0 0 15px}
+/* ---------- ledger ---------- */
+#ledgerWrap {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+  border-top: 1px solid var(--edge); border-bottom: 1px solid var(--edge);
+  /* clip our own children: when a short window squeezes this region to near
+     zero, the ledger must not spill out and overlap the apply row below. */
+  overflow: hidden;
+}
+#ledgerBar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 6px; border-bottom: 1px solid var(--edge);
+}
+.barhint { color: var(--dim); font-size: .62rem; letter-spacing: .22em; text-transform: uppercase; opacity: .7; }
+.barbtns { display: flex; gap: 8px; }
+#propToggle, #soundToggle { padding: 4px 10px; font-size: .66rem; }
+/* One shared grid spans the whole ledger, so every row — equation lines and
+   operation lines alike — uses the same column tracks. That's what lets an
+   added/subtracted operand line up under the term it targets (see
+   computeColumns/appendEqRow/appendStepRow in game.js). */
+#ledger {
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto;
+  padding: 8px 10px;
+  display: grid;
+  grid-auto-rows: min-content;
+  align-items: center; justify-content: center;
+  column-gap: 8px; row-gap: 1px;
+  font-size: 1.15rem;
+}
+.cell { white-space: nowrap; }
+.cell.l { text-align: right; }
+.cell.r { text-align: left; }
+.cell.eqsign { text-align: center; color: var(--dim); }
+.cell.eq { color: var(--text); opacity: .4; }
+.cell.eq.current { opacity: 1; color: var(--cyan); text-shadow: 0 0 3px rgba(46, 230, 255, .55); }
+.cell.work { font-size: .98rem; }
+.cell.work .op { color: var(--magenta); text-shadow: 0 0 3px var(--magenta); white-space: nowrap; }
+.cell.dim { color: var(--dim); opacity: .6; }
+.cell.cancel, .cancel { text-decoration: line-through; }
 
-/* ── Sections ────────────────────────────────────────────────────────────── */
-main{position:relative;z-index:1;display:block}
-section{scroll-margin-top:calc(var(--scroll-offset) + 14px);padding:34px 0 6px}
-.section-lead{color:var(--mu);font-size:.96rem;margin:8px 0 20px;max-width:66ch}
-section > h2 + .section-lead{margin-top:8px}
+/* fraction (division) */
+.frac {
+  display: inline-flex; flex-direction: column; align-items: center;
+  vertical-align: middle; line-height: 1.05;
+}
+.fnum { border-bottom: 2px solid currentColor; padding: 0 6px 1px; }
+.fden { padding: 1px 6px 0; }
 
-/* ── In-page nav (app pages) ─────────────────────────────────────────────── */
-.page-nav{position:sticky;top:0;z-index:20;background:rgba(5,6,16,.94);
-  backdrop-filter:blur(8px);border-bottom:1px solid var(--sf2);margin-bottom:6px}
-.page-nav ul{display:flex;gap:4px;list-style:none;overflow-x:auto;
-  scrollbar-width:none;min-height:var(--scroll-offset);align-items:center}
-.page-nav ul::-webkit-scrollbar{display:none}
-.page-nav a{display:flex;align-items:center;min-height:44px;padding:0 13px;
-  color:var(--mu);text-decoration:none;font-weight:800;font-size:.83rem;
-  white-space:nowrap;border-bottom:2px solid transparent}
-.page-nav a:hover{color:var(--tx)}
-.page-nav a[aria-current="true"]{color:var(--tc);border-bottom-color:var(--tc)}
+/* step rule + property label */
+.rulewrap { margin: 3px 0 2px; }
+.rule { height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); opacity: .45; }
+.proplabel {
+  display: block; text-align: right; margin-top: 2px;
+  font-size: .6rem; letter-spacing: .06em; font-style: italic; color: var(--dim);
+}
+.proplabel.hide { display: none; }
+.proplabel.invalid { color: var(--red); text-shadow: 0 0 4px var(--red); font-style: normal; }
 
-/* ── App grid (home) ─────────────────────────────────────────────────────── */
-.app-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
-.app{display:flex;flex-direction:column;gap:9px;background:var(--sf);
-  border:1px solid var(--sf2);border-radius:14px;padding:19px 19px 17px;
-  text-decoration:none;color:inherit;transition:transform .2s,border-color .2s,box-shadow .2s}
-a.app:hover{transform:translateY(-3px);border-color:var(--cat);
-  box-shadow:0 10px 30px -14px var(--cat)}
-.app-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.app-icon{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
-  border-radius:11px;background:var(--cat-soft);color:var(--cat);border:1px solid var(--cat-soft)}
-.app-icon .ico{width:20px;height:20px}
-.app-num{font-family:'Space Mono','SF Mono',Consolas,monospace;font-size:.76rem;
-  font-weight:700;color:var(--mu)}
-.app h3{font-size:1.16rem}
-.app-sub{color:var(--cat);font-size:.79rem;font-weight:800;
-  text-transform:uppercase;letter-spacing:.6px;margin-top:-4px}
-.app-blurb{color:var(--mu);font-size:.9rem;flex:1}
-.app-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
-.app-tag{background:var(--sf2);color:var(--tx);border-radius:6px;
-  padding:3px 9px;font-size:.72rem;font-weight:700}
-.app-open{display:inline-flex;align-items:center;gap:7px;color:var(--cat);
-  font-weight:900;font-size:.88rem;margin-top:6px}
-.app-open .ico{width:17px;height:17px;transition:transform .2s}
-a.app:hover .app-open .ico{transform:translateX(4px)}
+/* ---------- buttons ---------- */
+.btn {
+  font: inherit; background: var(--panel);
+  border: 1px solid currentColor; border-radius: 10px;
+  padding: 10px 6px; cursor: pointer; letter-spacing: .05em;
+  text-shadow: 0 0 4px currentColor;
+  box-shadow: 0 0 10px -4px currentColor, inset 0 0 12px -9px currentColor;
+  transition: transform .06s, box-shadow .15s, background .15s;
+}
+.btn:active { transform: scale(.94); }
+.btn.sel, .btn.on {
+  background: color-mix(in srgb, currentColor 16%, var(--panel));
+  box-shadow: 0 0 14px -2px currentColor;
+}
+.btn:disabled { opacity: .3; pointer-events: none; }
+.c-cyan { color: var(--cyan); }
+.c-mag { color: var(--magenta); }
+.c-green { color: var(--green); }
+.c-yel { color: var(--yellow); }
+.c-red { color: var(--red); }
+.c-dim { color: var(--dim); }
+.btn.small { padding: 5px 10px; font-size: .72rem; }
 
-/* Roadmap tiles: listed but not yet shipped, so not a link and not a dead end. */
-.app.pending{opacity:.62;cursor:default}
-.app.pending .app-status{display:inline-flex;align-items:center;gap:6px;
-  color:var(--mu);font-weight:900;font-size:.85rem;margin-top:6px}
-.app.pending .app-status::before{content:'';width:8px;height:8px;border-radius:50%;
-  background:var(--cat);box-shadow:0 0 8px var(--cat)}
-
-/* ── About grid (home) ───────────────────────────────────────────────────── */
-/* minmax(380px,1fr) so four cards land as a clean 2x2 rather than an orphaned
-   third column at common desktop widths. */
-.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px}
-.about-card{background:var(--sf);border:1px solid var(--sf2);border-radius:14px;padding:18px}
-.about-card .ico{width:19px;height:19px;color:var(--tc);flex:0 0 19px}
-.about-card h3{display:flex;align-items:center;gap:9px;margin-bottom:6px}
-.about-card p{color:var(--mu);font-size:.9rem}
-
-/* ── Prose blocks on app pages ───────────────────────────────────────────── */
-.prose{background:var(--sf);border:1px solid var(--sf2);border-radius:14px;
-  padding:20px 22px;max-width:none}
-.prose p + p,.prose ul + p,.prose p + ul,.prose ol + p,.prose p + ol{margin-top:12px}
-.prose ul,.prose ol{margin-left:20px;color:var(--tx)}
-.prose li{margin:6px 0}
-.prose li::marker{color:var(--mu)}
-.prose h3{margin:18px 0 7px}
-.prose h3:first-child{margin-top:0}
-.prose .muted{color:var(--mu);font-size:.92rem}
-
-.callout{border-left:3px solid var(--tc);background:var(--tc2);
-  border-radius:0 10px 10px 0;padding:14px 17px;margin:14px 0}
-.callout.warn{border-left-color:var(--oc);background:var(--oc2)}
-
-/* ── The embedded app ────────────────────────────────────────────────────── */
-.play-lead{color:var(--mu);font-size:.96rem;margin:8px 0 6px;max-width:70ch}
-
-/* An iframe is a single tab stop that drops a keyboard user into a document with
-   dozens of controls and no obvious way back. This link, placed BEFORE the frame,
-   is the escape hatch. Hidden until focused, then a visible chip. */
-.skip-embed{position:absolute;left:-9999px;display:inline-flex;align-items:center;
-  gap:7px;font-weight:800;font-size:.85rem;text-decoration:none}
-/* :focus, not :focus-visible — a skip link should show whenever it holds focus,
-   including when focus was moved programmatically. min-height keeps it at the 44px
-   target size; padding alone lands at 43.8px. */
-.skip-embed:focus{position:static;left:auto;background:var(--tc);color:#04202b;
-  padding:11px 16px;min-height:44px;border-radius:9px;margin:10px 0 0}
-
-.play-frame{position:relative;margin:16px 0 12px;border:1px solid var(--sf2);
-  border-radius:14px;overflow:hidden;background:var(--bg);
-  box-shadow:0 20px 50px -30px #000}
-.play-embed{display:block;width:100%;height:100%;border:0}
-.play-frame[data-app="transform-lab"]{height:clamp(620px, 80vh, 940px)}
-.play-frame[data-app="tiger-trail"]{height:clamp(440px, 76vh, 800px)}
-.play-frame[data-app="balancing-act"]{height:clamp(600px, 84vh, 900px);width:min(560px, 100%);margin-inline:auto}
-
-.play-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
-.btn-play-full{display:inline-flex;align-items:center;gap:8px;min-height:44px;
-  padding:10px 18px;background:var(--sf);border:1px solid var(--tc);
-  border-radius:10px;color:var(--tc);font-weight:900;font-size:.88rem;text-decoration:none}
-.btn-play-full:hover{background:var(--tc2)}
-.btn-play-full .ico{width:16px;height:16px}
-.play-note{color:var(--mu);font-size:.83rem}
-
-/* ── Footer + pager ──────────────────────────────────────────────────────── */
-footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
-.footer-rule{border:0;border-top:1px solid var(--sf2);margin:0 0 22px}
-.pager{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:14px;margin-bottom:24px}
-.pager a{display:flex;flex-direction:column;gap:3px;background:var(--sf);
-  border:1px solid var(--sf2);border-radius:12px;padding:15px 17px;
-  text-decoration:none;color:inherit;min-height:44px}
-.pager a:hover{border-color:var(--tc)}
-.pager .dir{display:inline-flex;align-items:center;gap:6px;color:var(--mu);
-  font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px}
-.pager .dir .ico{width:14px;height:14px}
-.pager .pt{color:var(--pre);font-weight:800}
-.pager .ps{color:var(--mu);font-size:.83rem}
-.pager .next{text-align:right}
-.pager .next .dir{justify-content:flex-end}
-.footer-disclaimer{color:var(--mu);font-size:.85rem;max-width:78ch}
-.footer-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-  margin-top:14px;color:var(--mu);font-size:.78rem;
-  font-family:'Space Mono','SF Mono',Consolas,monospace}
-.footer-meta .sep{opacity:.45}
-.footer-back{display:inline-flex;align-items:center;gap:7px;min-height:44px;
-  color:var(--tc);font-weight:800;font-size:.87rem;text-decoration:none}
-.footer-back .ico{width:16px;height:16px}
-
-/* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width:640px){
-  .wrap{padding:0 16px}
-  .play-frame{height:clamp(420px,70vh,640px) !important;width:100% !important}
-  .about-grid{grid-template-columns:1fr}
-  .pager .next{text-align:left}
-  .pager .next .dir{justify-content:flex-start}
+/* ---------- apply row ---------- */
+#applyRow {
+  display: grid; grid-template-columns: 1fr 1.25fr 1fr;
+  gap: 8px; align-items: stretch;
+}
+.apply { font-size: .95rem; }
+.apply.ready { background: color-mix(in srgb, currentColor 14%, var(--panel)); }
+#preview {
+  display: flex; align-items: center; justify-content: center;
+  border: 1px dashed var(--edge); border-radius: 10px;
+  color: var(--yellow); font-size: 1.2rem;
+  text-shadow: 0 0 4px var(--yellow); min-height: 44px;
+  overflow: hidden; white-space: nowrap;
 }
 
-/* ── Reduced motion ──────────────────────────────────────────────────────── */
-/* The upstream Transform Lab has no guard on its spinning logo — that gap is not
-   carried forward. Functional transitions collapse to near-zero rather than being
-   removed, so state changes stay perceivable. */
-@media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  .logo-icon{animation:none}
+/* ---------- keypad ---------- */
+#keypad {
+  display: grid; gap: 7px;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-areas:
+    "d7 d8 d9 oDiv back"
+    "d4 d5 d6 oMul simp"
+    "d1 d2 d3 oSub subm"
+    "d0 pm dx oAdd subm";
+}
+#keypad .btn { font-size: 1.25rem; padding: 12px 4px; }
+#keypad .btn.small-label { font-size: .68rem; letter-spacing: .04em; }
+#kSubmit { font-size: .85rem; }
+
+/* ---------- overlays ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 10;
+  background: rgba(3, 3, 10, .9);
+  backdrop-filter: blur(3px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; text-align: center; padding: 24px;
+}
+.hide { display: none !important; }
+.title {
+  margin: 0; font-size: 2.2rem; letter-spacing: .12em; line-height: 1.15;
+  color: var(--cyan);
+  text-shadow: 0 0 9px var(--cyan), 0 0 26px rgba(46, 230, 255, .4);
+}
+.title.red { color: var(--red); text-shadow: 0 0 9px var(--red), 0 0 26px rgba(255, 59, 92, .4); }
+.tag { color: var(--magenta); text-shadow: 0 0 4px var(--magenta); margin: 0; }
+.how { max-width: 42ch; color: var(--dim); font-size: .85rem; line-height: 1.55; }
+.how b { color: var(--yellow); }
+.modes { display: flex; flex-direction: column; gap: 10px; width: min(280px, 85%); }
+.modes .btn {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; font-size: 1rem;
+}
+.modes .best { font-size: .7rem; color: var(--dim); text-shadow: none; }
+.final { color: var(--yellow); text-shadow: 0 0 4px var(--yellow); font-size: 1.1rem; }
+.glow-yel { color: var(--yellow); text-shadow: 0 0 4px var(--yellow); }
+.overlay .row { display: flex; gap: 12px; }
+.overlay .row .btn { padding: 12px 22px; }
+
+/* ── Additions for the Math Lab showcase (not upstream) ───────────────────── */
+
+/* The beam tilt is informative — it shows the equation is unbalanced — so it is
+   collapsed to near-instant rather than removed. The decorative dazed-stars spin
+   is switched off entirely. */
+@media (prefers-reduced-motion: reduce){
+  #stars{display:none}
   *,*::before,*::after{
     animation-duration:.01ms !important;
     animation-iteration-count:1 !important;
     transition-duration:.01ms !important;
   }
-  a.app:hover{transform:none}
-  a.app:hover .app-open .ico{transform:none}
 }
-/* SITE CHROME:END */
-</style>
-</head>
-<body>
-
-<a class="skip-link" href="#main">Skip to main content</a>
-
-<div class="topbar">
-<!-- TOPBAR:START -->
-<div class="wrap">
-  <a href="index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H6"/><path d="m11 6-6 6 6 6"/></svg><span>All apps</span></a>
-  <span class="crumb-meta">App 02 / 03</span>
-</div>
-<!-- TOPBAR:END -->
-</div>
-
-<div class="wrap">
-  <header class="site">
-    <div class="logo">
-      <span class="logo-pre">Dr. Cole's</span>
-      <div class="logo-icon" aria-hidden="true"></div>
-      <h1 class="wordmark">Math Lab</h1>
-    </div>
-    <p class="subtitle">Tiger Trail — a jungle math runner for multiples and factors</p>
-  </header>
-</div>
-
-<nav class="page-nav" aria-label="Sections on this page">
-<!-- PAGENAV:START -->
-<div class="wrap">
-  <ul>
-    <li><a href="#play">Play</a></li>
-    <li><a href="#how-to-play">Controls</a></li>
-    <li><a href="#rules-scoring">Scoring</a></li>
-    <li><a href="#skills">Skills</a></li>
-    <li><a href="#tips">Tips</a></li>
-    <li><a href="#limits">Limits</a></li>
-  </ul>
-</div>
-<!-- PAGENAV:END -->
-</nav>
-
-<main id="main">
-  <div class="wrap">
-
-    <section id="play" aria-labelledby="play-h">
-      <h2 id="play-h">Play it here</h2>
-      <p class="play-lead">
-        The whole game runs in this page. <kbd>←</kbd> <kbd>→</kbd> to change lane,
-        <kbd>Space</kbd> to jump, <kbd>↓</kbd> to roll, <kbd>P</kbd> to pause — or swipe
-        on a touchscreen. Collect the coins that match the target at the top; dodge the
-        ones that don't.
-      </p>
-      <!-- PLAY:START -->
-<a class="skip-embed" href="#how-to-play">Skip past the interactive app</a>
-
-<div class="play-frame" data-app="tiger-trail">
-  <iframe class="play-embed"
-          src="apps/tiger-trail/index.html"
-          title="Tiger Trail — Jungle Math Runner"
-          allow="fullscreen"
-          referrerpolicy="no-referrer"
-          loading="lazy"></iframe>
-</div>
-
-<p class="play-actions">
-  <a class="btn-play-full" href="apps/tiger-trail/index.html" target="_blank" rel="noopener"><span>Open full screen</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg><span class="sr-only"> (opens in a new tab)</span></a>
-  <span class="play-note">Click or tab into the app first so it receives your keyboard. Works best on a screen at least 900&nbsp;px wide.</span>
-</p>
-<!-- PLAY:END -->
-    </section>
-
-    <section id="how-to-play" aria-labelledby="how-h">
-      <h2 id="how-h">How to play</h2>
-      <p class="section-lead">
-        A number appears at the top of the screen. Everything else follows from it.
-      </p>
-
-      <div class="prose">
-        <h3>The two modes</h3>
-        <ul>
-          <li><strong>Multiples</strong> — collect coins that are multiples of the target.
-            Target 7, collect 14, 21, 28.</li>
-          <li><strong>Factors</strong> — collect coins that divide the target evenly.
-            Target 36, collect 1, 2, 3, 4, 6, 9, 12, 18, 36.</li>
-        </ul>
-
-        <h3>The two styles</h3>
-        <ul>
-          <li><strong>Competitive</strong> — three lives, the pace ramps up the longer you
-            survive, and scores reach the leaderboard and unlock achievements.</li>
-          <li><strong>Casual</strong> — a steady pace with waves spaced farther apart for
-            thinking time. No lives; a wrong answer costs 10 points instead. Casual runs
-            never touch the leaderboard or the lifetime records, though per-fact practice
-            stats still accumulate.</li>
-        </ul>
-
-        <h3>Controls</h3>
-        <ul>
-          <li>Change lane — <kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd>,
-            or swipe left/right</li>
-          <li>Jump — <kbd>Space</kbd>, <kbd>↑</kbd> or <kbd>W</kbd>, or swipe up</li>
-          <li>Tumble roll — <kbd>↓</kbd> or <kbd>S</kbd>, or swipe down</li>
-          <li>Pause — <kbd>P</kbd> or <kbd>Esc</kbd>, or the ⏸ button</li>
-        </ul>
-
-        <div class="callout">
-          <p><strong>The move most players miss:</strong> you can jump <em>over</em> a
-          wrong number rather than swerving around it. Once that clicks, the lane you are
-          in stops being the only thing you can change.</p>
-        </div>
-
-        <p class="muted">
-          On a phone, turn to landscape before you start — the trail is much easier to
-          read wide than tall.
-        </p>
-      </div>
-    </section>
-
-    <section id="rules-scoring" aria-labelledby="rules-h">
-      <h2 id="rules-h">Rules and scoring</h2>
-      <p class="section-lead">
-        The number generation is the part that took the most care, and it is the part that
-        decides whether the game teaches anything.
-      </p>
-
-      <div class="prose">
-        <h3>How a round ends</h3>
-        <ul>
-          <li><strong>Multiples:</strong> after eight collected multiples.</li>
-          <li><strong>Factors:</strong> after every factor of the target has been collected
-            — capped at six for factor-rich numbers. A prime target like 7, 11 or 13 needs
-            only 1 and itself.</li>
-        </ul>
-
-        <h3>Where the numbers come from</h3>
-        <ul>
-          <li><strong>Wrong answers are deliberate near-misses</strong> — one more than a
-            real multiple, say — so you cannot succeed by pattern-matching on "looks about
-            right". You have to actually check.</li>
-          <li><strong>Correct values are drawn from a shuffled deck</strong> (×1–×12 for
-            multiples; all factors in factors mode). A collected value does not reappear in
-            the round, but one that slips past comes back — so rounds end because you
-            collected everything, not because you got lucky.</li>
-          <li><strong>Targets cycle through their own shuffled deck</strong> — all of 2–12
-            for multiples; factor-rich numbers plus some primes up to 144 for factors — so
-            the whole fact grid gets covered before anything repeats.</li>
-        </ul>
-
-        <h3>Scoring</h3>
-        <ul>
-          <li>Combo streaks multiply your score: <strong>×2</strong> at five in a row,
-            <strong>×3</strong> at ten, with the chime pitch rising as you climb.</li>
-          <li>In Competitive, wrong answers, log crashes and vine tangles each cost a life.
-            Obstacles are deliberately rare — the math is meant to be the difficulty, not
-            the reflexes.</li>
-          <li>A per-mode top-ten leaderboard with arcade-style initials entry, and 63
-            achievements: 12 adventure goals plus per-fact-family mastery that accumulates
-            across runs.</li>
-          <li>Statistics track <strong>trouble spots</strong> and <strong>success
-            spots</strong> per fact family — which is the genuinely useful output, because
-            it tells you which facts to go practise.</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="skills" aria-labelledby="skills-h">
-      <h2 id="skills-h">What it teaches</h2>
-      <p class="section-lead">
-        Multiplicative fluency, under mild time pressure, across the whole fact grid.
-      </p>
-
-      <div class="prose">
-        <ul>
-          <li><strong>Recall speed, not just accuracy.</strong> Most students can work out
-            whether 51 is a multiple of 7 given a pencil and a minute. The point here is
-            doing it in the two seconds before the coin arrives.</li>
-          <li><strong>Multiples and factors as inverse ideas.</strong> Playing both modes
-            against the same numbers makes the relationship concrete — 36 is a multiple of
-            9, and 9 is a factor of 36, and those are one fact seen from two directions.</li>
-          <li><strong>Divisibility instincts.</strong> The near-miss distractors reward
-            noticing that 68 cannot be a multiple of 3, or that an odd number has no even
-            factors. That is where the real speed comes from.</li>
-          <li><strong>Coverage without repetition.</strong> The shuffled target decks mean
-            you meet every fact family before you meet any of them twice — so the facts you
-            find hard cannot be quietly skipped.</li>
-          <li><strong>Self-assessment.</strong> The trouble-spots view turns a game session
-            into a list of which facts actually need work.</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="tips" aria-labelledby="tips-h">
-      <h2 id="tips-h">Tips</h2>
-
-      <div class="prose">
-        <ul>
-          <li><strong>Start in Casual.</strong> The wider wave spacing gives you time to
-            reason instead of guess, and nothing is at stake. Move to Competitive once the
-            target number stops needing thought.</li>
-          <li><strong>Read the lane ahead, not the coin in front of you.</strong> By the
-            time a coin is close enough to read comfortably, you have already committed.</li>
-          <li><strong>Use the jump as a refusal.</strong> If all three lanes have wrong
-            numbers, jumping is the answer — swerving is not.</li>
-          <li><strong>Play Factors on a highly composite target</strong> (36, 48, 60) once
-            you are comfortable. Finding six factors in one run is a different kind of
-            thinking from spotting multiples, and it is where the mode earns its keep.</li>
-          <li><strong>Check the statistics screen after a few runs.</strong> The trouble
-            spots are usually a surprise, and they are the fastest route to improving.</li>
-          <li><strong>Drop the number range to 9</strong> in settings for a younger player.
-            The full 12 grid is a lot if the basics are not solid yet.</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="limits" aria-labelledby="limits-h">
-      <h2 id="limits-h">Honest limits</h2>
-      <p class="section-lead">
-        What this game does not do. This section is on every page here and it is not
-        marketing copy.
-      </p>
-
-      <div class="prose">
-        <h3>What it doesn't cover</h3>
-        <ul>
-          <li><strong>It drills, it does not explain.</strong> Nothing here teaches
-            <em>why</em> 36 has nine factors, or what a factor is if you do not already
-            know. It is practice for a concept taught elsewhere.</li>
-          <li><strong>Time pressure is a mode, not the whole game.</strong> Competitive
-            ramps up and takes a life for a wrong answer, and that pressure is the point of
-            it. Casual is the answer for a student who does not want that: a constant,
-            slower pace that never ramps, waves spaced well over half again as far apart to
-            leave thinking time, no lives, and a run that ends when the player decides.
-            What stays true in both is that the coins keep coming — so a student who needs
-            genuinely untimed practice, as long as they want per question, needs a
-            worksheet rather than this.</li>
-          <li><strong>No prime factorisation, no GCF or LCM.</strong> Those are the natural
-            next steps from factors and none of them are here.</li>
-          <li><strong>It needs a reasonably capable device.</strong> This renders a 3D
-            scene at 60&nbsp;fps and the download is around 800&nbsp;KB, most of it the
-            rendering engine. There is a graphics-quality setting in the menu, but an old
-            phone or a slow connection will feel it — the two flat apps here will not.</li>
-        </ul>
-
-        <h3>Third-party code</h3>
-        <p class="muted">
-          This is the only app here that uses an outside library:
-          <strong>three.js r149</strong> (MIT), vendored into the repository rather than
-          loaded from a CDN, so the offline guarantee still holds. Every 3D model, texture
-          and sound in the game is generated procedurally in code — there is not a single
-          image or audio file in the payload.
-        </p>
-
-        <!-- A11Y:START -->
-<h3>Accessibility, honestly</h3>
-<p>The page around this app meets <strong>WCAG 2.1 AA</strong>: a skip link as the first focusable element, a "skip past the interactive app" link before the frame so keyboard users are never trapped inside it, verified colour contrast on every token pair, visible focus rings, 44&nbsp;px touch targets, and full <code>prefers-reduced-motion</code> support.</p>
-<p>The app itself is an existing project embedded here, and it does not meet that bar in full. Specifically: Fully playable with arrow keys, WASD and space, and every menu control is a real button. But it is a reaction game rendered in 3D — the state is visual only, and no amount of live-region text makes it playable without sight.</p>
-<p class="muted">This app saves progress in your browser's local storage (<code>tigerTrailSave_v1</code>, <code>tt_modes</code>). Nothing is sent anywhere. Safari clears script-written storage after about a week without a visit, so saved scores can disappear there — that is a browser policy, not a bug I can fix.</p>
-<p class="muted">Third-party code: three.js r149 (MIT), vendored into this repository rather than loaded from a CDN.</p>
-<!-- A11Y:END -->
-      </div>
-    </section>
-
-  </div>
-</main>
-
-<footer class="site">
-  <div class="wrap">
-    <hr class="footer-rule">
-    <!-- FOOTER:START -->
-<nav class="pager" aria-label="More apps">
-  <a class="prev" href="transform-lab.html">
-    <span class="dir"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H6"/><path d="m11 6-6 6 6 6"/></svg><span>Previous</span></span>
-    <span class="pt">Transform Lab</span>
-    <span class="ps">Geometric transformations you can drag</span>
-  </a>
-  <a class="next" href="balancing-act.html">
-    <span class="dir"><span>Next</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg></span>
-    <span class="pt">Balancing Act</span>
-    <span class="ps">Solve the linear equations</span>
-  </a>
-</nav>
-<p><a class="footer-back" href="index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H6"/><path d="m11 6-6 6 6 6"/></svg><span>Back to all apps</span></a></p>
-<p class="footer-disclaimer">These are teaching demos built to show one idea clearly. They are not a full curriculum and they are not a substitute for instruction or practice.</p>
-<p class="footer-meta">Dr. Cole's Math Lab<span class="sep">·</span>App 2 of 3 — Tiger Trail<span class="sep">·</span>No tracking, no third-party requests</p>
-<!-- FOOTER:END -->
-  </div>
-</footer>
-
-<!-- SCROLLSPY:START -->
-<script>
-(function () {
-  var nav = document.querySelector('.page-nav');
-  if (!nav) return;
-
-  var ids = ["play","how-to-play","rules-scoring","skills","tips","limits"];
-  var links = {}, sections = [];
-  ids.forEach(function (id) {
-    var el = document.getElementById(id);
-    var a = nav.querySelector('a[href="#' + id + '"]');
-    if (el && a) { links[id] = a; sections.push(el); }
-  });
-  if (!sections.length) return;
-
-  var offset = parseInt(
-    getComputedStyle(document.documentElement).getPropertyValue('--scroll-offset'), 10
-  ) || 60;
-
-  var current = null, ticking = false;
-
-  function update() {
-    ticking = false;
-    var line = offset + 16;
-    var pick = sections[0];
-    for (var i = 0; i < sections.length; i++) {
-      if (sections[i].getBoundingClientRect().top <= line) pick = sections[i];
-    }
-    // The last section is often short enough that its top never reaches the line,
-    // so at the bottom of the page select it explicitly.
-    if (window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight - 2) {
-      pick = sections[sections.length - 1];
-    }
-    if (pick.id === current) return;
-    if (current && links[current]) links[current].removeAttribute('aria-current');
-    current = pick.id;
-    links[current].setAttribute('aria-current', 'true');
-  }
-
-  function onScroll() {
-    if (!ticking) { ticking = true; requestAnimationFrame(update); }
-  }
-
-  addEventListener('scroll', onScroll, { passive: true });
-  addEventListener('resize', onScroll, { passive: true });
-  update();
-})();
-</script>
-<!-- SCROLLSPY:END -->
-
-</body>
-</html>

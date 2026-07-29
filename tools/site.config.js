@@ -198,7 +198,7 @@ module.exports = {
       blurb:
         'Solve linear equations the column way, with a stick figure on a balance beam ' +
         'that tips the moment you do something to one side and not the other.',
-      published: false,
+      published: true,
 
       category: { key: 'algebra', label: 'Algebra', token: '--oc', icon: 'equals' },
       tags: ['Linear equations', 'Inverse operations', 'Properties of equality'],
@@ -215,8 +215,13 @@ module.exports = {
         keyboard: 'full',
         liveRegion: true,
         notes:
-          'Every control is a real button, the balance-beam graphic is labelled, and ' +
-          'score and prompt changes are announced to a screen reader.',
+          'this is the closest of the three to genuinely accessible. Every control is a ' +
+          'real button, the balance-beam graphic is labelled, there is no timer, and the ' +
+          'feedback line is a live region, so prompts and right/wrong results are ' +
+          'announced. Two gaps remain: the streak readout is not announced (it redraws ' +
+          'on every keypress, so announcing it would talk over you constantly), and the ' +
+          'beam itself carries information — tipped means unbalanced — that reaches you ' +
+          'only through the feedback text, not through the graphic.',
       },
 
       og: {

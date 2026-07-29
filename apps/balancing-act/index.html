@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050610">
+<title>Balancing Act — Dr. Cole's Math Lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="hud">
+    <div id="hudLeft">
+      <button id="btnMenu" class="btn c-dim small">MENU</button>
+      <button id="soundToggle" class="btn c-dim small" aria-label="Toggle sound">♪ ON</button>
+    </div>
+    <div id="modeLabel"></div>
+    <div id="scoreBox">
+      <span>STREAK <b id="streakVal">0</b></span>
+      <span>BEST <b id="bestVal">0</b></span>
+    </div>
+  </header>
+
+  <div id="stage">
+    <svg id="scene" viewBox="0 0 400 230" role="img" aria-label="Balance character">
+      <line class="ground" x1="30" y1="210" x2="370" y2="210"/>
+      <line class="pole" x1="200" y1="152" x2="200" y2="210"/>
+      <g id="tiltG">
+        <line class="beam" x1="110" y1="150" x2="290" y2="150"/>
+        <g id="loadL" class="load">
+          <line class="load-cord" x1="110" y1="150" x2="110" y2="163"/>
+          <rect class="load-block" x="99" y="163" width="22" height="15" rx="3"/>
+        </g>
+        <g id="loadR" class="load">
+          <line class="load-cord" x1="290" y1="150" x2="290" y2="163"/>
+          <rect class="load-block" x="279" y="163" width="22" height="15" rx="3"/>
+        </g>
+        <g id="guy" class="guy">
+          <circle cx="200" cy="100" r="9"/>
+          <line x1="200" y1="109" x2="200" y2="133"/>
+          <line x1="200" y1="116" x2="180" y2="105"/>
+          <line x1="200" y1="116" x2="220" y2="105"/>
+          <line x1="200" y1="133" x2="191" y2="150"/>
+          <line x1="200" y1="133" x2="209" y2="150"/>
+        </g>
+      </g>
+      <g id="fallen" class="guy hide">
+        <circle cx="286" cy="200" r="9"/>
+        <line x1="277" y1="201" x2="252" y2="203"/>
+        <line x1="268" y1="202" x2="261" y2="191"/>
+        <line x1="264" y1="202" x2="257" y2="208"/>
+        <line x1="252" y1="203" x2="240" y2="196"/>
+        <line x1="252" y1="203" x2="241" y2="208"/>
+      </g>
+      <g id="stars" class="hide">
+        <text x="280" y="174">✦</text>
+        <text x="262" y="188">✦</text>
+        <text x="302" y="188">✦</text>
+      </g>
+    </svg>
+  </div>
+
+  <div id="message" role="status" aria-live="polite" aria-atomic="true">&nbsp;</div>
+
+  <div id="ledgerWrap">
+    <div id="ledgerBar">
+      <span class="barhint">the work</span>
+      <div class="barbtns">
+        <button id="propToggle" class="btn c-dim small">Show Property</button>
+      </div>
+    </div>
+    <div id="ledger"></div>
+  </div>
+
+  <div id="applyRow">
+    <button id="applyL" class="btn c-green apply">◀ LEFT</button>
+    <div id="preview"><span id="previewText">▢</span></div>
+    <button id="applyR" class="btn c-green apply">RIGHT ▶</button>
+  </div>
+
+  <div id="keypad">
+    <button class="btn c-cyan" data-k="7" style="grid-area:d7">7</button>
+    <button class="btn c-cyan" data-k="8" style="grid-area:d8">8</button>
+    <button class="btn c-cyan" data-k="9" style="grid-area:d9">9</button>
+    <button class="btn c-mag" data-k="/" style="grid-area:oDiv">/</button>
+    <button class="btn c-red" data-k="back" style="grid-area:back">⌫</button>
+
+    <button class="btn c-cyan" data-k="4" style="grid-area:d4">4</button>
+    <button class="btn c-cyan" data-k="5" style="grid-area:d5">5</button>
+    <button class="btn c-cyan" data-k="6" style="grid-area:d6">6</button>
+    <button class="btn c-mag" data-k="*" style="grid-area:oMul">×</button>
+    <button class="btn c-yel small-label" id="kSimplify" data-k="simplify" style="grid-area:simp">SIMPLIFY</button>
+
+    <button class="btn c-cyan" data-k="1" style="grid-area:d1">1</button>
+    <button class="btn c-cyan" data-k="2" style="grid-area:d2">2</button>
+    <button class="btn c-cyan" data-k="3" style="grid-area:d3">3</button>
+    <button class="btn c-mag" data-k="-" style="grid-area:oSub">−</button>
+    <button class="btn c-green small-label" id="kSubmit" data-k="submit" style="grid-area:subm">SUBMIT</button>
+
+    <button class="btn c-cyan" data-k="0" style="grid-area:d0">0</button>
+    <button class="btn c-yel" data-k="sign" style="grid-area:pm">±</button>
+    <button class="btn c-yel" data-k="x" style="grid-area:dx">x</button>
+    <button class="btn c-mag" data-k="+" style="grid-area:oAdd">+</button>
+  </div>
+</div>
+
+<div id="menu" class="overlay">
+  <h1 class="title">BALANCING<br>ACT</h1>
+  <p class="tag">Solve the linear equations. Don't let Stick Man fall.</p>
+  <div class="how">
+    Pick an operation and number, apply it to one side of the equation —
+    then <b>match it on the other side</b> before he tips too far.
+    Use <b>SIMPLIFY</b> to rewrite a messy side.
+    Get to <b>x&nbsp;=&nbsp;▢</b> and hit <b>SUBMIT</b>.
+    A wrong answer knocks him off the line!
+  </div>
+  <div class="modes">
+    <button class="btn c-cyan" data-mode="one">1-STEP <span class="best"></span></button>
+    <button class="btn c-mag" data-mode="two">2-STEP <span class="best"></span></button>
+    <button class="btn c-yel" data-mode="multi">MULTI-STEP <span class="best"></span></button>
+    <button class="btn c-green" data-mode="endless">ENDLESS <span class="best"></span></button>
+  </div>
+</div>
+
+<div id="gameover" class="overlay hide">
+  <h1 class="title red">WIPEOUT!</h1>
+  <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>
+  <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>
+  <div class="row">
+    <button id="btnRetry" class="btn c-green">TRY AGAIN</button>
+    <button id="btnGoMenu" class="btn c-dim">MENU</button>
+  </div>
+</div>
+
+<script src="js/algebra.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/character.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
