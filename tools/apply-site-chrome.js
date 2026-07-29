@@ -127,7 +127,11 @@ function buildFontCss() {
 
 function buildMeta(page) {
   const { origin, name } = config.site;
-  const url = `${origin}/${page.file}`;
+  // The home page advertises the bare origin, not /index.html. Both resolve, but the
+  // bare form is what gets pasted into a post — and if og:url disagrees with the URL
+  // someone shared, LinkedIn canonicalises to the og:url and the shared link shows the
+  // uglier variant.
+  const url = page.kind === 'home' ? `${origin}/` : `${origin}/${page.file}`;
   const img = `${origin}/assets/og-${page.ogSlug}.png`;
   return [
     `<link rel="canonical" href="${url}">`,
