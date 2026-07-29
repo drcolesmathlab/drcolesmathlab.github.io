@@ -478,7 +478,7 @@ function main() {
       kind: 'home',
       file: 'index.html',
       ogSlug: 'home',
-      title: `${config.site.name} — ${config.site.tagline}`,
+      title: `${config.site.name} — ${config.site.metaTagline}`,
       description:
         `${published.length} interactive math ` +
         `${plural(published.length, 'app', 'apps')} you can use right in the browser — ` +

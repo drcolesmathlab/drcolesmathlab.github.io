@@ -23,7 +23,12 @@ module.exports = {
     name: "Dr. Cole's Math Lab",
     wordmarkPre: "Dr. Cole's",
     wordmark: 'Math Lab',
+    // Shown as the subtitle under the wordmark, where there is room for it.
     tagline: 'Interactive math you can actually use — right here in the browser',
+    // Used for og:title and <title>. LinkedIn truncates around 70 characters and the
+    // full tagline would push the home title to 84, cutting mid-phrase in the preview
+    // card — which is the one place this link is meant to be seen.
+    metaTagline: 'interactive math you can actually use',
     // "App 02 / 03" rather than "Game" — not everything here is a game.
     noun: 'App',
     nounPlural: 'apps',
