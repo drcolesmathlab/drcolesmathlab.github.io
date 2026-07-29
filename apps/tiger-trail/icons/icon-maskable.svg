@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Full-bleed background (no transparent corners) for maskable PWA icons:
+       the OS may crop to a circle, so the green must reach every edge. The
+       tiger sits inside the central ~80% "safe zone". -->
+  <rect x="0" y="0" width="1024" height="1024" fill="#1a4a22"/>
+
+  <!-- ears -->
+  <polygon points="290,300 380,180 440,330" fill="#e65100"/>
+  <polygon points="734,300 644,180 584,330" fill="#e65100"/>
+  <polygon points="320,295 380,215 420,320" fill="#ffb74d"/>
+  <polygon points="704,295 644,215 604,320" fill="#ffb74d"/>
+
+  <!-- head -->
+  <polygon points="512,210 700,300 760,500 700,700 512,790 324,700 264,500 324,300" fill="#ff8f00"/>
+
+  <!-- forehead stripes -->
+  <polygon points="512,225 482,330 542,330" fill="#3e2200"/>
+  <polygon points="427,250 412,345 472,335" fill="#3e2200"/>
+  <polygon points="597,250 612,345 552,335" fill="#3e2200"/>
+
+  <!-- cheek stripes -->
+  <polygon points="285,460 390,480 390,520 285,545" fill="#3e2200"/>
+  <polygon points="739,460 634,480 634,520 739,545" fill="#3e2200"/>
+  <polygon points="305,590 395,580 395,620 320,640" fill="#3e2200"/>
+  <polygon points="719,590 629,580 629,620 704,640" fill="#3e2200"/>
+
+  <!-- muzzle -->
+  <polygon points="512,500 620,560 595,700 512,745 429,700 404,560" fill="#fff8e1"/>
+
+  <!-- eyes -->
+  <polygon points="380,430 450,410 460,470 395,485" fill="#fff8e1"/>
+  <polygon points="644,430 574,410 564,470 629,485" fill="#fff8e1"/>
+  <circle cx="424" cy="447" r="26" fill="#2b1700"/>
+  <circle cx="600" cy="447" r="26" fill="#2b1700"/>
+  <circle cx="432" cy="439" r="9" fill="#ffffff"/>
+  <circle cx="608" cy="439" r="9" fill="#ffffff"/>
+
+  <!-- nose + mouth -->
+  <polygon points="512,545 552,575 512,615 472,575" fill="#3e2200"/>
+  <rect x="503" y="600" width="18" height="55" fill="#3e2200"/>
+  <polygon points="512,655 575,640 560,685 512,700" fill="#3e2200"/>
+  <polygon points="512,655 449,640 464,685 512,700" fill="#3e2200"/>
+</svg>

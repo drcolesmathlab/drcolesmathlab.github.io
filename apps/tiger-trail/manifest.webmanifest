@@ -1,0 +1,41 @@
+{
+  "name": "Tiger Trail: Jungle Math Runner — Dr. Cole's Math Lab",
+  "short_name": "Tiger Trail",
+  "description": "A 3D jungle runner that teaches multiples and factors. Collect the right number coins, dodge the wrong ones.",
+  "id": "./",
+  "start_url": ".",
+  "scope": ".",
+  "display": "fullscreen",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "landscape",
+  "background_color": "#0d2b13",
+  "theme_color": "#1a4a22",
+  "categories": [
+    "games",
+    "education",
+    "kids"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

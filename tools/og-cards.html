@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OG card templates — Dr. Cole's Math Lab</title>
+<!--
+  One 1200x630 card per page, selected by URL hash (#home, #transform-lab, …).
+  tools/build-og-cards.js screenshots each one into assets/og-<slug>.png.
+
+  Deliberately NOT wired to site.config.js: this file is a build-time template that
+  never ships, and keeping it standalone means you can open it in a browser and eyeball
+  every card at once without running anything. Adding an app means adding one <article>.
+
+  Fonts here are the system stack on purpose — the card is rasterised to a PNG, so
+  embedding 57KB of base64 woff2 into a file that never reaches a visitor is wasted
+  work. The wordmark gradient carries the brand.
+-->
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#050610;--sf:#0c0b1d;--sf2:#141328;
+    --tc:#00d4ff;--rc:#00ff7f;--oc:#ffcc00;--dc:#ff3355;--ax:#bb55ff;--or:#ff9500;
+    --tx:#eef2ff;--mu:#7a83a8;--pre:#fff;
+  }
+  body{background:#222;font-family:'Nunito','Avenir Next','Segoe UI',system-ui,sans-serif}
+
+  /* Only the card matching the URL hash is rendered; the rest collapse so the
+     screenshot always captures the right one at 1200x630. */
+  article{display:none}
+  article:target{display:flex}
+  body:not(:has(article:target)) article:first-of-type{display:flex}
+
+  article{
+    width:1200px;height:630px;flex-direction:column;justify-content:space-between;
+    padding:64px 72px;background:var(--bg);color:var(--tx);position:relative;overflow:hidden;
+  }
+  article::before{content:'';position:absolute;inset:0;
+    background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.06) 0,rgba(0,0,0,.06) 1px,transparent 1px,transparent 3px)}
+  article::after{content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse at 22% 0%,rgba(255,255,255,.06) 0,transparent 58%)}
+  .layer{position:relative;z-index:1}
+
+  .brand{display:flex;align-items:center;gap:14px}
+  .mark{width:44px;height:44px;background:linear-gradient(135deg,#00d4ff,#ff3355);
+    clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)}
+  .brand span{font-size:34px;font-weight:900;letter-spacing:-1px;
+    background:linear-gradient(90deg,#00d4ff,#00ff7f 45%,#ff3355);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+  h1{font-size:82px;line-height:1.03;font-weight:900;letter-spacing:-2.5px;color:var(--pre);
+    max-width:20ch}
+  .kicker{font-size:22px;font-weight:900;letter-spacing:3px;text-transform:uppercase;
+    color:var(--cat,var(--tc));margin-bottom:20px}
+  .sub{font-size:29px;color:var(--mu);font-weight:600;margin-top:20px;max-width:34ch;line-height:1.4}
+
+  .tags{display:flex;gap:11px;flex-wrap:wrap;margin-top:30px}
+  .tag{background:var(--sf2);color:var(--tx);border-radius:9px;padding:9px 18px;
+    font-size:20px;font-weight:700}
+
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .foot .note{font-size:22px;color:var(--mu);font-weight:700}
+  .rule{height:5px;width:120px;border-radius:5px;background:var(--cat,var(--tc))}
+
+  #home{--cat:var(--tc)}
+  #transform-lab{--cat:var(--rc)}
+  #tiger-trail{--cat:var(--ax)}
+  #balancing-act{--cat:var(--oc)}
+</style>
+</head>
+<body>
+
+<article id="home">
+  <div class="layer brand"><div class="mark"></div><span>Dr. Cole's Math Lab</span></div>
+  <div class="layer">
+    <div class="rule"></div>
+    <h1>Interactive math you can actually use.</h1>
+    <p class="sub">Playable in the browser. No download, no sign-up, no tracking.</p>
+  </div>
+  <div class="layer foot">
+    <span class="note">drcolesmathlab.github.io</span>
+    <span class="note">Geometry · Algebra · Number sense</span>
+  </div>
+</article>
+
+<article id="transform-lab">
+  <div class="layer brand"><div class="mark"></div><span>Dr. Cole's Math Lab</span></div>
+  <div class="layer">
+    <p class="kicker">Geometry</p>
+    <h1>Transform Lab</h1>
+    <p class="sub">Translate, reflect, rotate and dilate shapes on a live coordinate grid.</p>
+    <div class="tags">
+      <span class="tag">Coordinate plane</span>
+      <span class="tag">Transformations</span>
+      <span class="tag">Prediction</span>
+    </div>
+  </div>
+  <div class="layer foot">
+    <span class="note">drcolesmathlab.github.io/transform-lab.html</span>
+    <span class="note">Play it in your browser</span>
+  </div>
+</article>
+
+<article id="tiger-trail">
+  <div class="layer brand"><div class="mark"></div><span>Dr. Cole's Math Lab</span></div>
+  <div class="layer">
+    <p class="kicker">Speed &amp; arcade</p>
+    <h1>Tiger Trail</h1>
+    <p class="sub">A 3D jungle runner built on multiples and factors.</p>
+    <div class="tags">
+      <span class="tag">Multiples</span>
+      <span class="tag">Factors</span>
+      <span class="tag">Speed recall</span>
+    </div>
+  </div>
+  <div class="layer foot">
+    <span class="note">drcolesmathlab.github.io/tiger-trail.html</span>
+    <span class="note">Play it in your browser</span>
+  </div>
+</article>
+
+<article id="balancing-act">
+  <div class="layer brand"><div class="mark"></div><span>Dr. Cole's Math Lab</span></div>
+  <div class="layer">
+    <p class="kicker">Algebra</p>
+    <h1>Balancing Act</h1>
+    <p class="sub">Solve linear equations on a balance beam that tips when you break equality.</p>
+    <div class="tags">
+      <span class="tag">Linear equations</span>
+      <span class="tag">Inverse operations</span>
+      <span class="tag">Properties of equality</span>
+    </div>
+  </div>
+  <div class="layer foot">
+    <span class="note">drcolesmathlab.github.io/balancing-act.html</span>
+    <span class="note">Play it in your browser</span>
+  </div>
+</article>
+
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Tiger Trail: Jungle Math Runner — Dr. Cole's Math Lab</title>
+<meta name="theme-color" content="#1a4a22">
+<meta name="description" content="A 3D jungle runner that teaches multiples and factors.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐯</text></svg>">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game-canvas" role="img" aria-label="3D view of the jungle trail: the tiger runs down one of three lanes collecting numbered coins"></canvas>
+
+  <!-- ===== MAIN MENU ===== -->
+  <div id="screen-menu" class="screen visible">
+    <div class="menu-panel">
+      <h1 class="game-title"><span class="title-tiger">🐯</span> TIGER TRAIL</h1>
+      <p class="game-subtitle">Jungle Math Runner</p>
+      <div class="mode-row">
+        <button class="btn btn-mode" id="btn-mode-multiples" data-mode="multiples">
+          <span class="mode-icon">✖️</span>
+          <span class="mode-name">Multiples</span>
+          <span class="mode-desc">Collect multiples of the target number</span>
+        </button>
+        <button class="btn btn-mode" id="btn-mode-factors" data-mode="factors">
+          <span class="mode-icon">➗</span>
+          <span class="mode-name">Factors</span>
+          <span class="mode-desc">Collect factors of the target number</span>
+        </button>
+      </div>
+      <div class="style-row">
+        <button class="btn btn-style" data-style="competitive">
+          <span class="style-name">🏆 Competitive</span>
+          <span class="style-desc">3 lives · speeds up · leaderboard</span>
+        </button>
+        <button class="btn btn-style" data-style="casual">
+          <span class="style-name">🌴 Casual</span>
+          <span class="style-desc">relaxed pace · no lives · stop when you like</span>
+        </button>
+      </div>
+      <button class="btn btn-primary btn-big" id="btn-start">▶ Start Game</button>
+      <div class="menu-grid">
+        <button class="btn btn-secondary" id="btn-leaderboard">🏆 Leaderboard</button>
+        <button class="btn btn-secondary" id="btn-stats">📊 Stats &amp; Achievements</button>
+        <button class="btn btn-secondary" id="btn-settings">⚙️ Settings</button>
+        <button class="btn btn-secondary" id="btn-howto">❓ How to Play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HOW TO PLAY ===== -->
+  <div id="screen-howto" class="screen">
+    <div class="menu-panel">
+      <h2>How to Play</h2>
+      <div class="howto-body">
+        <p>A <b>target number</b> is shown at the top of the screen.</p>
+        <p><b>Multiples mode:</b> run into numbers that are multiples of the target. <br><b>Factors mode:</b> run into numbers that divide the target evenly.</p>
+        <p>✅ Correct numbers give points and build your combo.<br>❌ Wrong numbers, 🪵 logs, and 🌿 vines cost a life. You have 3 lives!<br>🤸 Jump over logs — tumble roll under vines.<br>⚠️ Letting a correct number slip past costs 5 points.</p>
+        <p>🌴 <b>Casual mode:</b> a calm, steady pace with no lives — wrong answers just cost points. Run as long as you like and press ✖ when you're done.</p>
+        <div class="controls-table">
+          <div class="ctl"><span class="key">◀ ▶</span> or <span class="key">swipe</span> — change lane</div>
+          <div class="ctl"><span class="key">SPACE</span> or <span class="key">swipe up</span> — jump</div>
+          <div class="ctl"><span class="key">▼</span> or <span class="key">swipe down</span> — tumble roll</div>
+          <div class="ctl"><span class="key">P</span> / <span class="key">ESC</span> — pause</div>
+        </div>
+        <p class="tip">Tip: you can jump <i>over</i> a wrong number to avoid it!</p>
+      </div>
+      <button class="btn btn-primary back-btn">← Back</button>
+    </div>
+  </div>
+
+  <!-- ===== LEADERBOARD ===== -->
+  <div id="screen-leaderboard" class="screen">
+    <div class="menu-panel">
+      <h2>🏆 Leaderboard</h2>
+      <div class="tab-row">
+        <button class="btn tab-btn active" data-board="multiples">Multiples</button>
+        <button class="btn tab-btn" data-board="factors">Factors</button>
+      </div>
+      <ol id="leaderboard-list" class="board-list"></ol>
+      <button class="btn btn-primary back-btn">← Back</button>
+    </div>
+  </div>
+
+  <!-- ===== STATS & ACHIEVEMENTS ===== -->
+  <div id="screen-stats" class="screen">
+    <div class="menu-panel wide">
+      <h2>📊 Stats &amp; Achievements</h2>
+      <div class="stats-columns">
+        <div class="stats-col">
+          <h3>Lifetime</h3>
+          <div id="lifetime-stats" class="lifetime-grid"></div>
+          <h3>💪 Success Spots</h3>
+          <div id="success-spots" class="spot-list"></div>
+          <h3>🎯 Trouble Spots</h3>
+          <div id="trouble-spots" class="spot-list"></div>
+        </div>
+        <div class="stats-col">
+          <h3>🏅 Achievements</h3>
+          <div id="achievement-list" class="achievement-list"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary back-btn">← Back</button>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div id="screen-settings" class="screen">
+    <div class="menu-panel">
+      <h2>⚙️ Settings</h2>
+      <div class="settings-body">
+        <label class="setting-row">Sound Effects
+          <input type="checkbox" id="set-sfx" checked>
+        </label>
+        <label class="setting-row">Music
+          <input type="checkbox" id="set-music" checked>
+        </label>
+        <label class="setting-row">Volume
+          <input type="range" id="set-volume" min="0" max="100" value="70">
+        </label>
+        <label class="setting-row">Graphics Quality
+          <select id="set-quality">
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+        </label>
+        <label class="setting-row">Fact Range
+          <select id="set-range">
+            <option value="9">Basics (×2–9, factors to 36)</option>
+            <option value="12" selected>Full (×2–12, factors to 144)</option>
+          </select>
+        </label>
+        <button class="btn btn-danger" id="btn-reset-data">🗑 Reset All Data</button>
+      </div>
+      <button class="btn btn-primary back-btn">← Back</button>
+    </div>
+  </div>
+
+  <!-- ===== HUD (in-game) ===== -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div id="hud-lives"></div>
+        <div id="hud-score">0</div>
+      </div>
+      <div class="hud-center">
+        <div id="hud-target-label">MULTIPLES OF</div>
+        <div id="hud-target">7</div>
+      </div>
+      <div class="hud-right">
+        <button class="btn hud-btn" id="btn-pause" title="Pause">⏸</button>
+        <button class="btn hud-btn" id="btn-game-settings" title="Settings">⚙️</button>
+        <button class="btn hud-btn" id="btn-exit" title="Exit">✖</button>
+      </div>
+    </div>
+    <div id="hud-combo" class="hidden"></div>
+    <div id="hud-banner" class="hidden"></div>
+    <div id="target-intro" class="hidden">
+      <div class="ti-label">MULTIPLES OF</div>
+      <div class="ti-value">7</div>
+    </div>
+    <div id="popup-layer"></div>
+  </div>
+
+  <!-- ===== PAUSE ===== -->
+  <div id="screen-pause" class="screen overlay">
+    <div class="menu-panel small">
+      <h2>⏸ Paused</h2>
+      <button class="btn btn-primary btn-big" id="btn-resume">▶ Resume</button>
+      <button class="btn btn-secondary" id="btn-pause-settings">⚙️ Settings</button>
+      <button class="btn btn-secondary" id="btn-pause-exit">🚪 Exit to Menu</button>
+    </div>
+  </div>
+
+  <!-- ===== GAME OVER ===== -->
+  <div id="screen-gameover" class="screen overlay">
+    <div class="menu-panel">
+      <h2 id="gameover-title">Game Over</h2>
+      <div id="gameover-score" class="final-score">0</div>
+      <div id="gameover-detail" class="gameover-detail"></div>
+      <div id="initials-entry" class="hidden">
+        <p class="hi-msg">🎉 New high score! Enter your initials:</p>
+        <input id="initials-input" maxlength="3" autocomplete="off" placeholder="AAA">
+        <button class="btn btn-primary" id="btn-save-score">Save Score</button>
+      </div>
+      <div id="gameover-buttons">
+        <button class="btn btn-primary btn-big" id="btn-play-again">▶ Play Again</button>
+        <button class="btn btn-secondary" id="btn-gameover-menu">🏠 Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COUNTDOWN ===== -->
+  <div id="countdown" class="hidden">3</div>
+</div>
+
+<script src="lib/three.min.js"></script>
+<script src="src/storage.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/mathgen.js"></script>
+<script src="src/tiger.js"></script>
+<script src="src/world.js"></script>
+<script src="src/game.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>

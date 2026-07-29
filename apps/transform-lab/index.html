@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transform Lab — Dr. Cole's Math Lab</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+<p class="subtitle app-subtitle">Laser-powered geometry — explore, measure, and predict!</p>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="translation">⚡ Translation</button>
+  <button class="tab-btn" data-tab="reflection">🔮 Reflection</button>
+  <button class="tab-btn" data-tab="rotation">🌀 Rotation</button>
+  <button class="tab-btn" data-tab="dilation">💥 Dilation</button>
+  <button class="tab-btn" data-tab="challenge">🏆 Challenge</button>
+  <button class="tab-btn" data-tab="freeform">✏️ Freeform</button>
+</div>
+
+<div class="panel active" data-panel="translation" data-level="1">
+  <div class="panel-layout">
+    <div class="canvas-card">
+      <div class="shape-bar" id="tSB">
+        <button class="sbtn active" data-shape="triangle">▲ Triangle</button>
+        <button class="sbtn" data-shape="square">■ Square</button>
+        <button class="sbtn" data-shape="pentagon">⬠ Pentagon</button>
+      </div>
+      <canvas id="tCanvas" tabindex="0" role="img" aria-label="Coordinate grid showing a shape and its translated image"></canvas>
+      <div class="canvas-footer">
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--pre)"></div><span class="cpre">Pre-image</span></div>
+          <div class="li"><div class="ld" style="background:var(--img)"></div><span class="cimg">Image</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="level-sel">
+        <span class="lbl">Level</span>
+        <button class="lbtn active" data-level="1">1</button>
+        <button class="lbtn" data-level="2">2</button>
+        <button class="lbtn" data-level="3">3</button>
+        <button class="lbtn" data-level="4">4</button>
+        <span class="lname" id="tLN">Explore</span>
+      </div>
+      <div class="info-box">
+        <h3>⚡ Translation<span class="info-chevron">▾</span></h3>
+        <p class="itext">A <strong>translation</strong> slides every point the exact same distance in the same direction.</p>
+      </div>
+      <div class="ctrl-box">
+        <div class="lblock" data-lv="1">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst">Drag the <span class="cimg">image</span> to see the translation from the <span class="cpre">pre-image</span>.</p>
+          <div class="cbox" id="tCoords1"></div>
+          <span class="t-lbl" id="tTransLbl1">Transformation</span>
+          <div class="t-box" id="tTransBox1"></div>
+        </div>
+        <div class="lblock" data-lv="2">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Use the <strong>sliders</strong> to translate from the <span class="cpre">pre-image</span> to the <span class="cimg">image</span>.</p>
+          <div class="sgrp">
+            <div class="srow"><span>x shift</span><span class="sv" id="txV">0</span></div>
+            <input type="range" id="txS" min="-10" max="10" step="1" value="0">
+          </div>
+          <div class="sgrp">
+            <div class="srow"><span>y shift</span><span class="sv" id="tyV">0</span></div>
+            <input type="range" id="tyS" min="-8" max="8" step="1" value="0">
+          </div>
+          <div class="brow">
+            <button class="btn bt" id="tRst">↺ Reset</button>
+          </div>
+          <div class="cbox" id="tCoords2"></div>
+          <span class="t-lbl" id="tTransLbl2">Transformation</span>
+          <div class="t-box" id="tTransBox2"></div>
+        </div>
+        <div class="lblock" data-lv="3">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Translate the <span class="cimg">image</span> using the given horizontal and vertical shifts.</p>
+          <div class="chal">
+            <div class="rule" id="tRule3">Rule: (+3, −2)</div>
+            <div class="cbox" id="tCoords3" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn bt" id="tChk3">✓ Submit</button>
+              <button class="btn bg" id="tNew3">🔄 New</button>
+              <button class="btn bg" id="tShow3" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="tRes3"></div>
+          </div>
+          <span class="t-lbl" id="tTransLbl3">Transformation</span>
+          <div class="t-box" id="tTransBox3"></div>
+        </div>
+        <div class="lblock" data-lv="4">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Use the given translation to predict the coordinates for the specific vertex of the <span class="cimg">image</span>.</p>
+          <div class="chal">
+            <div class="rule" id="tRule4">Rule: (+3, −2)</div>
+            <div class="cbox" id="tCoords4" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <p class="ptitle" id="tChalQ4">Where will vertex A' land?</p>
+            <div class="pinputs">
+              <label>x: <input type="number" id="tPX4" placeholder="?"></label>
+              <label>y: <input type="number" id="tPY4" placeholder="?"></label>
+            </div>
+            <div class="brow">
+              <button class="btn bt" id="tChk4">✓ Check</button>
+              <button class="btn bg" id="tNew4">🔄 New</button>
+              <button class="btn bg" id="tShow4" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="tRes4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" data-panel="reflection" data-level="1">
+  <div class="panel-layout">
+    <div class="canvas-card">
+      <div class="shape-bar" id="rfSB">
+        <button class="sbtn active" data-shape="triangle">▲ Triangle</button>
+        <button class="sbtn" data-shape="square">■ Square</button>
+        <button class="sbtn" data-shape="pentagon">⬠ Pentagon</button>
+      </div>
+      <canvas id="rfCanvas" tabindex="0" role="img" aria-label="Coordinate grid showing a shape and its reflected image across an axis"></canvas>
+      <div class="canvas-footer">
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--pre)"></div><span class="cpre">Pre-image</span></div>
+          <div class="li"><div class="ld" style="background:var(--img)"></div><span class="cimg">Image</span></div>
+          <div class="li"><div class="ld" style="background:var(--ax);border-radius:50%"></div>Axis of symmetry</div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="level-sel">
+        <span class="lbl">Level</span>
+        <button class="lbtn active" data-level="1">1</button>
+        <button class="lbtn" data-level="2">2</button>
+        <button class="lbtn" data-level="3">3</button>
+        <button class="lbtn" data-level="4">4</button>
+        <button class="lbtn" data-level="5">5</button>
+        <span class="lname" id="rfLN">Explore</span>
+      </div>
+      <div class="info-box">
+        <h3>🔮 Reflection<span class="info-chevron">▾</span></h3>
+        <p class="itext">A <strong>reflection</strong> flips a shape over a line called the <em style="color:var(--ax)">axis of reflection</em>. Every <span class="cimg">image</span> point is the exact same distance from the axis as the corresponding <span class="cpre">pre-image</span> point.</p>
+      </div>
+      <div class="ctrl-box">
+        <div class="lblock" data-lv="1">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst">Drag the <span class="cpre">pre-image</span> or click the buttons below to see how the <span class="cimg">image</span> is reflected.</p>
+          <div class="axbtns" id="rfAP">
+            <button class="axbtn active" data-ax="y">y-axis</button>
+            <button class="axbtn" data-ax="x">x-axis</button>
+            <button class="axbtn" data-ax="yx">y = x</button>
+            <button class="axbtn" data-ax="ynx">y = −x</button>
+          </div>
+          <div class="cbox" id="rfCoords1"></div>
+          <span class="t-lbl" id="rfTransLbl1">Transformation</span>
+          <div class="t-box" id="rfTransBox1"></div>
+          <div class="brow" style="margin-top:10px;"><button class="btn br" id="rfRst">↺ Reset</button></div>
+        </div>
+        <div class="lblock" data-lv="2">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Use the buttons or drag the <span style="color:var(--ax)">axis handles</span> to set the axis. Move the <span class="cpre">pre-image</span> to see equidistance lines update!</p>
+          <div class="axbtns" id="rfAP2">
+            <button class="axbtn active" data-ax="y">y-axis</button>
+            <button class="axbtn" data-ax="x">x-axis</button>
+            <button class="axbtn" data-ax="yx">y = x</button>
+            <button class="axbtn" data-ax="ynx">y = −x</button>
+          </div>
+          <div class="cbox" id="rfCoords2"></div>
+          <span class="t-lbl" id="rfTransLbl2">Transformation</span>
+          <div class="t-box" id="rfTransBox2"></div>
+          <div class="brow" style="margin-top:10px;"><button class="btn br" id="rfRst2">↺ Reset</button></div>
+        </div>
+        <div class="lblock" data-lv="3">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Plot points to make the reflection — the <span class="cimg">image</span> of the given <span class="cpre">pre-image</span> across the <span style="color:var(--ax)">axis of symmetry</span>.</p>
+          <div class="chal">
+            <div class="rule" id="rfRule3" style="color:var(--ax)">Axis: y-axis</div>
+            <div class="cbox" id="rfCoords3" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn br" id="rfChk3">✓ Check</button>
+              <button class="btn bg" id="rfNew3">🔄 New</button>
+              <button class="btn bg" id="rfShow3" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="rfRes3"></div>
+          </div>
+          <span class="t-lbl" id="rfTransLbl3">Transformation</span>
+          <div class="t-box" id="rfTransBox3"></div>
+        </div>
+        <div class="lblock" data-lv="4">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Plot points to make the reflection — the <span class="cimg">image</span> of the given <span class="cpre">pre-image</span> across the <span style="color:var(--ax)">axis of symmetry</span>.</p>
+          <div class="chal">
+            <div class="rule" id="rfRule4" style="color:var(--ax)">Axis: y-axis</div>
+            <div class="cbox" id="rfCoords4" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn br" id="rfChk4">✓ Check</button>
+              <button class="btn bg" id="rfNew4">🔄 New</button>
+              <button class="btn bg" id="rfShow4" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="rfRes4"></div>
+          </div>
+          <span class="t-lbl" id="rfTransLbl4">Transformation</span>
+          <div class="t-box" id="rfTransBox4"></div>
+        </div>
+        <div class="lblock" data-lv="5">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Given the <span class="cpre">pre-image</span> and the <span style="color:var(--ax)">axis of symmetry</span>, predict the coordinates of the named vertex of the <span class="cimg">image</span>.</p>
+          <div class="chal">
+            <div class="rule" id="rfRule5" style="color:var(--ax)">Axis: y-axis</div>
+            <div class="cbox" id="rfCoords5" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <p class="ptitle" id="rfChalQ5">Where will vertex A' land?</p>
+            <div class="pinputs">
+              <label>x: <input type="number" id="rfPX5" placeholder="?"></label>
+              <label>y: <input type="number" id="rfPY5" placeholder="?"></label>
+            </div>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn br" id="rfChk5">✓ Check</button>
+              <button class="btn bg" id="rfNew5">🔄 New</button>
+              <button class="btn bg" id="rfShow5" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="rfRes5"></div>
+          </div>
+          <span class="t-lbl" id="rfTransLbl5">Transformation</span>
+          <div class="t-box" id="rfTransBox5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" data-panel="rotation" data-level="1">
+  <div class="panel-layout">
+    <div class="canvas-card">
+      <div class="shape-bar" id="roSB">
+        <button class="sbtn active" data-shape="triangle">▲ Triangle</button>
+        <button class="sbtn" data-shape="square">■ Square</button>
+        <button class="sbtn" data-shape="pentagon">⬠ Pentagon</button>
+      </div>
+      <canvas id="roCanvas" tabindex="0" role="img" aria-label="Coordinate grid showing a shape and its rotated image about a centre point"></canvas>
+      <div class="canvas-footer">
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--pre)"></div><span class="cpre">Pre-image</span></div>
+          <div class="li"><div class="ld" style="background:var(--img)"></div><span class="cimg">Image</span></div>
+          <div class="li"><div class="ld" style="background:var(--ax);border-radius:50%"></div>Center P</div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="level-sel">
+        <span class="lbl">Level</span>
+        <button class="lbtn active" data-level="1">1</button>
+        <button class="lbtn" data-level="2">2</button>
+        <button class="lbtn" data-level="3">3</button>
+        <button class="lbtn" data-level="4">4</button>
+        <button class="lbtn" data-level="5">5</button>
+        <span class="lname" id="roLN">Explore</span>
+      </div>
+      <div class="info-box">
+        <h3>🌀 Rotation<span class="info-chevron">▾</span></h3>
+        <p class="itext">A <strong>rotation</strong> spins the <span class="cimg">image</span> around a fixed point, called the <em>center of rotation</em>, for a given angle of rotation from the <span class="cpre">pre-image</span>. The image can rotate clockwise or counterclockwise.</p>
+      </div>
+      <div class="ctrl-box">
+        <div class="lblock" data-lv="1">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Drag the <span class="cpre">pre-image</span> and use the controls below to rotate the <span class="cimg">image</span>.</p>
+          <span class="clbl" style="margin-bottom:4px">Arc Vertex</span>
+          <div class="axbtns" id="roVtxBtns1"></div>
+          <div class="sgrp" style="margin-top:10px">
+            <div class="srow"><span>Angle of Rotation</span><span class="sv" id="roV1">0°</span></div>
+            <input type="range" id="roS1" min="-360" max="360" step="15" value="0">
+          </div>
+          <div class="brow">
+            <button class="btn bg ro-quick" data-a="0">0°</button>
+            <button class="btn bg ro-quick" data-a="90">90°</button>
+            <button class="btn bg ro-quick" data-a="180">180°</button>
+            <button class="btn bg ro-quick" data-a="270">270°</button>
+            <button class="btn bg ro-quick" data-a="360">360°</button>
+          </div>
+          <div class="brow"><button class="btn bo" id="roRst1">↺ Reset</button></div>
+          <div class="cbox" id="roCoords1"></div>
+          <span class="t-lbl" id="roTransLbl1">Transformation</span>
+          <div class="t-box" id="roTransBox1"></div>
+        </div>
+        <div class="lblock" data-lv="2">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Drag the <span class="cpre">pre-image</span> and <span style="color:var(--ax)">center P</span>, then use the controls below to rotate the <span class="cimg">image</span>.</p>
+          <span class="clbl" style="margin-bottom:4px">Arc Vertex</span>
+          <div class="axbtns" id="roVtxBtns2"></div>
+          <div class="sgrp" style="margin-top:10px">
+            <div class="srow"><span>Angle of Rotation</span><span class="sv" id="roV2">0°</span></div>
+            <input type="range" id="roS2" min="-360" max="360" step="15" value="0">
+          </div>
+          <div class="brow">
+            <button class="btn bg ro-quick2" data-a="0">0°</button>
+            <button class="btn bg ro-quick2" data-a="90">90°</button>
+            <button class="btn bg ro-quick2" data-a="180">180°</button>
+            <button class="btn bg ro-quick2" data-a="270">270°</button>
+            <button class="btn bg ro-quick2" data-a="360">360°</button>
+          </div>
+          <div class="brow"><button class="btn bo" id="roRst2">↺ Reset</button></div>
+          <div class="cbox" id="roCoords2"></div>
+          <span class="t-lbl" id="roTransLbl2">Transformation</span>
+          <div class="t-box" id="roTransBox2"></div>
+        </div>
+        <div class="lblock" data-lv="3">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Plot the <span style="color:var(--ax)">center of rotation P</span> at the given coordinates. Then use the slider to rotate the <span class="cimg">image</span>.</p>
+          <div class="chal">
+            <div class="rule" id="roRule3" style="color:var(--oc)">Rotate 90° around P(0, 0)</div>
+            <span class="clbl" style="margin-bottom:4px;margin-top:8px">Arc Vertex</span>
+            <div class="axbtns" id="roVtxBtns3"></div>
+            <div class="sgrp" style="margin-top:10px">
+              <div class="srow"><span>Angle of Rotation</span><span class="sv" id="roV3">0°</span></div>
+              <input type="range" id="roS3" min="-360" max="360" step="15" value="0">
+            </div>
+            <div class="cbox" id="roCoords3" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn bo" id="roChk3">✓ Submit</button>
+              <button class="btn bg" id="roNew3">🔄 New</button>
+              <button class="btn bg" id="roShow3" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="roRes3"></div>
+          </div>
+          <span class="t-lbl" id="roTransLbl3">Transformation</span>
+          <div class="t-box" id="roTransBox3"></div>
+        </div>
+        <div class="lblock" data-lv="4">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Predict the coordinates of the <span class="cimg">image</span> by plotting the given <span style="color:var(--ax)">center of rotation P</span> and angle of rotation.</p>
+          <div class="chal">
+            <div class="rule" id="roRule4" style="color:var(--oc)">Rotate 90° around P(2, −1)</div>
+            <span class="clbl" style="margin-bottom:4px;margin-top:8px">Arc Vertex</span>
+            <div class="axbtns" id="roVtxBtns4"></div>
+            <div class="sgrp" style="margin-top:10px">
+              <div class="srow"><span>Angle of Rotation</span><span class="sv" id="roV4">0°</span></div>
+              <input type="range" id="roS4" min="-360" max="360" step="15" value="0">
+            </div>
+            <div class="cbox" id="roCoords4" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <p class="ptitle" id="roChalQ4">Where will vertex A' land?</p>
+            <div class="pinputs">
+              <label>x: <input type="number" id="roPX4" placeholder="?"></label>
+              <label>y: <input type="number" id="roPY4" placeholder="?"></label>
+            </div>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn bo" id="roChk4">✓ Check</button>
+              <button class="btn bg" id="roNew4">🔄 New</button>
+              <button class="btn bg" id="roShow4" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="roRes4"></div>
+          </div>
+          <span class="t-lbl" id="roTransLbl4">Transformation</span>
+          <div class="t-box" id="roTransBox4"></div>
+        </div>
+        <div class="lblock" data-lv="5">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Use the slider to set the given angle and observe where the arc vertex lands. Then select the result that best describes the <span class="cimg">image</span> vertex.</p>
+          <div class="chal">
+            <div class="rule" id="roRule5" style="color:var(--oc)">Rotate 90° around P(0, 0)</div>
+            <span class="clbl" style="margin-bottom:4px;margin-top:8px">Arc Vertex</span>
+            <div class="axbtns" id="roVtxBtns5"></div>
+            <div class="sgrp" style="margin-top:10px">
+              <div class="srow"><span>Angle of Rotation</span><span class="sv" id="roV5">0°</span></div>
+              <input type="range" id="roS5" min="-360" max="360" step="90" value="0">
+            </div>
+            <div class="cbox" id="roCoords5" style="margin-bottom:10px; background:transparent; padding:0;"></div>
+            <span class="clbl" style="margin-bottom:4px">Select the result</span>
+            <div class="rule-btns" id="roRuleBtns5"></div>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn bo" id="roChk5">✓ Check</button>
+              <button class="btn bg" id="roNew5">🔄 New</button>
+              <button class="btn bg" id="roShow5" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="roRes5"></div>
+          </div>
+          <span class="t-lbl" id="roTransLbl5">Transformation</span>
+          <div class="t-box" id="roTransBox5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" data-panel="dilation" data-level="1">
+  <div class="panel-layout">
+    <div class="canvas-card">
+      <div class="shape-bar" id="dSB">
+        <button class="sbtn active" data-shape="triangle">▲ Triangle</button>
+        <button class="sbtn" data-shape="square">■ Square</button>
+        <button class="sbtn" data-shape="pentagon">⬠ Pentagon</button>
+      </div>
+      <canvas id="dCanvas" tabindex="0" role="img" aria-label="Coordinate grid showing a shape and its dilated image about a centre point"></canvas>
+      <div class="canvas-footer">
+        <div class="legend">
+          <div class="li"><div class="ld" style="background:var(--pre)"></div><span class="cpre">Pre-image</span></div>
+          <div class="li"><div class="ld" style="background:var(--img)"></div><span class="cimg">Image</span></div>
+          <div class="li"><div class="ld" style="background:#ffffff;border-radius:50%"></div><strong style="color:#fff">Center K</strong></div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="level-sel">
+        <span class="lbl">Level</span>
+        <button class="lbtn active" data-level="1">1</button>
+        <button class="lbtn" data-level="2">2</button>
+        <button class="lbtn" data-level="3">3</button>
+        <button class="lbtn" data-level="4">4</button>
+        <button class="lbtn" data-level="5">5</button>
+        <span class="lname" id="dLN">Explore</span>
+      </div>
+      <div class="info-box">
+        <h3>💥 Dilation<span class="info-chevron">▾</span></h3>
+        <p class="itext">A <strong>dilation</strong> enlarges or shrinks a <span class="cpre">pre-image</span> into an <span class="cimg">image</span> by a <em>scale factor</em> from a <strong style="color:#fff">center K</strong>. The image is <em>similar</em> — same shape, different size.</p>
+      </div>
+      <div class="ctrl-box">
+        <div class="lblock" data-lv="1">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Drag the <span class="cpre">pre-image</span>, or use the slider to change the scale factor. <strong style="color:#fff">Center K</strong> is fixed at the origin.</p>
+          <div class="sgrp">
+            <div class="srow"><span>Scale Factor:</span><span class="sv" id="dV">1.0</span></div>
+            <input type="range" id="dS" min="0.1" max="5" step="0.1" value="1">
+          </div>
+          <div class="brow">
+            <button class="btn bg" id="d05">×0.5</button>
+            <button class="btn bg" id="d1">×1</button>
+            <button class="btn bg" id="d2">×2</button>
+            <button class="btn bg" id="d3">×3</button>
+          </div>
+          <div class="brow"><button class="btn bd" id="dRst">↺ Reset</button></div>
+          <div class="cbox">
+            <div class="crow"><span class="ck">Scale Factor:</span><span class="cimg" id="dScale">2.0</span></div>
+            <div class="crow"><span class="ck">Center K:</span><span style="color:#ffffff" id="dCtr1">(0, 0)</span></div>
+            <div id="dCoords1"></div>
+          </div>
+          <span class="t-lbl" id="dTransLbl1">Transformation</span>
+          <div class="t-box" id="dTransBox1"></div>
+        </div>
+        <div class="lblock" data-lv="2">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Drag the <span class="cpre">pre-image</span> or <strong style="color:#fff">center K</strong> — notice how distance from <strong style="color:#fff">K</strong> scales with the scale factor!</p>
+          <div class="sgrp">
+            <div class="srow"><span>Scale Factor:</span><span class="sv" id="dV2">1.0</span></div>
+            <input type="range" id="dS2" min="0.1" max="5" step="0.1" value="1">
+          </div>
+          <div class="brow" style="margin-top:8px"><button class="btn bd" id="dRst2">↺ Reset</button></div>
+          <div style="margin:10px 0 2px">
+            <label style="font-size:.8rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:7px;cursor:pointer">
+              <input type="checkbox" id="dDistShow2" checked> Show component distances from <strong style="color:#fff">K</strong>
+            </label>
+            <div id="dVtxBtns2" class="brow" style="margin-top:6px;flex-wrap:wrap;gap:5px;"></div>
+          </div>
+          <div class="cbox">
+            <div class="crow"><span class="ck">Scale Factor:</span><span class="cimg" id="dScale2">2.0</span></div>
+            <div id="dCoords2"></div>
+          </div>
+          <span class="t-lbl" id="dTransLbl2">Transformation</span>
+          <div class="t-box" id="dTransBox2"></div>
+        </div>
+        <div class="lblock" data-lv="3">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Click the graph to plot <strong style="color:#fff">center K</strong> at the given coordinates. Use the slider to set the scale factor, then classify the dilation.</p>
+          <div class="chal">
+            <div class="rule" id="dRule3" style="color:var(--dc)">Scale factor 2 from K(0, 0)</div>
+            <div class="sgrp" style="margin-top:10px">
+              <div class="srow"><span>Scale Factor</span><span class="sv" id="dV3">1×</span></div>
+              <input type="range" id="dS3" min="0.5" max="3" step="0.5" value="0.5">
+            </div>
+            <div class="cbox" id="dCoords3" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <div style="margin-bottom:10px">
+              <p style="font-size:.78rem;text-align:center;margin-bottom:6px;color:rgba(255,255,255,.65)">This dilation is a…</p>
+              <div class="brow" style="justify-content:center;gap:8px;">
+                <button class="rule-btn" id="dStretch3">Stretch &nbsp;(k &gt; 1)</button>
+                <button class="rule-btn" id="dShrink3">Shrink &nbsp;(k &lt; 1)</button>
+              </div>
+            </div>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn bd" id="dChk3">✓ Check</button>
+              <button class="btn bg" id="dNew3">🔄 New</button>
+              <button class="btn bg" id="dShow3" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="dRes3"></div>
+          </div>
+          <span class="t-lbl" id="dTransLbl3">Transformation</span>
+          <div class="t-box" id="dTransBox3"></div>
+        </div>
+        <div class="lblock" data-lv="4">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px"><strong style="color:#fff">Center K</strong>, <span class="cpre">pre-image</span>, and <span class="cimg">image</span> are shown. Find the horizontal and vertical distances from <strong style="color:#fff">K</strong> to the named <span class="cimg">image</span> vertex.</p>
+          <div class="chal">
+            <div class="rule" id="dRule4" style="color:var(--dc)">Scale factor 2 from K(0, 0)</div>
+            <div class="cbox" id="dCoords4" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <p class="ptitle" id="dChalQ4">Distances from K to vertex A'?</p>
+            <div class="pinputs">
+              <label>H: <input type="number" id="dDX4" step="1" min="0" placeholder="?"></label>
+              <label>V: <input type="number" id="dDY4" step="1" min="0" placeholder="?"></label>
+            </div>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn bd" id="dChk4">✓ Check</button>
+              <button class="btn bg" id="dNew4">🔄 New</button>
+              <button class="btn bg" id="dShow4" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="dRes4"></div>
+          </div>
+          <span class="t-lbl" id="dTransLbl4">Transformation</span>
+          <div class="t-box" id="dTransBox4"></div>
+        </div>
+        <div class="lblock" data-lv="5">
+          <span class="clbl clbl-interact">Interact</span>
+          <p class="inst" style="margin-bottom:8px">Multiply each <span class="cpre">pre-image</span> coordinate by the scale factor relative to <strong style="color:#fff">K</strong> to find the <span class="cimg">image</span>. Click the graph to place each vertex in order. Right-click to remove the last point.</p>
+          <div id="dL5TypeBtns" class="brow" style="justify-content:center;gap:8px;margin:0 0 12px;">
+            <button class="rule-btn selected" data-mode="origin">K(0,0) — Origin</button>
+            <button class="rule-btn" data-mode="free">K(x,y) — Any Point</button>
+          </div>
+          <div class="chal">
+            <div class="rule" id="dRule5" style="color:var(--dc)">Scale factor 2 from K(0, 0)</div>
+            <div class="cbox" id="dCoords5" style="margin-bottom:12px; background:transparent; padding:0;"></div>
+            <p class="ptitle" id="dChalQ5">Click to place vertex A'</p>
+            <div class="brow" style="justify-content:center;">
+              <button class="btn bd" id="dChk5">✓ Check</button>
+              <button class="btn bg" id="dNew5">🔄 New</button>
+              <button class="btn bg" id="dShow5" style="display:none;">👁 Show me</button>
+            </div>
+            <div class="pres" id="dRes5"></div>
+          </div>
+          <span class="t-lbl" id="dTransLbl5">Transformation</span>
+          <div class="t-box" id="dTransBox5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" data-panel="challenge" data-level="1">
+  <div class="panel-layout">
+    <div class="canvas-card">
+      <div class="shape-bar" id="chSB">
+        <button class="sbtn active" data-shape="triangle">▲ Triangle</button>
+        <button class="sbtn" data-shape="square">■ Square</button>
+        <button class="sbtn" data-shape="pentagon">⬠ Pentagon</button>
+      </div>
+      <canvas id="chCanvas" tabindex="0" role="img" aria-label="Coordinate grid for the multi-step transformation challenge"></canvas>
+      <div id="chTooltip" class="canvas-tooltip">Correct!</div>
+      <div class="canvas-footer">
+        <div class="legend" id="chLegend">
+          <div class="li"><div class="ld" style="background:var(--pre)"></div><span class="cpre">Pre-image</span></div>
+          <div class="li ch-leg-step" data-step="0"><div class="ld" style="background:#00d4ff"></div>Step 1</div>
+          <div class="li ch-leg-step" data-step="1"><div class="ld" style="background:#00ff7f"></div>Step 2</div>
+          <div class="li ch-leg-step" data-step="2"><div class="ld" style="background:#ffcc00"></div>Step 3</div>
+          <div class="li ch-leg-step" data-step="3"><div class="ld" style="background:#ff3355"></div>Step 4</div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="level-sel">
+        <span class="lbl">Level</span>
+        <button class="lbtn active" data-level="1">1</button>
+        <button class="lbtn" data-level="2">2</button>
+        <button class="lbtn" data-level="3">3</button>
+        <button class="lbtn" data-level="4">4</button>
+        <span class="lname" id="chLN">Easy</span>
+      </div>
+      <div class="ctrl-box">
+        <div class="chain-sel">
+          <span class="clbl">Chain Length</span>
+          <div class="brow" id="chChainBtns">
+            <button class="btn bg ch-chain active" data-n="2">2</button>
+            <button class="btn bg ch-chain" data-n="3">3</button>
+            <button class="btn bg ch-chain" data-n="4">4</button>
+          </div>
+        </div>
+
+        <div class="chal" style="border-color:rgba(187,85,255,.2)">
+          <div id="chRule" class="chain-steps"></div>
+          
+          <div class="cbox" id="chCoords" style="background:transparent;padding:0;margin-top:8px"></div>
+          
+          <p class="ptitle" id="chInstContext" style="margin-top:10px;text-align:center;">Plot the transformation...</p>
+
+          <div class="brow" style="justify-content:center;margin-top:12px">
+            <button class="btn bg" id="chUndoBtn" title="Right-click canvas to quickly undo">↩ Undo</button>
+            <button class="btn bg" id="chResetBtn">↺ Reset</button>
+            <button class="btn bg" id="chShowBtn">👁 Show Me</button>
+            <button class="btn bg" id="chNewBtn">🔄 New Problem</button>
+          </div>
+          <div class="brow" style="justify-content:center;margin-top:5px">
+            <button class="btn bg" id="chChkBtn" style="display:none; font-size:0.8rem; padding:8px 20px;">✓ Check Valid</button>
+          </div>
+          <div class="pres" id="chRes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" data-panel="freeform">
+  <div class="panel-layout">
+    <div class="canvas-card">
+      <canvas id="ffCanvas" tabindex="0" role="img" aria-label="Coordinate grid sandbox for building and transforming a custom polygon"></canvas>
+      <div class="canvas-footer">
+        <div class="legend" id="ffLegend">
+          <div class="li"><div class="ld" style="background:var(--pre)"></div><span class="cpre">Pre-image</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctrl-box">
+
+        <div id="ffPhase1">
+          <span class="clbl clbl-interact">Draw Your Shape</span>
+          <p class="inst" style="margin-bottom:10px">Click the graph to place 3–6 vertices. Vertices snap to grid. Right-click to remove the last vertex.</p>
+          <p class="ptitle" style="text-align:center;margin-bottom:10px" id="ffVertCount">0 of 6 vertices placed</p>
+          <div class="brow" style="justify-content:center">
+            <button class="btn bg" id="ffConfirm" disabled>✓ Confirm Shape</button>
+            <button class="btn bg" id="ffClearVerts">✕ Clear</button>
+          </div>
+        </div>
+
+        <div id="ffPhase2" style="display:none">
+          <p class="ptitle" id="ffShapeSummary" style="margin-bottom:6px;text-align:center">3-vertex polygon</p>
+          <p class="inst" style="margin-bottom:6px;text-align:center;">Select up to 4 transformations.</p>
+
+          <div id="ffChainList"></div>
+
+          <div class="ff-type-picker" id="ffTypePicker" style="display:none">
+            <span class="clbl">Choose transformation type</span>
+            <div class="brow" style="flex-wrap:wrap">
+              <button class="btn bg ff-type-btn" data-type="translation">⚡ Translation</button>
+              <button class="btn bg ff-type-btn" data-type="reflection">🔮 Reflection</button>
+              <button class="btn bg ff-type-btn" data-type="rotation">🌀 Rotation</button>
+              <button class="btn bg ff-type-btn" data-type="dilation">💥 Dilation</button>
+            </div>
+          </div>
+
+          <button class="ff-add-btn" id="ffAddBtn">+ Add Transformation</button>
+
+          <div class="brow" style="margin-top:14px;justify-content:center;gap:8px" id="ffModeButtons">
+            <button class="btn bt" id="ffTestTrans" disabled>✓ Test Transformations</button>
+            <button class="btn bo" id="ffAnimateTrans" disabled>▶ Animate Mode</button>
+          </div>
+
+          <div class="ff-anim-controls" id="ffAnimControls" style="display:none">
+            <button class="btn bg" id="ffAnimPlay">▶ Play</button>
+            <button class="btn bg" id="ffAnimStep">⏭ Step</button>
+            <button class="btn bg" id="ffAnimReset">↺ Reset</button>
+            <button class="btn bg" id="ffExitMode">✕ Exit</button>
+          </div>
+
+          <div id="ffTestControls" style="display:none; text-align:center; margin-top:10px;">
+            <p class="ptitle" id="ffTestStatus" style="margin-bottom:8px">Plot the image for Step 1</p>
+            <button class="btn bg" id="ffTestExit">✕ Exit Test Mode</button>
+          </div>
+
+          <div class="brow" style="margin-top:15px;justify-content:center">
+            <button class="btn bg" id="ffNewShape">↩ New Shape / Reset Sequence</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="app.js"></script>
+<p class="a11y-note">Mode tabs, level buttons and the coordinate inputs are keyboard-reachable. Moving shapes on the grid requires a pointer — see the accessibility notes on the page around this app.</p>
+</body>
+</html>
