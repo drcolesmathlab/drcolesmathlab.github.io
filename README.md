@@ -198,20 +198,14 @@ contrast and saying why is the more defensible call.
 
 ## Deploying
 
-This repo is not yet a git repo and Pages is not configured. To publish:
+Live at `drcolesmathlab.github.io`, served by GitHub Pages from `main` / root. The repo
+name must keep matching the `origin` in `tools/site.config.js`, because `og:image` and
+`og:url` have to be absolute `https://` URLs — LinkedIn's crawler will not resolve a
+relative path or a `data:` URI, and without them a shared link shows no preview card at
+all.
 
-```bash
-git init && git add -A && git commit -m "Dr. Cole's Math Lab"
-```
-
-Then create `drcolesmathlab.github.io` on GitHub, push to `main`, and set Pages to serve
-from `main` / root. The repo name must match the `origin` in `tools/site.config.js`,
-because `og:image` and `og:url` have to be absolute `https://` URLs — LinkedIn's crawler
-will not resolve a relative path or a `data:` URI, and without them a shared link shows
-no preview card at all.
-
-After deploying, paste each URL into LinkedIn's Post Inspector to confirm the card
-renders. LinkedIn caches aggressively, so check before you share, not after.
+Before sharing a new or changed URL, paste it into LinkedIn's Post Inspector to confirm
+the card renders. LinkedIn caches aggressively, so check before you share, not after.
 
 ---
 
