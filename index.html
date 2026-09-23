@@ -1,29 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dr. Cole's Math Lab — interactive math you can actually use</title>
 
 <!-- META:START -->
-<link rel="canonical" href="https://drcolesmathlab.github.io/">
+<link rel="canonical" href="https://drcolesmathlab.pages.dev/">
 <meta name="description" content="3 interactive math apps you can use right in the browser — no download, no sign-up, no tracking. Built by Dr. Cole.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Dr. Cole's Math Lab">
-<meta property="og:url" content="https://drcolesmathlab.github.io/">
+<meta property="og:url" content="https://drcolesmathlab.pages.dev/">
 <meta property="og:title" content="Dr. Cole's Math Lab — interactive math you can actually use">
 <meta property="og:description" content="3 interactive math apps you can use right in the browser — no download, no sign-up, no tracking. Built by Dr. Cole.">
-<meta property="og:image" content="https://drcolesmathlab.github.io/assets/og-home.png">
+<meta property="og:image" content="https://drcolesmathlab.pages.dev/assets/og-home.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Dr. Cole's Math Lab — interactive math you can actually use">
 <meta name="twitter:description" content="3 interactive math apps you can use right in the browser — no download, no sign-up, no tracking. Built by Dr. Cole.">
-<meta name="twitter:image" content="https://drcolesmathlab.github.io/assets/og-home.png">
-<meta name="theme-color" content="#050610">
+<meta name="twitter:image" content="https://drcolesmathlab.pages.dev/assets/og-home.png">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F7F8FA">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060810">
 <!-- META:END -->
 
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,4 100,40 82,100 18,100 0,40' fill='%2300d4ff'/></svg>">
+
+<!-- THEME BOOT:START -->
+<script>
+(function () {
+  var d = document.documentElement;
+  d.className = d.className.replace(/\bno-js\b/, 'js');
+  try {
+    var t = localStorage.getItem('mathlab.home.theme');
+    if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+<!-- THEME BOOT:END -->
 
 <style>
 /* FONTS:START */
@@ -53,291 +67,278 @@
   src:url(data:font/woff2;base64,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) format('woff2');
 }
 /* FONTS:END */
+/* HOME CHROME:START */
 
-/* SITE CHROME:START */
-/* ═══════════════════════════════════════════════════════════════════════════
-   DESIGN TOKENS
-   Carried from Dr. Cole's Transform Lab. One deliberate change: --mu was
-   #6b7498, which measures 4.40:1 on --bg and 4.23:1 on --sf — below the 4.5:1
-   WCAG AA floor for normal text, and it carries subtitles, card copy, tags and
-   footer meta. #7a83a8 measures 5.42:1 / 5.22:1. Full table in README.md.
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ── Theme tokens ────────────────────────────────────────────────────────── */
 :root{
-  --bg:#050610;
-  --sf:#0c0b1d;
-  --sf2:#141328;
-  --tc:#00d4ff;
-  --tc2:rgba(0,212,255,.12);
-  --rc:#00ff7f;
-  --rc2:rgba(0,255,127,.12);
-  --oc:#ffcc00;
-  --oc2:rgba(255,204,0,.12);
-  --dc:#ff3355;
-  --dc2:rgba(255,51,85,.12);
-  --ax:#bb55ff;
-  --ax2:rgba(187,85,255,.12);
-  --or:#ff9500;
-  --or2:rgba(255,149,0,.12);
-  --pre:#ffffff;
-  --tx:#eef2ff;
-  --mu:#7a83a8;
-  --maxw:1080px;
-  --scroll-offset:60px;   /* shared by the sticky nav's top and every section's
-                             scroll-margin-top, so an anchor jump lands where the
-                             nav highlight says it will */
+  --bg:#F7F8FA;
+  --bg-elevated:#FFFFFF;
+  --border:#E1E4EB;
+  --border-soft:#ECEEF2;
+  --text:#14171F;
+  --text-soft:#4B5165;
+  --text-faint:#5F6576;
+  --focus:#1D4ED8;
+  --on-focus:#FFFFFF;
+  --algebra:#B45309; --algebra-soft:#FEF3C7;
+  --geometry:#047857; --geometry-soft:#D1FAE5;
+  --stats:#0E7490; --stats-soft:#CFFAFE;
+  --testprep:#BE185D; --testprep-soft:#FCE7F3;
+  --games:#6D28D9; --games-soft:#EDE9FE;
+  --wm-pre:linear-gradient(90deg,#0E7490,#047857);
+  --wm-mid:linear-gradient(90deg,#047857,#4D7C0F);
+  --wm-post:linear-gradient(90deg,#BE185D,#9D174D);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#060810;
+    --bg-elevated:#0E111B;
+    --border:#1D2233;
+    --border-soft:#161A29;
+    --text:#E9EBF2;
+    --text-soft:#8B93A6;
+    --text-faint:#7F8AA8;
+    --focus:#60A5FA;
+    --on-focus:#060810;
+    --algebra:#F0B429; --algebra-soft:#3A2E12;
+    --geometry:#34D399; --geometry-soft:#0F2B22;
+    --stats:#22D3EE; --stats-soft:#0E2A30;
+    --testprep:#F472B6; --testprep-soft:#331D28;
+    --games:#A78BFA; --games-soft:#241D3A;
+    --wm-pre:linear-gradient(90deg,#22D3EE,#4ADE80);
+    --wm-mid:linear-gradient(90deg,#4ADE80,#A3E635);
+    --wm-post:linear-gradient(90deg,#F472B6,#FDA4AF);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#060810;
+  --bg-elevated:#0E111B;
+  --border:#1D2233;
+  --border-soft:#161A29;
+  --text:#E9EBF2;
+  --text-soft:#8B93A6;
+  --text-faint:#7F8AA8;
+  --focus:#60A5FA;
+  --on-focus:#060810;
+  --algebra:#F0B429; --algebra-soft:#3A2E12;
+  --geometry:#34D399; --geometry-soft:#0F2B22;
+  --stats:#22D3EE; --stats-soft:#0E2A30;
+  --testprep:#F472B6; --testprep-soft:#331D28;
+  --games:#A78BFA; --games-soft:#241D3A;
+  --wm-pre:linear-gradient(90deg,#22D3EE,#4ADE80);
+  --wm-mid:linear-gradient(90deg,#4ADE80,#A3E635);
+  --wm-post:linear-gradient(90deg,#F472B6,#FDA4AF);
+  color-scheme:dark;
 }
 
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-
+/* ── Base ────────────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:9rem}
 body{
-  font-family:'Nunito','Avenir Next','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
-  background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;
-  line-height:1.6;-webkit-font-smoothing:antialiased;
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:'Nunito',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+.mono,.count,.idx,.result-meta,.footer-meta{font-family:'Space Mono',ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+a{color:inherit}
+.wrap{max-width:67.5rem;margin-inline:auto;padding-inline:1.25rem}
+/* .grid and .grid > li set display, which would otherwise beat the hidden attribute
+   the filter script toggles — filtered-out cards would stay on screen. */
+[hidden]{display:none !important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ico{width:1em;height:1em;flex-shrink:0}
+
+.skip-link{
+  position:absolute;left:.75rem;top:-4rem;z-index:100;
+  background:var(--focus);color:var(--on-focus);padding:.65rem 1rem;border-radius:.5rem;
+  font-weight:800;text-decoration:none;
+}
+.skip-link:focus{top:.75rem}
+
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid var(--focus);outline-offset:2px;
 }
 
-/* Brand atmosphere: scanline stripes + a soft vignette. Decorative and
-   pointer-transparent, sitting behind everything via z-index. */
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent 3px)}
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse at 50% 8%,rgba(255,255,255,.045) 0,transparent 55%)}
-
-.wrap{position:relative;z-index:1;width:100%;max-width:var(--maxw);margin:0 auto;padding:0 22px}
-
-/* ── Typography ──────────────────────────────────────────────────────────── */
-h2{font-size:clamp(1.35rem,3vw,1.75rem);font-weight:900;letter-spacing:-.4px;color:var(--pre)}
-h3{font-size:1.06rem;font-weight:800;color:var(--pre)}
-p{color:var(--tx)}
-a{color:var(--tc)}
-strong{color:var(--pre);font-weight:800}
-code,kbd,.mono{font-family:'Space Mono','SF Mono',Consolas,monospace}
-kbd{background:var(--sf2);border:1px solid #26243f;border-radius:5px;
-  padding:1px 6px;font-size:.82em;color:var(--pre);white-space:nowrap}
-
-/* ── Accessibility utilities ─────────────────────────────────────────────── */
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
-  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-
-/* The card grids and pill rows are marked up as lists so assistive tech announces
-   "list, 3 items" — but they are styled as grids, so the markers come off. Prose
-   lists inside .prose keep theirs. */
-.hero-facts,.app-grid,.app-tags,.about-grid,.page-nav ul{list-style:none}
-
-/* The skip link is the first focusable element on every page. It is off-screen
-   until focused, then becomes a solid chip in the top-left. */
-.skip-link{position:absolute;left:12px;top:-100px;z-index:100;
-  background:var(--tc);color:#04202b;font-weight:900;padding:12px 18px;
-  border-radius:0 0 10px 10px;text-decoration:none;transition:top .15s}
-.skip-link:focus{top:0}
-
-:focus-visible{outline:3px solid var(--tc);outline-offset:3px;border-radius:4px}
-
-/* ── Top bar (app pages only) ────────────────────────────────────────────── */
-/* Deliberately NOT sticky. The in-page nav below owns position:sticky, so there
-   is exactly one sticky element and the --scroll-offset math stays honest. */
-.topbar{border-bottom:1px solid var(--sf2);background:rgba(5,6,16,.6)}
-.topbar .wrap{display:flex;align-items:center;justify-content:space-between;
-  gap:14px;min-height:52px;flex-wrap:wrap}
-.topbar a{display:inline-flex;align-items:center;gap:7px;color:var(--mu);
-  text-decoration:none;font-weight:800;font-size:.86rem;white-space:nowrap;
-  padding:11px 4px;min-height:44px}
-.topbar .ico{flex:0 0 auto;width:16px;height:16px}
-.topbar a:hover{color:var(--tc)}
-.topbar .crumb-meta{color:var(--mu);font-size:.78rem;font-weight:700;
-  font-family:'Space Mono','SF Mono',Consolas,monospace;letter-spacing:.3px}
-
-/* ── Header / wordmark ───────────────────────────────────────────────────── */
-header.site{text-align:center;padding:26px 0 20px}
-.logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;justify-content:center}
-.logo-pre,.logo h1,.logo .wordmark{
-  font-size:clamp(1.8rem,5vw,2.6rem);font-weight:900;letter-spacing:-1px;line-height:1.1;
-  background:linear-gradient(90deg,#00d4ff,#00ff7f 45%,#ff3355);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+/* ── Header ──────────────────────────────────────────────────────────────── */
+header.site{
+  position:sticky;top:0;z-index:20;
+  background:var(--bg);border-bottom:1px solid var(--border-soft);
 }
-.logo-icon{width:36px;height:36px;flex:0 0 36px;
-  background:linear-gradient(135deg,#00d4ff,#ff3355);
-  clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px #00d4ff)}
-@keyframes spin{to{transform:rotate(360deg)}}
-.subtitle{color:var(--mu);font-size:.92rem;font-weight:700;margin-top:6px}
+@supports (backdrop-filter:blur(1px)){
+  header.site{background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px)}
+}
+.brand-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding-block:.6rem}
+.brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.02rem;letter-spacing:-.01em;text-decoration:none;min-height:2.75rem}
+.gem{width:.95em;height:.95em;flex-shrink:0}
 
-/* ── Hero facts ──────────────────────────────────────────────────────────── */
-.hero-facts{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:18px 0 4px}
-.hero-fact{display:inline-flex;align-items:center;gap:7px;background:var(--sf);
-  border:1px solid var(--sf2);border-radius:50px;padding:7px 15px;
-  color:var(--tx);font-size:.8rem;font-weight:700}
-.hero-fact .ico{width:15px;height:15px;color:var(--tc);flex:0 0 15px}
+.theme-toggle{display:flex;border:1px solid var(--border);border-radius:.6rem;overflow:hidden}
+.theme-toggle button{
+  display:flex;align-items:center;gap:.4rem;min-height:2.75rem;
+  background:var(--bg-elevated);color:var(--text-soft);
+  border:0;border-inline-end:1px solid var(--border);
+  padding:0 .8rem;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;
+}
+.theme-toggle button:last-child{border-inline-end:0}
+.theme-toggle button[aria-pressed="true"]{background:var(--focus);color:var(--on-focus)}
+.theme-toggle button:focus-visible{outline-offset:-4px}
 
-/* ── Sections ────────────────────────────────────────────────────────────── */
-main{position:relative;z-index:1;display:block}
-section{scroll-margin-top:calc(var(--scroll-offset) + 14px);padding:34px 0 6px}
-.section-lead{color:var(--mu);font-size:.96rem;margin:8px 0 20px;max-width:66ch}
-section > h2 + .section-lead{margin-top:8px}
+/* ── Hero ────────────────────────────────────────────────────────────────── */
+.hero{padding-block:3.5rem 2rem;text-align:center}
+.wordmark{
+  margin:0;display:flex;align-items:center;justify-content:center;gap:.35em;flex-wrap:wrap;
+  font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-.02em;line-height:1.15;
+}
+.wordmark .grad{background-clip:text;-webkit-background-clip:text;color:transparent}
+.wordmark .w-pre{background-image:var(--wm-pre)}
+.wordmark .w-mid{background-image:var(--wm-mid)}
+.wordmark .w-post{background-image:var(--wm-post)}
+/* Windows High Contrast / forced colours drops background images, which would leave
+   transparent text. Fall back to the system text colour. */
+@media (forced-colors:active){.wordmark .grad{color:CanvasText;background:none}}
+.tagline{margin:.9rem auto 0;max-width:44ch;color:var(--text-soft);font-size:1.05rem}
+.hero-facts{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin:1.5rem 0 0;padding:0;list-style:none}
+.hero-fact{
+  display:flex;align-items:center;gap:.45rem;border:1px solid var(--border);background:var(--bg-elevated);
+  padding:.45rem .9rem;border-radius:999px;font-size:.85rem;color:var(--text-soft);
+}
 
-/* ── In-page nav (app pages) ─────────────────────────────────────────────── */
-.page-nav{position:sticky;top:0;z-index:20;background:rgba(5,6,16,.94);
-  backdrop-filter:blur(8px);border-bottom:1px solid var(--sf2);margin-bottom:6px}
-.page-nav ul{display:flex;gap:4px;list-style:none;overflow-x:auto;
-  scrollbar-width:none;min-height:var(--scroll-offset);align-items:center}
-.page-nav ul::-webkit-scrollbar{display:none}
-.page-nav a{display:flex;align-items:center;min-height:44px;padding:0 13px;
-  color:var(--mu);text-decoration:none;font-weight:800;font-size:.83rem;
-  white-space:nowrap;border-bottom:2px solid transparent}
-.page-nav a:hover{color:var(--tx)}
-.page-nav a[aria-current="true"]{color:var(--tc);border-bottom-color:var(--tc)}
+/* ── Section headings ────────────────────────────────────────────────────── */
+h2{font-size:1.5rem;font-weight:900;letter-spacing:-.01em;margin:0 0 .35rem}
+.section-lead{color:var(--text-soft);font-size:.95rem;max-width:60ch;margin:0 0 1.25rem}
 
-/* ── App grid (home) ─────────────────────────────────────────────────────── */
-.app-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
-.app{display:flex;flex-direction:column;gap:9px;background:var(--sf);
-  border:1px solid var(--sf2);border-radius:14px;padding:19px 19px 17px;
-  text-decoration:none;color:inherit;transition:transform .2s,border-color .2s,box-shadow .2s}
-a.app:hover{transform:translateY(-3px);border-color:var(--cat);
-  box-shadow:0 10px 30px -14px var(--cat)}
-.app-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.app-icon{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
-  border-radius:11px;background:var(--cat-soft);color:var(--cat);border:1px solid var(--cat-soft)}
-.app-icon .ico{width:20px;height:20px}
-.app-num{font-family:'Space Mono','SF Mono',Consolas,monospace;font-size:.76rem;
-  font-weight:700;color:var(--mu)}
-.app h3{font-size:1.16rem}
-.app-sub{color:var(--cat);font-size:.79rem;font-weight:800;
-  text-transform:uppercase;letter-spacing:.6px;margin-top:-4px}
-.app-blurb{color:var(--mu);font-size:.9rem;flex:1}
-.app-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
-.app-tag{background:var(--sf2);color:var(--tx);border-radius:6px;
-  padding:3px 9px;font-size:.72rem;font-weight:700}
-.app-open{display:inline-flex;align-items:center;gap:7px;color:var(--cat);
-  font-weight:900;font-size:.88rem;margin-top:6px}
-.app-open .ico{width:17px;height:17px;transition:transform .2s}
-a.app:hover .app-open .ico{transform:translateX(4px)}
+/* ── Controls ────────────────────────────────────────────────────────────── */
+.controls{position:sticky;top:3.9rem;z-index:15;background:var(--bg);padding-block:.75rem 1rem}
+.search-row{display:flex;gap:.6rem;flex-wrap:wrap}
+.search-box{position:relative;flex:1;min-width:12rem}
+.search-box .ico{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--text-faint);pointer-events:none}
+.search-box input{
+  width:100%;min-height:2.75rem;padding:.6rem .9rem .6rem 2.4rem;
+  border-radius:.6rem;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text);
+  font:inherit;font-size:.95rem;
+}
+.search-box input::placeholder{color:var(--text-faint);opacity:1}
+.sort-select{
+  min-height:2.75rem;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text);
+  border-radius:.6rem;padding:0 .75rem;font:inherit;font-size:.88rem;cursor:pointer;
+}
+.chip-rail{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
+.chip{
+  display:inline-flex;align-items:center;gap:.4rem;min-height:2.75rem;
+  border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-soft);
+  padding:0 .9rem;border-radius:999px;font:inherit;font-size:.85rem;font-weight:800;cursor:pointer;white-space:nowrap;
+}
+.chip .count{font-size:.75rem;font-weight:400}
+.chip .chip-glyph{font-weight:900}
+.chip[aria-pressed="true"]{color:var(--text);border-color:var(--text);background:var(--border-soft)}
+.chip[data-cat][aria-pressed="true"]{color:var(--cat);border-color:var(--cat);background:var(--cat-soft)}
+/* Pressed state is also shown by a check mark, so it never relies on colour alone. */
+.chip .chip-check{display:none}
+.chip[aria-pressed="true"] .chip-check{display:inline}
+/* Chips are rendered for no-JS readers too, but do nothing without the script. */
+.no-js .controls{display:none}
 
-/* Roadmap tiles: listed but not yet shipped, so not a link and not a dead end. */
-.app.pending{opacity:.62;cursor:default}
-.app.pending .app-status{display:inline-flex;align-items:center;gap:6px;
-  color:var(--mu);font-weight:900;font-size:.85rem;margin-top:6px}
-.app.pending .app-status::before{content:'';width:8px;height:8px;border-radius:50%;
-  background:var(--cat);box-shadow:0 0 8px var(--cat)}
+.result-meta{margin:.25rem 0 0;font-size:.8rem;color:var(--text-faint);min-height:1.2em}
 
-/* ── About grid (home) ───────────────────────────────────────────────────── */
-/* minmax(380px,1fr) so four cards land as a clean 2x2 rather than an orphaned
-   third column at common desktop widths. */
-.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px}
-.about-card{background:var(--sf);border:1px solid var(--sf2);border-radius:14px;padding:18px}
-.about-card .ico{width:19px;height:19px;color:var(--tc);flex:0 0 19px}
-.about-card h3{display:flex;align-items:center;gap:9px;margin-bottom:6px}
-.about-card p{color:var(--mu);font-size:.9rem}
+/* ── Grid ────────────────────────────────────────────────────────────────── */
+.grid{list-style:none;margin:0;padding:1rem 0 3.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,16rem),1fr));gap:1rem}
+.grid > li{display:flex}
+.card{
+  position:relative;flex:1;
+  background:var(--bg-elevated);border:1px solid var(--border);border-radius:.9rem;padding:1.25rem;
+  display:flex;flex-direction:column;gap:.75rem;min-height:12.5rem;
+}
+.card:focus-within{outline:2px solid var(--focus);outline-offset:2px}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem}
+.glyph{
+  width:2.4rem;height:2.4rem;border-radius:.55rem;display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;font-weight:900;background:var(--cat-soft);color:var(--cat);
+}
+.idx{font-size:.8rem;color:var(--text-faint);padding-top:.25rem}
+.card h3{font-weight:900;font-size:1.1rem;letter-spacing:-.01em;margin:0}
+.card-kicker{font-size:.74rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin:.15rem 0 0;color:var(--text-soft)}
+.card-kicker .cat{color:var(--cat)}
+.card-desc{font-size:.9rem;color:var(--text-soft);line-height:1.55;flex:1;margin:0}
+.card-tags{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;margin:0;padding:0}
+.tag{font-size:.75rem;padding:.2rem .55rem;border-radius:.4rem;background:var(--border-soft);color:var(--text-soft);border:1px solid var(--border)}
+.open-link{
+  display:inline-flex;align-items:center;gap:.35rem;min-height:2.75rem;
+  font-size:.9rem;font-weight:800;color:var(--cat);text-decoration:underline;text-underline-offset:3px;
+}
+.open-link:focus-visible{outline:none}
+/* The whole card is the hit area; the link text stays the accessible name. */
+.open-link::after{content:"";position:absolute;inset:0;border-radius:.9rem}
 
-/* ── Prose blocks on app pages ───────────────────────────────────────────── */
-.prose{background:var(--sf);border:1px solid var(--sf2);border-radius:14px;
-  padding:20px 22px;max-width:none}
-.prose p + p,.prose ul + p,.prose p + ul,.prose ol + p,.prose p + ol{margin-top:12px}
-.prose ul,.prose ol{margin-left:20px;color:var(--tx)}
-.prose li{margin:6px 0}
-.prose li::marker{color:var(--mu)}
-.prose h3{margin:18px 0 7px}
-.prose h3:first-child{margin-top:0}
-.prose .muted{color:var(--mu);font-size:.92rem}
+.empty-state{text-align:center;color:var(--text-soft);padding-block:2.5rem 3.5rem}
+.empty-state h3{color:var(--text);margin:0 0 .5rem;font-size:1.1rem}
+.empty-state p{margin:0}
 
-.callout{border-left:3px solid var(--tc);background:var(--tc2);
-  border-radius:0 10px 10px 0;padding:14px 17px;margin:14px 0}
-.callout.warn{border-left-color:var(--oc);background:var(--oc2)}
+/* ── About ───────────────────────────────────────────────────────────────── */
+#about{padding-block:1rem 3rem}
+.about-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;list-style:none;margin:1.25rem 0 0;padding:0}
+.about-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:.9rem;padding:1.35rem}
+.about-card h3{display:flex;align-items:center;gap:.55rem;font-size:1rem;font-weight:900;margin:0 0 .4rem}
+.about-card h3 .ico{color:var(--focus);width:1.1em;height:1.1em}
+.about-card p{margin:0;font-size:.9rem;color:var(--text-soft);line-height:1.55}
 
-/* ── The embedded app ────────────────────────────────────────────────────── */
-.play-lead{color:var(--mu);font-size:.96rem;margin:8px 0 6px;max-width:70ch}
-
-/* An iframe is a single tab stop that drops a keyboard user into a document with
-   dozens of controls and no obvious way back. This link, placed BEFORE the frame,
-   is the escape hatch. Hidden until focused, then a visible chip. */
-.skip-embed{position:absolute;left:-9999px;display:inline-flex;align-items:center;
-  gap:7px;font-weight:800;font-size:.85rem;text-decoration:none}
-/* :focus, not :focus-visible — a skip link should show whenever it holds focus,
-   including when focus was moved programmatically. min-height keeps it at the 44px
-   target size; padding alone lands at 43.8px. */
-.skip-embed:focus{position:static;left:auto;background:var(--tc);color:#04202b;
-  padding:11px 16px;min-height:44px;border-radius:9px;margin:10px 0 0}
-
-.play-frame{position:relative;margin:16px 0 12px;border:1px solid var(--sf2);
-  border-radius:14px;overflow:hidden;background:var(--bg);
-  box-shadow:0 20px 50px -30px #000}
-.play-embed{display:block;width:100%;height:100%;border:0}
-.play-frame[data-app="transform-lab"]{height:clamp(620px, 80vh, 940px)}
-.play-frame[data-app="tiger-trail"]{height:clamp(440px, 76vh, 800px)}
-.play-frame[data-app="balancing-act"]{height:clamp(600px, 84vh, 900px);width:min(560px, 100%);margin-inline:auto}
-
-.play-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
-.btn-play-full{display:inline-flex;align-items:center;gap:8px;min-height:44px;
-  padding:10px 18px;background:var(--sf);border:1px solid var(--tc);
-  border-radius:10px;color:var(--tc);font-weight:900;font-size:.88rem;text-decoration:none}
-.btn-play-full:hover{background:var(--tc2)}
-.btn-play-full .ico{width:16px;height:16px}
-.play-note{color:var(--mu);font-size:.83rem}
-
-/* ── Footer + pager ──────────────────────────────────────────────────────── */
-footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
-.footer-rule{border:0;border-top:1px solid var(--sf2);margin:0 0 22px}
-.pager{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:14px;margin-bottom:24px}
-.pager a{display:flex;flex-direction:column;gap:3px;background:var(--sf);
-  border:1px solid var(--sf2);border-radius:12px;padding:15px 17px;
-  text-decoration:none;color:inherit;min-height:44px}
-.pager a:hover{border-color:var(--tc)}
-.pager .dir{display:inline-flex;align-items:center;gap:6px;color:var(--mu);
-  font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px}
-.pager .dir .ico{width:14px;height:14px}
-.pager .pt{color:var(--pre);font-weight:800}
-.pager .ps{color:var(--mu);font-size:.83rem}
-.pager .next{text-align:right}
-.pager .next .dir{justify-content:flex-end}
-.footer-disclaimer{color:var(--mu);font-size:.85rem;max-width:78ch}
-.footer-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-  margin-top:14px;color:var(--mu);font-size:.78rem;
-  font-family:'Space Mono','SF Mono',Consolas,monospace}
-.footer-meta .sep{opacity:.45}
-.footer-back{display:inline-flex;align-items:center;gap:7px;min-height:44px;
-  color:var(--tc);font-weight:800;font-size:.87rem;text-decoration:none}
-.footer-back .ico{width:16px;height:16px}
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+footer.site{border-top:1px solid var(--border-soft);padding-block:1.4rem 2.75rem;color:var(--text-faint);font-size:.82rem}
+footer.site p{margin:0 0 .4rem}
+.footer-meta .sep{margin-inline:.45rem}
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width:640px){
-  .wrap{padding:0 16px}
-  .play-frame{height:clamp(420px,70vh,640px) !important;width:100% !important}
+@media (max-width:40rem){
   .about-grid{grid-template-columns:1fr}
-  .pager .next{text-align:left}
-  .pager .next .dir{justify-content:flex-start}
+  .hero{padding-block:2.5rem 1.5rem}
+  .controls{position:static}
+  .theme-toggle button{padding:0 .6rem}
 }
 
 /* ── Reduced motion ──────────────────────────────────────────────────────── */
-/* The upstream Transform Lab has no guard on its spinning logo — that gap is not
-   carried forward. Functional transitions collapse to near-zero rather than being
-   removed, so state changes stay perceivable. */
 @media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  .logo-icon{animation:none}
-  *,*::before,*::after{
-    animation-duration:.01ms !important;
-    animation-iteration-count:1 !important;
-    transition-duration:.01ms !important;
-  }
-  a.app:hover{transform:none}
-  a.app:hover .app-open .ico{transform:none}
+  *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
 }
-/* SITE CHROME:END */
+/* HOME CHROME:END */
 </style>
 </head>
 <body>
 
-<a class="skip-link" href="#main">Skip to main content</a>
+<a class="skip-link" href="#main">Skip to the app list</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gem-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60A5FA"/><stop offset=".5" stop-color="#A78BFA"/><stop offset="1" stop-color="#F472B6"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<header class="site">
+  <div class="wrap brand-row">
+    <a class="brand" href="index.html">
+      <svg class="gem" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2 20 9 12 22 4 9Z" fill="url(#gem-grad)"/></svg>
+      <span>Dr. Cole's Math Lab</span>
+    </a>
+    <div class="theme-toggle" role="group" aria-label="Colour theme">
+    <!-- THEME TOGGLE:START -->
+<button type="button" data-theme-choice="light" aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span>Light</span></button>
+<button type="button" data-theme-choice="dark" aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg><span>Dark</span></button>
+<button type="button" data-theme-choice="auto" aria-pressed="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg><span>Auto</span></button>
+<!-- THEME TOGGLE:END -->
+    </div>
+  </div>
+</header>
 
 <div class="wrap">
-  <header class="site">
-    <div class="logo">
-      <span class="logo-pre">Dr. Cole's</span>
-      <div class="logo-icon" aria-hidden="true"></div>
-      <h1 class="wordmark">Math Lab</h1>
-    </div>
-    <p class="subtitle">Interactive math you can actually use — right here in the browser</p>
-
+  <section class="hero" aria-labelledby="hero-title">
+    <h1 class="wordmark" id="hero-title">
+      <span class="grad w-pre">Dr. Cole's</span>
+      <svg class="gem" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2 20 9 12 22 4 9Z" fill="url(#gem-grad)"/></svg>
+      <span class="grad w-mid">Math</span>
+      <span class="grad w-post">Lab</span>
+    </h1>
+    <p class="tagline">Every interactive app in one place — search, filter, and open the one you need in a click.</p>
     <ul class="hero-facts">
     <!-- HERO FACTS:START -->
 <li class="hero-fact"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>3 interactive apps</span></li>
@@ -345,56 +346,99 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
 <li class="hero-fact"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3 20 6v6c0 4.4-3.2 7.8-8 9-4.8-1.2-8-4.6-8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg><span>No sign-up, no tracking</span></li>
 <!-- HERO FACTS:END -->
     </ul>
-  </header>
+  </section>
 </div>
 
-<main id="main">
+<main id="main" tabindex="-1">
   <div class="wrap">
 
     <section id="apps" aria-labelledby="apps-h">
       <h2 id="apps-h">The apps</h2>
       <p class="section-lead">
-        Each one runs in the page — click through and use it. Nothing to install, no account,
-        and no data leaves your machine.
+        Each one runs right in the browser — click through and use it. Search by name or topic,
+        or filter by category. Nothing to install, no account, and no data leaves your machine.
       </p>
 
-      <ul class="app-grid">
+      <div class="controls">
+        <div class="search-row">
+          <div class="search-box">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <label class="sr-only" for="search">Search apps by name or topic</label>
+            <input id="search" type="search" placeholder="Search apps or topics" autocomplete="off">
+          </div>
+          <div>
+            <label class="sr-only" for="sort">Sort apps</label>
+            <select class="sort-select" id="sort">
+              <option value="newest">Newest first</option>
+              <option value="az">A → Z</option>
+              <option value="category">By category</option>
+            </select>
+          </div>
+        </div>
+        <div class="chip-rail" id="chips" role="group" aria-label="Filter apps by category">
+        <!-- CHIPS:START -->
+<button class="chip" type="button" data-all aria-pressed="true"><span class="chip-check" aria-hidden="true">✓</span>All apps<span class="count">3</span></button>
+<button class="chip" type="button" data-cat="algebra" data-label="Algebra" aria-pressed="false" style="--cat:var(--algebra);--cat-soft:var(--algebra-soft)"><span class="chip-check" aria-hidden="true">✓</span><span class="chip-glyph" aria-hidden="true">=</span>Algebra<span class="count"><span class="sr-only">, </span>1<span class="sr-only"> app</span></span></button>
+<button class="chip" type="button" data-cat="geometry" data-label="Geometry" aria-pressed="false" style="--cat:var(--geometry);--cat-soft:var(--geometry-soft)"><span class="chip-check" aria-hidden="true">✓</span><span class="chip-glyph" aria-hidden="true">△</span>Geometry<span class="count"><span class="sr-only">, </span>1<span class="sr-only"> app</span></span></button>
+<button class="chip" type="button" data-cat="games" data-label="Games" aria-pressed="false" style="--cat:var(--games);--cat-soft:var(--games-soft)"><span class="chip-check" aria-hidden="true">✓</span><span class="chip-glyph" aria-hidden="true">⚡</span>Games<span class="count"><span class="sr-only">, </span>1<span class="sr-only"> app</span></span></button>
+<!-- CHIPS:END -->
+        </div>
+        <p class="result-meta" id="result-meta" aria-live="polite"></p>
+      </div>
+
+      <ul class="grid" id="grid">
       <!-- APP GRID:START -->
-<li><a class="app" href="transform-lab.html" style="--cat:var(--rc);--cat-soft:var(--rc2)">
-  <div class="app-top">
-    <span class="app-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3 21 20H3Z"/><circle cx="12" cy="3" r="1.4" fill="currentColor"/></svg></span>
-    <span class="app-num">01</span>
+<li data-cat="geometry" data-name="Transform Lab" data-date="2026-07-29" data-order="0" data-search="transform lab geometric transformations you can drag translate, reflect, rotate and dilate shapes on a live coordinate grid — then predict where the image lands before you check your answer. geometry coordinate plane transformations prediction">
+<article class="card" style="--cat:var(--geometry);--cat-soft:var(--geometry-soft)">
+  <div class="card-top">
+    <span class="glyph" aria-hidden="true">△</span>
+    <span class="idx" aria-hidden="true">01</span>
   </div>
-  <h3>Transform Lab</h3>
-  <p class="app-sub">Geometry &middot; Geometric transformations you can drag</p>
-  <p class="app-blurb">Translate, reflect, rotate and dilate shapes on a live coordinate grid — then predict where the image lands before you check your answer.</p>
-  <ul class="app-tags"><li class="app-tag">Coordinate plane</li><li class="app-tag">Transformations</li><li class="app-tag">Prediction</li></ul>
-  <span class="app-open">Open Transform Lab<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg></span>
-</a></li>
-<li><a class="app" href="tiger-trail.html" style="--cat:var(--ax);--cat-soft:var(--ax2)">
-  <div class="app-top">
-    <span class="app-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2 4 14h7l-1 8 9-12h-7Z"/></svg></span>
-    <span class="app-num">02</span>
+  <div>
+    <h3>Transform Lab</h3>
+    <p class="card-kicker"><span class="cat">Geometry</span> &middot; Geometric transformations you can drag</p>
   </div>
-  <h3>Tiger Trail</h3>
-  <p class="app-sub">Speed &amp; arcade &middot; Jungle Math Runner</p>
-  <p class="app-blurb">A 3D endless runner built on multiples and factors. Collect the right number coins, dodge the wrong ones, and keep your speed up as the trail accelerates.</p>
-  <ul class="app-tags"><li class="app-tag">Multiples</li><li class="app-tag">Factors</li><li class="app-tag">Speed recall</li></ul>
-  <span class="app-open">Open Tiger Trail<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg></span>
-</a></li>
-<li><a class="app" href="balancing-act.html" style="--cat:var(--oc);--cat-soft:var(--oc2)">
-  <div class="app-top">
-    <span class="app-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 9h16M4 15h16"/></svg></span>
-    <span class="app-num">03</span>
+  <p class="card-desc">Translate, reflect, rotate and dilate shapes on a live coordinate grid — then predict where the image lands before you check your answer.</p>
+  <ul class="card-tags" aria-label="Topics"><li class="tag">Coordinate plane</li><li class="tag">Transformations</li><li class="tag">Prediction</li></ul>
+  <a class="open-link" href="transform-lab.html">Open Transform Lab<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg></a>
+</article>
+</li>
+<li data-cat="games" data-name="Tiger Trail" data-date="2026-07-29" data-order="1" data-search="tiger trail jungle math runner a 3d endless runner built on multiples and factors. collect the right number coins, dodge the wrong ones, and keep your speed up as the trail accelerates. games multiples factors speed recall">
+<article class="card" style="--cat:var(--games);--cat-soft:var(--games-soft)">
+  <div class="card-top">
+    <span class="glyph" aria-hidden="true">⚡</span>
+    <span class="idx" aria-hidden="true">02</span>
   </div>
-  <h3>Balancing Act</h3>
-  <p class="app-sub">Algebra &middot; Solve the linear equations</p>
-  <p class="app-blurb">Solve linear equations the column way, with a stick figure on a balance beam that tips the moment you do something to one side and not the other.</p>
-  <ul class="app-tags"><li class="app-tag">Linear equations</li><li class="app-tag">Inverse operations</li><li class="app-tag">Properties of equality</li></ul>
-  <span class="app-open">Open Balancing Act<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg></span>
-</a></li>
+  <div>
+    <h3>Tiger Trail</h3>
+    <p class="card-kicker"><span class="cat">Games</span> &middot; Jungle Math Runner</p>
+  </div>
+  <p class="card-desc">A 3D endless runner built on multiples and factors. Collect the right number coins, dodge the wrong ones, and keep your speed up as the trail accelerates.</p>
+  <ul class="card-tags" aria-label="Topics"><li class="tag">Multiples</li><li class="tag">Factors</li><li class="tag">Speed recall</li></ul>
+  <a class="open-link" href="tiger-trail.html">Open Tiger Trail<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg></a>
+</article>
+</li>
+<li data-cat="algebra" data-name="Balancing Act" data-date="2026-07-29" data-order="2" data-search="balancing act solve the linear equations solve linear equations the column way, with a stick figure on a balance beam that tips the moment you do something to one side and not the other. algebra linear equations inverse operations properties of equality">
+<article class="card" style="--cat:var(--algebra);--cat-soft:var(--algebra-soft)">
+  <div class="card-top">
+    <span class="glyph" aria-hidden="true">=</span>
+    <span class="idx" aria-hidden="true">03</span>
+  </div>
+  <div>
+    <h3>Balancing Act</h3>
+    <p class="card-kicker"><span class="cat">Algebra</span> &middot; Solve the linear equations</p>
+  </div>
+  <p class="card-desc">Solve linear equations the column way, with a stick figure on a balance beam that tips the moment you do something to one side and not the other.</p>
+  <ul class="card-tags" aria-label="Topics"><li class="tag">Linear equations</li><li class="tag">Inverse operations</li><li class="tag">Properties of equality</li></ul>
+  <a class="open-link" href="balancing-act.html">Open Balancing Act<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg></a>
+</article>
+</li>
 <!-- APP GRID:END -->
       </ul>
+      <div class="empty-state" id="empty" hidden>
+        <h3>No apps match that search</h3>
+        <p>Try a different keyword, or select “All apps” to clear the category filters.</p>
+      </div>
     </section>
 
     <section id="about" aria-labelledby="about-h">
@@ -403,7 +447,6 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
         A few things that are true of every app here, and one that is a deliberate constraint
         rather than a feature.
       </p>
-
       <ul class="about-grid">
       <!-- ABOUT:START -->
 <li class="about-card">
@@ -431,13 +474,108 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
 
 <footer class="site">
   <div class="wrap">
-    <hr class="footer-rule">
     <!-- FOOTER:START -->
 <p class="footer-disclaimer">These are teaching demos built to show one idea clearly. They are not a full curriculum and they are not a substitute for instruction or practice.</p>
 <p class="footer-meta">Dr. Cole's Math Lab<span class="sep">·</span>3 apps<span class="sep">·</span>No tracking, no third-party requests</p>
 <!-- FOOTER:END -->
   </div>
 </footer>
+
+<!-- HOME SCRIPT:START -->
+<script>
+(function () {
+  'use strict';
+  var KEY = 'mathlab.home.theme';
+  var root = document.documentElement;
+
+  /* ── theme ── */
+  var themeBtns = document.querySelectorAll('[data-theme-choice]');
+  function applyTheme(pref, save) {
+    if (pref === 'light' || pref === 'dark') root.setAttribute('data-theme', pref);
+    else { pref = 'auto'; root.removeAttribute('data-theme'); }
+    for (var i = 0; i < themeBtns.length; i++) {
+      themeBtns[i].setAttribute('aria-pressed', String(themeBtns[i].getAttribute('data-theme-choice') === pref));
+    }
+    if (save) { try { localStorage.setItem(KEY, pref); } catch (e) {} }
+  }
+  applyTheme(root.getAttribute('data-theme') || 'auto', false);
+  for (var i = 0; i < themeBtns.length; i++) {
+    themeBtns[i].addEventListener('click', function () {
+      applyTheme(this.getAttribute('data-theme-choice'), true);
+    });
+  }
+
+  /* ── library ── */
+  var grid = document.getElementById('grid');
+  if (!grid) return;
+  var items = Array.prototype.slice.call(grid.children);
+  var search = document.getElementById('search');
+  var sort = document.getElementById('sort');
+  var chips = Array.prototype.slice.call(document.querySelectorAll('#chips .chip'));
+  var meta = document.getElementById('result-meta');
+  var empty = document.getElementById('empty');
+  var active = {};
+  var labels = {};
+  chips.forEach(function (c) {
+    var id = c.getAttribute('data-cat');
+    if (id) labels[id] = c.getAttribute('data-label');
+  });
+
+  function catLabel(li) { return labels[li.getAttribute('data-cat')] || ''; }
+  var comparators = {
+    newest: function (a, b) {
+      var d = b.getAttribute('data-date').localeCompare(a.getAttribute('data-date'));
+      return d || a.getAttribute('data-order') - b.getAttribute('data-order');
+    },
+    az: function (a, b) { return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name')); },
+    category: function (a, b) {
+      return catLabel(a).localeCompare(catLabel(b)) || comparators.az(a, b);
+    }
+  };
+
+  function render() {
+    var q = search.value.trim().toLowerCase();
+    var anyCat = Object.keys(active).length > 0;
+    var shown = items.filter(function (li) {
+      var okQ = !q || li.getAttribute('data-search').indexOf(q) > -1;
+      var okC = !anyCat || active[li.getAttribute('data-cat')];
+      return okQ && okC;
+    });
+    shown.sort(comparators[sort.value] || comparators.newest);
+
+    items.forEach(function (li) { li.hidden = true; });
+    shown.forEach(function (li, i) {
+      li.hidden = false;
+      li.querySelector('.idx').textContent = (i < 9 ? '0' : '') + (i + 1);
+      grid.appendChild(li);
+    });
+
+    grid.hidden = shown.length === 0;
+    empty.hidden = shown.length !== 0;
+    meta.textContent = shown.length + ' of ' + items.length + ' ' +
+      (items.length === 1 ? 'app' : 'apps') + ' shown';
+  }
+
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      var id = c.getAttribute('data-cat');
+      if (id) { if (active[id]) delete active[id]; else active[id] = true; }
+      else active = {};
+      var anyCat = Object.keys(active).length > 0;
+      chips.forEach(function (o) {
+        var oid = o.getAttribute('data-cat');
+        o.setAttribute('aria-pressed', String(oid ? !!active[oid] : !anyCat));
+      });
+      render();
+    });
+  });
+  search.addEventListener('input', render);
+  sort.addEventListener('change', render);
+  // A search typed before the script ran (or restored by the back button) still counts.
+  render();
+})();
+</script>
+<!-- HOME SCRIPT:END -->
 
 </body>
 </html>

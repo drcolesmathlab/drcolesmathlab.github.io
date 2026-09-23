@@ -11,14 +11,18 @@
  *
  *   <!-- META:START -->        canonical, OG and Twitter tags
  *   /* FONTS:START *\/         @font-face blocks with base64 data: URIs
- *   /* SITE CHROME:START *\/   the shared stylesheet
+ *   /* SITE CHROME:START *\/   the shared app-page stylesheet (dark)     (app pages)
  *   <!-- TOPBAR:START -->      "back to all apps" bar + "App 0N / NN"   (app pages)
  *   <!-- PAGENAV:START -->     the sticky in-page section nav            (app pages)
  *   <!-- PLAY:START -->        the iframe embed block                    (app pages)
  *   <!-- A11Y:START -->        the honest accessibility statement        (app pages)
+ *   /* HOME CHROME:START *\/   the home stylesheet, light/dark/auto      (home)
+ *   <!-- THEME TOGGLE:START --> the Light / Dark / Auto buttons          (home)
  *   <!-- APP GRID:START -->    the home page card grid                   (home)
+ *   <!-- CHIPS:START -->       the category filter chips + counts        (home)
  *   <!-- HERO FACTS:START -->  the home page fact pills                  (home)
  *   <!-- ABOUT:START -->       the home page about cards                 (home)
+ *   <!-- HOME SCRIPT:START --> search / filter / sort / theme            (home)
  *   <!-- FOOTER:START -->      pager, disclaimer, footer meta
  *
  * Everything outside the markers is hand-authored page content and is never touched.
@@ -38,6 +42,9 @@ const REPO = path.resolve(__dirname, '..');
 const config = require('./site.config.js');
 const chromeCss = require('./lib/chrome-css.js');
 const { icon } = require('./lib/icons.js');
+const { homeCss } = require('./lib/home-css.js');
+
+const catById = Object.fromEntries(config.categories.map((c) => [c.id, c]));
 
 /* ── assertion harness ─────────────────────────────────────────────────────── */
 
@@ -131,7 +138,12 @@ function buildMeta(page) {
   // bare form is what gets pasted into a post — and if og:url disagrees with the URL
   // someone shared, LinkedIn canonicalises to the og:url and the shared link shows the
   // uglier variant.
-  const url = page.kind === 'home' ? `${origin}/` : `${origin}/${page.file}`;
+  //
+  // App pages advertise the extensionless path. Cloudflare Pages 308-redirects
+  // /foo.html to /foo, so a canonical ending in .html would point at a redirect.
+  // GitHub Pages serves both forms, and in-page links keep .html so the site still
+  // works opened from disk.
+  const url = page.kind === 'home' ? `${origin}/` : `${origin}/${page.file.replace(/\.html$/, '')}`;
   const img = `${origin}/assets/og-${page.ogSlug}.png`;
   return [
     `<link rel="canonical" href="${url}">`,
@@ -148,7 +160,12 @@ function buildMeta(page) {
     `<meta name="twitter:title" content="${esc(page.title)}">`,
     `<meta name="twitter:description" content="${esc(page.description)}">`,
     `<meta name="twitter:image" content="${img}">`,
-    `<meta name="theme-color" content="${config.tokens['--bg']}">`,
+    ...(page.kind === 'home'
+      ? [
+          `<meta name="theme-color" media="(prefers-color-scheme: light)" content="${config.homeTokens.light['--bg']}">`,
+          `<meta name="theme-color" media="(prefers-color-scheme: dark)" content="${config.homeTokens.dark['--bg']}">`,
+        ]
+      : [`<meta name="theme-color" content="${config.tokens['--bg']}">`]),
   ].join('\n');
 }
 
@@ -167,36 +184,197 @@ function buildHeroFacts(published) {
     .join('\n');
 }
 
+/*
+ * The home card grid. Rendered in full here, so the page is complete with no JS and
+ * opened straight from disk; the HOME SCRIPT only filters and re-orders these nodes.
+ * The data-* attributes are the script's whole data source — there is no second copy.
+ */
 function buildAppGrid(apps) {
-  let n = 0;
   return apps
-    .map((a) => {
-      const style = `--cat:var(${a.category.token});--cat-soft:var(${a.category.token}2)`;
-      // Colour is never the only signal: every tile carries the category icon and the
+    .filter((a) => a.published)
+    .map((a, i) => {
+      const c = catById[a.category];
+      const search = [a.title, a.subtitle, a.blurb, c.label, ...a.tags].join(' ').toLowerCase();
+      const tags = [...(a.grade ? [a.grade] : []), ...a.tags];
+      // Colour is never the only signal: every card carries the category glyph and the
       // category name as text alongside the colour.
-      const head =
-        `  <div class="app-top">\n` +
-        `    <span class="app-icon">${icon(a.category.icon)}</span>\n` +
-        `    <span class="app-num">${a.published ? String(++n).padStart(2, '0') : '&mdash;'}</span>\n` +
-        `  </div>\n` +
-        `  <h3>${esc(a.title)}</h3>\n` +
-        `  <p class="app-sub">${esc(a.category.label)} &middot; ${esc(a.subtitle)}</p>\n` +
-        `  <p class="app-blurb">${esc(a.blurb)}</p>\n` +
-        `  <ul class="app-tags">${a.tags.map((t) => `<li class="app-tag">${esc(t)}</li>`).join('')}</ul>`;
-
-      if (!a.published) {
-        return (
-          `<li class="app pending" style="${style}">\n${head}\n` +
-          `  <p class="app-status">In progress</p>\n</li>`
-        );
-      }
       return (
-        `<li><a class="app" href="${a.slug}.html" style="${style}">\n${head}\n` +
-        `  <span class="app-open">Open ${esc(a.title)}${icon('arrowRight')}</span>\n` +
-        `</a></li>`
+        `<li data-cat="${c.id}" data-name="${esc(a.title)}" data-date="${esc(a.dateAdded)}" ` +
+        `data-order="${i}" data-search="${esc(search)}">\n` +
+        `<article class="card" style="--cat:var(--${c.id});--cat-soft:var(--${c.id}-soft)">\n` +
+        `  <div class="card-top">\n` +
+        `    <span class="glyph" aria-hidden="true">${esc(c.glyph)}</span>\n` +
+        `    <span class="idx" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>\n` +
+        `  </div>\n` +
+        `  <div>\n` +
+        `    <h3>${esc(a.title)}</h3>\n` +
+        `    <p class="card-kicker"><span class="cat">${esc(c.label)}</span> &middot; ${esc(a.subtitle)}</p>\n` +
+        `  </div>\n` +
+        `  <p class="card-desc">${esc(a.blurb)}</p>\n` +
+        `  <ul class="card-tags" aria-label="Topics">${tags.map((t) => `<li class="tag">${esc(t)}</li>`).join('')}</ul>\n` +
+        `  <a class="open-link" href="${a.slug}.html">Open ${esc(a.title)}${icon('arrowRight')}</a>\n` +
+        `</article>\n</li>`
       );
     })
     .join('\n');
+}
+
+/* Filter chips. Categories with no published app are left out entirely — a chip that
+ * can only ever produce "no results" is noise. */
+function buildChips(published) {
+  const counts = {};
+  for (const a of published) counts[a.category] = (counts[a.category] || 0) + 1;
+  const check = `<span class="chip-check" aria-hidden="true">✓</span>`;
+  const chips = [
+    `<button class="chip" type="button" data-all aria-pressed="true">${check}All ${esc(config.site.nounPlural)}` +
+      `<span class="count">${published.length}</span></button>`,
+  ];
+  for (const c of config.categories) {
+    if (!counts[c.id]) continue;
+    chips.push(
+      `<button class="chip" type="button" data-cat="${c.id}" data-label="${esc(c.label)}" aria-pressed="false" ` +
+        `style="--cat:var(--${c.id});--cat-soft:var(--${c.id}-soft)">${check}` +
+        `<span class="chip-glyph" aria-hidden="true">${esc(c.glyph)}</span>${esc(c.label)}` +
+        `<span class="count"><span class="sr-only">, </span>${counts[c.id]}` +
+        `<span class="sr-only"> ${plural(counts[c.id], config.site.noun, config.site.nounPlural).toLowerCase()}</span></span></button>`
+    );
+  }
+  return chips.join('\n');
+}
+
+function buildThemeToggle() {
+  const opts = [
+    ['light', 'sun', 'Light'],
+    ['dark', 'moon', 'Dark'],
+    ['auto', 'monitor', 'Auto'],
+  ];
+  return opts
+    .map(
+      ([v, ic, label]) =>
+        `<button type="button" data-theme-choice="${v}" aria-pressed="${v === 'auto'}">${icon(ic)}<span>${label}</span></button>`
+    )
+    .join('\n');
+}
+
+/*
+ * Runs in <head> before first paint so an explicit Light/Dark choice never flashes
+ * the other theme. Also swaps the no-js class, which hides the filter controls for
+ * readers without JavaScript (they would do nothing).
+ */
+const THEME_KEY = 'mathlab.home.theme';
+function buildThemeBoot() {
+  return `<script>
+(function () {
+  var d = document.documentElement;
+  d.className = d.className.replace(/\\bno-js\\b/, 'js');
+  try {
+    var t = localStorage.getItem('${THEME_KEY}');
+    if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>`;
+}
+
+/*
+ * Search, filter, sort and the theme toggle. Progressive enhancement throughout:
+ * without it the page still lists every app in config order.
+ */
+function buildHomeScript() {
+  const noun = config.site.noun.toLowerCase();
+  const nouns = config.site.nounPlural.toLowerCase();
+  return `<script>
+(function () {
+  'use strict';
+  var KEY = '${THEME_KEY}';
+  var root = document.documentElement;
+
+  /* ── theme ── */
+  var themeBtns = document.querySelectorAll('[data-theme-choice]');
+  function applyTheme(pref, save) {
+    if (pref === 'light' || pref === 'dark') root.setAttribute('data-theme', pref);
+    else { pref = 'auto'; root.removeAttribute('data-theme'); }
+    for (var i = 0; i < themeBtns.length; i++) {
+      themeBtns[i].setAttribute('aria-pressed', String(themeBtns[i].getAttribute('data-theme-choice') === pref));
+    }
+    if (save) { try { localStorage.setItem(KEY, pref); } catch (e) {} }
+  }
+  applyTheme(root.getAttribute('data-theme') || 'auto', false);
+  for (var i = 0; i < themeBtns.length; i++) {
+    themeBtns[i].addEventListener('click', function () {
+      applyTheme(this.getAttribute('data-theme-choice'), true);
+    });
+  }
+
+  /* ── library ── */
+  var grid = document.getElementById('grid');
+  if (!grid) return;
+  var items = Array.prototype.slice.call(grid.children);
+  var search = document.getElementById('search');
+  var sort = document.getElementById('sort');
+  var chips = Array.prototype.slice.call(document.querySelectorAll('#chips .chip'));
+  var meta = document.getElementById('result-meta');
+  var empty = document.getElementById('empty');
+  var active = {};
+  var labels = {};
+  chips.forEach(function (c) {
+    var id = c.getAttribute('data-cat');
+    if (id) labels[id] = c.getAttribute('data-label');
+  });
+
+  function catLabel(li) { return labels[li.getAttribute('data-cat')] || ''; }
+  var comparators = {
+    newest: function (a, b) {
+      var d = b.getAttribute('data-date').localeCompare(a.getAttribute('data-date'));
+      return d || a.getAttribute('data-order') - b.getAttribute('data-order');
+    },
+    az: function (a, b) { return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name')); },
+    category: function (a, b) {
+      return catLabel(a).localeCompare(catLabel(b)) || comparators.az(a, b);
+    }
+  };
+
+  function render() {
+    var q = search.value.trim().toLowerCase();
+    var anyCat = Object.keys(active).length > 0;
+    var shown = items.filter(function (li) {
+      var okQ = !q || li.getAttribute('data-search').indexOf(q) > -1;
+      var okC = !anyCat || active[li.getAttribute('data-cat')];
+      return okQ && okC;
+    });
+    shown.sort(comparators[sort.value] || comparators.newest);
+
+    items.forEach(function (li) { li.hidden = true; });
+    shown.forEach(function (li, i) {
+      li.hidden = false;
+      li.querySelector('.idx').textContent = (i < 9 ? '0' : '') + (i + 1);
+      grid.appendChild(li);
+    });
+
+    grid.hidden = shown.length === 0;
+    empty.hidden = shown.length !== 0;
+    meta.textContent = shown.length + ' of ' + items.length + ' ' +
+      (items.length === 1 ? '${noun}' : '${nouns}') + ' shown';
+  }
+
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      var id = c.getAttribute('data-cat');
+      if (id) { if (active[id]) delete active[id]; else active[id] = true; }
+      else active = {};
+      var anyCat = Object.keys(active).length > 0;
+      chips.forEach(function (o) {
+        var oid = o.getAttribute('data-cat');
+        o.setAttribute('aria-pressed', String(oid ? !!active[oid] : !anyCat));
+      });
+      render();
+    });
+  });
+  search.addEventListener('input', render);
+  sort.addEventListener('change', render);
+  // A search typed before the script ran (or restored by the back button) still counts.
+  render();
+})();
+</script>`;
 }
 
 function buildAbout() {
@@ -431,13 +609,20 @@ function main() {
 
   /* -- config sanity, before touching any file ----------------------------- */
   const slugs = new Set();
-  const tokens = new Set();
   const storage = new Map();
+  for (const theme of ['light', 'dark']) {
+    const seen = new Map();
+    for (const c of config.categories) {
+      const col = c[theme].color.toLowerCase();
+      must(!seen.has(col), `categories ${seen.get(col)} and ${c.id} share the ${theme} colour ${col} — colour must stay a unique per-category signal`, 'config');
+      seen.set(col, c.id);
+    }
+  }
   for (const a of config.apps) {
     must(!slugs.has(a.slug), `duplicate slug "${a.slug}"`, 'config');
     slugs.add(a.slug);
-    must(!tokens.has(a.category.token), `two apps share category colour ${a.category.token} — colour must stay a unique per-category signal`, 'config');
-    tokens.add(a.category.token);
+    must(!!catById[a.category], `${a.slug}: category "${a.category}" is not in config.categories`, 'config');
+    must(/^\d{4}-\d{2}-\d{2}$/.test(a.dateAdded || ''), `${a.slug}: dateAdded must be YYYY-MM-DD`, 'config');
     for (const k of a.storageKeys) {
       must(
         !storage.has(k),
@@ -475,6 +660,7 @@ function main() {
 
   const fonts = buildFontCss();
   const css = chromeCss(config);
+  const hcss = homeCss(config);
 
   /* -- the page list ------------------------------------------------------- */
   const pages = [
@@ -517,14 +703,22 @@ function main() {
 
     apply('META', buildMeta(page), 'html', true);
     apply('FONTS', fonts.css, 'css', true);
-    apply('SITE CHROME', css, 'css', true);
     apply('FOOTER', buildFooter(page, published), 'html', true);
 
     if (page.kind === 'home') {
+      // The home page has its own light/dark sheet; SITE CHROME is the dark-only
+      // app-page sheet and must not leak onto it.
+      must(!html.includes('/* SITE CHROME:START */'), 'home must not carry SITE CHROME markers', where);
+      apply('HOME CHROME', hcss, 'css', true);
+      apply('THEME BOOT', buildThemeBoot(), 'html', true);
+      apply('THEME TOGGLE', buildThemeToggle(), 'html', true);
       apply('HERO FACTS', buildHeroFacts(published), 'html', true);
+      apply('CHIPS', buildChips(published), 'html', true);
       apply('APP GRID', buildAppGrid(config.apps), 'html', true);
       apply('ABOUT', buildAbout(), 'html', true);
+      apply('HOME SCRIPT', buildHomeScript(), 'html', true);
     } else {
+      apply('SITE CHROME', css, 'css', true);
       apply('TOPBAR', buildTopbar(page.app, page.index, published.length), 'html', true);
       apply('PAGENAV', buildPageNav(page.app), 'html', true);
       apply('PLAY', buildPlay(page.app), 'html', true);
@@ -535,7 +729,7 @@ function main() {
     /* -- structural assertions on the finished page ----------------------- */
     const h1s = (html.match(/<h1[\s>]/g) || []).length;
     must(h1s === 1, `expected exactly one <h1>, found ${h1s}`, where);
-    must(/<html lang="en">/.test(html), 'missing <html lang="en">', where);
+    must(/<html lang="en"[\s>]/.test(html), 'missing <html lang="en">', where);
     must(/class="skip-link"/.test(html), 'missing the skip link', where);
     must(/<main[\s>]/.test(html), 'missing <main> landmark', where);
     must(/id="main"/.test(html), 'missing id="main" for the skip link target', where);
