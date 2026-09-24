@@ -70,9 +70,20 @@ module.exports = {
   ],
 
   /*
-   * Design tokens. Carried verbatim from Dr. Cole's Transform Lab except --mu, which
+   * App-page design tokens, dark and light. The app pages share the home page's
+   * Light / Dark / Auto choice (one localStorage key, applied before first paint).
+   *
+   * Dark is carried verbatim from Dr. Cole's Transform Lab except --mu, which
    * measured 4.40:1 on --bg and failed WCAG AA for normal text. See README for the
    * full measured contrast table.
+   *
+   * Light keeps the same roles. The neon accents all fail on a light page, so each
+   * is darkened until it clears 4.5:1 as text on --bg and --sf; the neutrals match
+   * the home page's light palette. tools/check-contrast.js measures both sets.
+   *
+   * --frame-bg is the letterbox behind the embedded app. It stays dark in both
+   * themes: the apps themselves are dark-only, and a light box around a dark app
+   * would show as a bright seam while it loads or doesn't fill the frame.
    */
   tokens: {
     '--bg': '#050610',
@@ -87,6 +98,36 @@ module.exports = {
     '--pre': '#ffffff',
     '--tx': '#eef2ff',
     '--mu': '#7a83a8',
+    '--on-tc': '#04202b',
+    '--kbd-border': '#26243f',
+    '--topbar-bg': 'rgba(5,6,16,.6)',
+    '--nav-bg': 'rgba(5,6,16,.94)',
+    '--scan': 'rgba(0,0,0,.05)',
+    '--glow': 'rgba(255,255,255,.045)',
+    '--shadow': '#000',
+    '--frame-bg': '#050610',
+  },
+  tokensLight: {
+    '--bg': '#f7f8fa',
+    '--sf': '#ffffff',
+    '--sf2': '#e8ebf1',
+    '--tc': '#0b6680', '--tc2': 'rgba(11,102,128,.1)',
+    '--rc': '#047857', '--rc2': 'rgba(4,120,87,.1)',
+    '--oc': '#b45309', '--oc2': 'rgba(180,83,9,.1)',
+    '--dc': '#be123c', '--dc2': 'rgba(190,18,60,.1)',
+    '--ax': '#6d28d9', '--ax2': 'rgba(109,40,217,.1)',
+    '--or': '#c2410c', '--or2': 'rgba(194,65,12,.1)',
+    '--pre': '#0b0d14',
+    '--tx': '#1f2330',
+    '--mu': '#4b5165',
+    '--on-tc': '#ffffff',
+    '--kbd-border': '#c9cedb',
+    '--topbar-bg': 'rgba(255,255,255,.7)',
+    '--nav-bg': 'rgba(247,248,250,.94)',
+    '--scan': 'transparent',
+    '--glow': 'transparent',
+    '--shadow': 'rgba(20,23,31,.45)',
+    '--frame-bg': '#050610',
   },
 
   /*

@@ -11,8 +11,9 @@
  *
  *   <!-- META:START -->        canonical, OG and Twitter tags
  *   /* FONTS:START *\/         @font-face blocks with base64 data: URIs
- *   /* SITE CHROME:START *\/   the shared app-page stylesheet (dark)     (app pages)
- *   <!-- TOPBAR:START -->      "back to all apps" bar + "App 0N / NN"   (app pages)
+ *   <!-- THEME BOOT:START -->  pre-paint theme + toggle wiring           (every page)
+ *   /* SITE CHROME:START *\/   the app-page stylesheet, light/dark/auto  (app pages)
+ *   <!-- TOPBAR:START -->      back link, "App 0N / NN", theme toggle   (app pages)
  *   <!-- PAGENAV:START -->     the sticky in-page section nav            (app pages)
  *   <!-- PLAY:START -->        the iframe embed block                    (app pages)
  *   <!-- A11Y:START -->        the honest accessibility statement        (app pages)
@@ -22,7 +23,7 @@
  *   <!-- CHIPS:START -->       the category filter chips + counts        (home)
  *   <!-- HERO FACTS:START -->  the home page fact pills                  (home)
  *   <!-- ABOUT:START -->       the home page about cards                 (home)
- *   <!-- HOME SCRIPT:START --> search / filter / sort / theme            (home)
+ *   <!-- HOME SCRIPT:START --> search / filter / sort                    (home)
  *   <!-- FOOTER:START -->      pager, disclaimer, footer meta
  *
  * Everything outside the markers is hand-authored page content and is never touched.
@@ -159,12 +160,15 @@ function buildMeta(page) {
     `<meta name="twitter:title" content="${esc(page.title)}">`,
     `<meta name="twitter:description" content="${esc(page.description)}">`,
     `<meta name="twitter:image" content="${img}">`,
-    ...(page.kind === 'home'
-      ? [
-          `<meta name="theme-color" media="(prefers-color-scheme: light)" content="${config.homeTokens.light['--bg']}">`,
-          `<meta name="theme-color" media="(prefers-color-scheme: dark)" content="${config.homeTokens.dark['--bg']}">`,
-        ]
-      : [`<meta name="theme-color" content="${config.tokens['--bg']}">`]),
+    ...(() => {
+      const [l, d] = page.kind === 'home'
+        ? [config.homeTokens.light['--bg'], config.homeTokens.dark['--bg']]
+        : [config.tokensLight['--bg'], config.tokens['--bg']];
+      return [
+        `<meta name="theme-color" media="(prefers-color-scheme: light)" content="${l}">`,
+        `<meta name="theme-color" media="(prefers-color-scheme: dark)" content="${d}">`,
+      ];
+    })(),
   ].join('\n');
 }
 
@@ -256,27 +260,64 @@ function buildThemeToggle() {
 }
 
 /*
- * Runs in <head> before first paint so an explicit Light/Dark choice never flashes
- * the other theme. Also swaps the no-js class, which hides the filter controls for
- * readers without JavaScript (they would do nothing).
+ * The site-wide theme script, identical on every page. It runs in <head> before first
+ * paint so an explicit Light/Dark choice never flashes the other theme, then wires up
+ * whatever [data-theme-choice] buttons the page has once the DOM is ready. One key for
+ * the whole site, so a choice made on any page holds on every page; the `storage`
+ * event keeps other open tabs in step.
+ *
+ * LEGACY_THEME_KEY is the key the home page used when it was the only themed page.
+ * It is read as a fallback and removed on the next save, so nobody's choice is lost.
+ *
+ * Also swaps the no-js class, which hides the home filter controls for readers without
+ * JavaScript (they would do nothing), and un-hides the app-page toggle, which is
+ * rendered hidden for the same reason.
  */
-const THEME_KEY = 'mathlab.home.theme';
+const THEME_KEY = 'mathlab.theme';
+const LEGACY_THEME_KEY = 'mathlab.home.theme';
 function buildThemeBoot() {
   return `<script>
 (function () {
   var d = document.documentElement;
+  var KEY = '${THEME_KEY}', OLD = '${LEGACY_THEME_KEY}';
   d.className = d.className.replace(/\\bno-js\\b/, 'js');
-  try {
-    var t = localStorage.getItem('${THEME_KEY}');
-    if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
-  } catch (e) {}
+
+  function read() {
+    try { return localStorage.getItem(KEY) || localStorage.getItem(OLD) || 'auto'; }
+    catch (e) { return 'auto'; }
+  }
+  function apply(pref, save) {
+    if (pref === 'light' || pref === 'dark') d.setAttribute('data-theme', pref);
+    else { pref = 'auto'; d.removeAttribute('data-theme'); }
+    var btns = document.querySelectorAll('[data-theme-choice]');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute('aria-pressed', String(btns[i].getAttribute('data-theme-choice') === pref));
+    }
+    if (save) {
+      try { localStorage.setItem(KEY, pref); localStorage.removeItem(OLD); } catch (e) {}
+    }
+  }
+  apply(read(), false);
+
+  document.addEventListener('DOMContentLoaded', function () {
+    apply(read(), false);
+    var groups = document.querySelectorAll('.theme-toggle[hidden]');
+    for (var i = 0; i < groups.length; i++) groups[i].hidden = false;
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-theme-choice]');
+      if (b) apply(b.getAttribute('data-theme-choice'), true);
+    });
+  });
+  window.addEventListener('storage', function (e) {
+    if (e.key === KEY) apply(e.newValue || 'auto', false);
+  });
 })();
 </script>`;
 }
 
 /*
- * Search, filter, sort and the theme toggle. Progressive enhancement throughout:
- * without it the page still lists every app in config order.
+ * Search, filter and sort. Progressive enhancement throughout: without it the page
+ * still lists every app in config order. The theme toggle is wired by THEME BOOT.
  */
 function buildHomeScript() {
   const noun = config.site.noun.toLowerCase();
@@ -284,25 +325,6 @@ function buildHomeScript() {
   return `<script>
 (function () {
   'use strict';
-  var KEY = '${THEME_KEY}';
-  var root = document.documentElement;
-
-  /* ── theme ── */
-  var themeBtns = document.querySelectorAll('[data-theme-choice]');
-  function applyTheme(pref, save) {
-    if (pref === 'light' || pref === 'dark') root.setAttribute('data-theme', pref);
-    else { pref = 'auto'; root.removeAttribute('data-theme'); }
-    for (var i = 0; i < themeBtns.length; i++) {
-      themeBtns[i].setAttribute('aria-pressed', String(themeBtns[i].getAttribute('data-theme-choice') === pref));
-    }
-    if (save) { try { localStorage.setItem(KEY, pref); } catch (e) {} }
-  }
-  applyTheme(root.getAttribute('data-theme') || 'auto', false);
-  for (var i = 0; i < themeBtns.length; i++) {
-    themeBtns[i].addEventListener('click', function () {
-      applyTheme(this.getAttribute('data-theme-choice'), true);
-    });
-  }
 
   /* ── library ── */
   var grid = document.getElementById('grid');
@@ -394,7 +416,12 @@ function buildTopbar(app, index, total) {
   return (
     `<div class="wrap">\n` +
     `  <a href="index.html">${icon('arrowLeft')}<span>All ${esc(config.site.nounPlural)}</span></a>\n` +
-    `  <span class="crumb-meta">${esc(config.site.noun)} ${num} / ${String(total).padStart(2, '0')}</span>\n` +
+    `  <div class="topbar-end">\n` +
+    `    <span class="crumb-meta">${esc(config.site.noun)} ${num} / ${String(total).padStart(2, '0')}</span>\n` +
+    `    <div class="theme-toggle" role="group" aria-label="Colour theme" hidden>\n` +
+    buildThemeToggle().replace(/^/gm, '      ') + `\n` +
+    `    </div>\n` +
+    `  </div>\n` +
     `</div>`
   );
 }
@@ -608,7 +635,8 @@ function main() {
 
   /* -- config sanity, before touching any file ----------------------------- */
   const slugs = new Set();
-  const storage = new Map();
+  // The site-wide theme keys live in the same shared storage area as the apps' keys.
+  const storage = new Map([[THEME_KEY, 'the site theme'], [LEGACY_THEME_KEY, 'the site theme']]);
   for (const theme of ['light', 'dark']) {
     const seen = new Map();
     for (const c of config.categories) {
@@ -703,13 +731,13 @@ function main() {
     apply('META', buildMeta(page), 'html', true);
     apply('FONTS', fonts.css, 'css', true);
     apply('FOOTER', buildFooter(page, published), 'html', true);
+    apply('THEME BOOT', buildThemeBoot(), 'html', true);
 
     if (page.kind === 'home') {
-      // The home page has its own light/dark sheet; SITE CHROME is the dark-only
-      // app-page sheet and must not leak onto it.
+      // The home page has its own sheet; SITE CHROME is the app-page sheet and must
+      // not leak onto it.
       must(!html.includes('/* SITE CHROME:START */'), 'home must not carry SITE CHROME markers', where);
       apply('HOME CHROME', hcss, 'css', true);
-      apply('THEME BOOT', buildThemeBoot(), 'html', true);
       apply('THEME TOGGLE', buildThemeToggle(), 'html', true);
       apply('HERO FACTS', buildHeroFacts(published), 'html', true);
       apply('CHIPS', buildChips(published), 'html', true);

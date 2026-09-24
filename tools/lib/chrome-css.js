@@ -1,19 +1,40 @@
 /*
- * chrome-css.js — the shared site chrome stylesheet.
+ * chrome-css.js — the shared app-page stylesheet (light / dark / auto).
  *
  * Every page carries its own inline copy of this (spec §1: no external stylesheets),
  * so this file is the one source of truth and tools/apply-site-chrome.js injects it
  * between the SITE CHROME markers in each page's <style> block.
+ *
+ * Theme resolution matches the home page (home-css.js), so one choice covers the site:
+ *   <html data-theme="light|dark">   explicit choice from the toggle (persisted)
+ *   prefers-color-scheme             "Auto" — no attribute, follows the OS live
+ *   light                            the fallback with no media-query support
+ *
+ * Only the page around the iframe changes. The embedded apps are dark-only, so the
+ * frame's letterbox (--frame-bg) stays dark in both themes.
  *
  * Do not hand-edit the copies inside the .html files — they are overwritten.
  */
 
 'use strict';
 
+const { WORDMARK } = require('./home-css.js');
+
+function themeBlock(config, theme) {
+  const tokens = theme === 'light' ? config.tokensLight : config.tokens;
+  const [a, b, c] = WORDMARK[theme].stops;
+  return [
+    ...Object.entries(tokens).map(([k, v]) => `  ${k}:${v};`),
+    `  --wm:linear-gradient(90deg,${a},${b} 45%,${c});`,
+    `  --wm-icon:linear-gradient(135deg,${a},${c});`,
+    `  --wm-glow:${a};`,
+    `  color-scheme:${theme};`,
+  ].join('\n');
+}
+
 module.exports = function chromeCss(config) {
-  const tokenLines = Object.entries(config.tokens)
-    .map(([k, v]) => `  ${k}:${v};`)
-    .join('\n');
+  const light = themeBlock(config, 'light');
+  const dark = themeBlock(config, 'dark');
 
   // One rule per app so each iframe gets a box sized to how that app actually behaves.
   const frameRules = config.apps
@@ -35,9 +56,20 @@ module.exports = function chromeCss(config) {
    #6b7498, which measures 4.40:1 on --bg and 4.23:1 on --sf — below the 4.5:1
    WCAG AA floor for normal text, and it carries subtitles, card copy, tags and
    footer meta. #7a83a8 measures 5.42:1 / 5.22:1. Full table in README.md.
+   The light set is measured by tools/check-contrast.js.
    ═══════════════════════════════════════════════════════════════════════════ */
 :root{
-${tokenLines}
+${light}
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+${dark.replace(/^/gm, '  ')}
+  }
+}
+:root[data-theme="dark"]{
+${dark}
+}
+:root{
   --maxw:1080px;
   --scroll-offset:60px;   /* shared by the sticky nav's top and every section's
                              scroll-margin-top, so an anchor jump lands where the
@@ -56,9 +88,9 @@ body{
 /* Brand atmosphere: scanline stripes + a soft vignette. Decorative and
    pointer-transparent, sitting behind everything via z-index. */
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent 3px)}
+  background-image:repeating-linear-gradient(0deg,var(--scan) 0,var(--scan) 1px,transparent 1px,transparent 3px)}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse at 50% 8%,rgba(255,255,255,.045) 0,transparent 55%)}
+  background:radial-gradient(ellipse at 50% 8%,var(--glow) 0,transparent 55%)}
 
 .wrap{position:relative;z-index:1;width:100%;max-width:var(--maxw);margin:0 auto;padding:0 22px}
 
@@ -69,7 +101,7 @@ p{color:var(--tx)}
 a{color:var(--tc)}
 strong{color:var(--pre);font-weight:800}
 code,kbd,.mono{font-family:'Space Mono','SF Mono',Consolas,monospace}
-kbd{background:var(--sf2);border:1px solid #26243f;border-radius:5px;
+kbd{background:var(--sf2);border:1px solid var(--kbd-border);border-radius:5px;
   padding:1px 6px;font-size:.82em;color:var(--pre);white-space:nowrap}
 
 /* ── Accessibility utilities ─────────────────────────────────────────────── */
@@ -84,7 +116,7 @@ kbd{background:var(--sf2);border:1px solid #26243f;border-radius:5px;
 /* The skip link is the first focusable element on every page. It is off-screen
    until focused, then becomes a solid chip in the top-left. */
 .skip-link{position:absolute;left:12px;top:-100px;z-index:100;
-  background:var(--tc);color:#04202b;font-weight:900;padding:12px 18px;
+  background:var(--tc);color:var(--on-tc);font-weight:900;padding:12px 18px;
   border-radius:0 0 10px 10px;text-decoration:none;transition:top .15s}
 .skip-link:focus{top:0}
 
@@ -93,7 +125,7 @@ kbd{background:var(--sf2);border:1px solid #26243f;border-radius:5px;
 /* ── Top bar (app pages only) ────────────────────────────────────────────── */
 /* Deliberately NOT sticky. The in-page nav below owns position:sticky, so there
    is exactly one sticky element and the --scroll-offset math stays honest. */
-.topbar{border-bottom:1px solid var(--sf2);background:rgba(5,6,16,.6)}
+.topbar{border-bottom:1px solid var(--sf2);background:var(--topbar-bg)}
 .topbar .wrap{display:flex;align-items:center;justify-content:space-between;
   gap:14px;min-height:52px;flex-wrap:wrap}
 .topbar a{display:inline-flex;align-items:center;gap:7px;color:var(--mu);
@@ -103,19 +135,33 @@ kbd{background:var(--sf2);border:1px solid #26243f;border-radius:5px;
 .topbar a:hover{color:var(--tc)}
 .topbar .crumb-meta{color:var(--mu);font-size:.78rem;font-weight:700;
   font-family:'Space Mono','SF Mono',Consolas,monospace;letter-spacing:.3px}
+.topbar-end{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+
+/* Light / Dark / Auto — same buttons and storage key as the home page. Rendered
+   hidden and revealed by the THEME BOOT script, so it never shows without JS. */
+.theme-toggle{display:flex;border:1px solid var(--sf2);border-radius:10px;overflow:hidden}
+.theme-toggle[hidden]{display:none}
+.theme-toggle button{display:flex;align-items:center;gap:6px;min-height:44px;
+  background:var(--sf);color:var(--mu);border:0;border-inline-end:1px solid var(--sf2);
+  padding:0 12px;font:inherit;font-size:.8rem;font-weight:800;cursor:pointer}
+.theme-toggle button:last-child{border-inline-end:0}
+.theme-toggle button:hover{color:var(--tx)}
+.theme-toggle button[aria-pressed="true"]{background:var(--tc);color:var(--on-tc)}
+.theme-toggle button:focus-visible{outline-offset:-4px}
+.theme-toggle .ico{width:15px;height:15px}
 
 /* ── Header / wordmark ───────────────────────────────────────────────────── */
 header.site{text-align:center;padding:26px 0 20px}
 .logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;justify-content:center}
 .logo-pre,.logo h1,.logo .wordmark{
   font-size:clamp(1.8rem,5vw,2.6rem);font-weight:900;letter-spacing:-1px;line-height:1.1;
-  background:linear-gradient(90deg,#00d4ff,#00ff7f 45%,#ff3355);
+  background:var(--wm);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
 .logo-icon{width:36px;height:36px;flex:0 0 36px;
-  background:linear-gradient(135deg,#00d4ff,#ff3355);
+  background:var(--wm-icon);
   clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px #00d4ff)}
+  animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px var(--wm-glow))}
 @keyframes spin{to{transform:rotate(360deg)}}
 .subtitle{color:var(--mu);font-size:.92rem;font-weight:700;margin-top:6px}
 
@@ -133,7 +179,7 @@ section{scroll-margin-top:calc(var(--scroll-offset) + 14px);padding:34px 0 6px}
 section > h2 + .section-lead{margin-top:8px}
 
 /* ── In-page nav (app pages) ─────────────────────────────────────────────── */
-.page-nav{position:sticky;top:0;z-index:20;background:rgba(5,6,16,.94);
+.page-nav{position:sticky;top:0;z-index:20;background:var(--nav-bg);
   backdrop-filter:blur(8px);border-bottom:1px solid var(--sf2);margin-bottom:6px}
 .page-nav ul{display:flex;gap:4px;list-style:none;overflow-x:auto;
   scrollbar-width:none;min-height:var(--scroll-offset);align-items:center}
@@ -211,12 +257,12 @@ a.app:hover .app-open .ico{transform:translateX(4px)}
 /* :focus, not :focus-visible — a skip link should show whenever it holds focus,
    including when focus was moved programmatically. min-height keeps it at the 44px
    target size; padding alone lands at 43.8px. */
-.skip-embed:focus{position:static;left:auto;background:var(--tc);color:#04202b;
+.skip-embed:focus{position:static;left:auto;background:var(--tc);color:var(--on-tc);
   padding:11px 16px;min-height:44px;border-radius:9px;margin:10px 0 0}
 
 .play-frame{position:relative;margin:16px 0 12px;border:1px solid var(--sf2);
-  border-radius:14px;overflow:hidden;background:var(--bg);
-  box-shadow:0 20px 50px -30px #000}
+  border-radius:14px;overflow:hidden;background:var(--frame-bg);
+  box-shadow:0 20px 50px -30px var(--shadow)}
 .play-embed{display:block;width:100%;height:100%;border:0}
 ${frameRules}
 
@@ -260,6 +306,20 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
   .about-grid{grid-template-columns:1fr}
   .pager .next{text-align:left}
   .pager .next .dir{justify-content:flex-start}
+}
+/* At phone width the back link, counter and three labelled buttons don't fit on one
+   row. The labels become screen-reader-only; the icons carry the choice visually and
+   each button keeps its text name. */
+@media (max-width:480px){
+  .theme-toggle button{padding:0 11px}
+  .theme-toggle button span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+}
+
+/* Windows High Contrast / forced colours drops background images, which would leave
+   the gradient wordmark as transparent text. */
+@media (forced-colors:active){
+  .logo-pre,.logo h1,.logo .wordmark{background:none;-webkit-text-fill-color:CanvasText;color:CanvasText}
 }
 
 /* ── Reduced motion ──────────────────────────────────────────────────────── */

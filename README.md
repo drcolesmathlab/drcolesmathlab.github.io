@@ -34,8 +34,8 @@ assets/og-<slug>.png        1200x630 social preview cards
 tools/site.config.js        SINGLE SOURCE OF TRUTH — read this first
 tools/apply-site-chrome.js  regenerates every shared region of every page
 tools/lib/home-css.js       the home page stylesheet (light / dark / auto)
-tools/lib/chrome-css.js     the app-page stylesheet (dark only)
-tools/check-contrast.js     measures every home colour pair against WCAG AA
+tools/lib/chrome-css.js     the app-page stylesheet (light / dark / auto)
+tools/check-contrast.js     measures every home and app-page colour pair against WCAG AA
 tools/build-transform-lab.js  vendors Transform Lab (ES modules → one classic script)
 tools/vendor-tiger-trail.js   vendors Tiger Trail (copy + five documented patches)
 tools/vendor-balancing-act.js vendors Balancing Act (copies six files BY NAME — see below)
@@ -89,10 +89,11 @@ lost.** Everything outside is hand-authored and never touched.
 | `META` | every page | canonical, OG, Twitter, theme-color |
 | `FONTS` | every page + payload CSS | `@font-face` blocks, base64 |
 | `CACHE NAME` | payload `sw.js` | service-worker cache version, hashed from the payload |
-| `SITE CHROME` | app pages | the dark app-page stylesheet |
-| `HOME CHROME`, `THEME BOOT`, `THEME TOGGLE` | home | light/dark/auto stylesheet, pre-paint theme script, toggle buttons |
+| `THEME BOOT` | every page | pre-paint theme script + toggle wiring (one copy, shared) |
+| `SITE CHROME` | app pages | the light/dark/auto app-page stylesheet |
+| `HOME CHROME`, `THEME TOGGLE` | home | light/dark/auto stylesheet, toggle buttons |
 | `HERO FACTS`, `CHIPS`, `APP GRID`, `ABOUT`, `HOME SCRIPT` | home | fact pills, filter chips, cards, about cards, search/filter/sort script |
-| `TOPBAR`, `PAGENAV`, `PLAY`, `A11Y`, `SCROLLSPY` | app pages | chrome + embed + a11y statement |
+| `TOPBAR`, `PAGENAV`, `PLAY`, `A11Y`, `SCROLLSPY` | app pages | chrome (incl. theme toggle) + embed + a11y statement |
 | `FOOTER` | every page | pager, disclaimer, footer meta |
 
 The generator is idempotent — run it twice, get no diff. That property is worth
@@ -207,13 +208,22 @@ Cheap, attribute-only improvements *were* made to the vendored app: `tabindex="0
 `role="img"` and a descriptive `aria-label` on each of the six canvases, a
 reduced-motion guard, and a visible note about what needs a pointer.
 
-**The home page has a Light / Dark / Auto toggle; app pages are dark only.** The home
-page has no iframe, so it gets a real theme toggle: the choice is saved in
-`localStorage` (`mathlab.home.theme`), a tiny script in `<head>` applies it before first
-paint so it never flashes, and Auto follows `prefers-color-scheme` live. The app pages
-stay dark on purpose. A theme toggle there would flip the page around a permanently dark
-app frame, which would look broken and help nobody. A real one means editing each app's
-CSS, which is a different project.
+**Every page has the same Light / Dark / Auto toggle, and one choice covers the whole
+site.** The home page has it in its header; each app page has it in the top bar. The
+choice is saved in `localStorage` under `mathlab.theme`, a tiny script in `<head>` (the
+`THEME BOOT` region, identical on every page) applies it before first paint so it never
+flashes, Auto follows `prefers-color-scheme` live, and a change in one tab is picked up
+by the site's other open tabs. The old home-only key, `mathlab.home.theme`, is still read
+as a fallback and removed on the next save, so an existing choice carries over. Without
+JavaScript the app-page toggle is hidden (it would do nothing) and the page follows the
+OS theme.
+
+**Only the page around the app changes; the embedded apps stay dark.** Each app is its
+own document with its own dark design, and theming them means editing each app's CSS —
+a separate project. The frame's letterbox (`--frame-bg`) is kept dark in both themes so
+a light page never shows a bright seam around a dark app. The light app-page palette is
+in `tokensLight` in `tools/site.config.js`; every neon accent is darkened there until it
+clears 4.5:1 on the light surfaces, and `node tools/check-contrast.js` measures it.
 
 The home page also has search (across name, subtitle, description, category and topic
 tags), multi-select category chips with per-category counts, and a Newest / A→Z /
@@ -222,7 +232,7 @@ enhancement: with JavaScript off, every card still renders and the controls are 
 Chips for categories with no apps are not rendered.
 
 The home palette comes from the design mockup, checked by `node tools/check-contrast.js`
-(66 pairs, both themes). Three mockup values failed AA and were changed: `--text-faint`
+(114 pairs across home and app pages, both themes). Three mockup values failed AA and were changed: `--text-faint`
 (light and dark, 4.20 and 4.40:1 on `--border-soft`) and the pressed-button text in dark
 mode (white on `#60A5FA` was 2.54:1, now `#060810`). The mockup's decorative grey
 (`#9AA0AF`, 2.6:1) is not used.
@@ -300,7 +310,7 @@ fallback font, so check the PNGs before committing them.
 node tools/apply-site-chrome.js   # regenerate; fails loudly on a structural problem
 node tools/apply-site-chrome.js   # run twice — the second run must produce no diff
 node tools/check-external.js      # must report zero external origins
-node tools/check-contrast.js      # every home colour pair, both themes, must pass AA
+node tools/check-contrast.js      # every home + app-page colour pair, both themes, must pass AA
 ```
 
 Then, manually:
@@ -312,8 +322,10 @@ Then, manually:
 - Tab through each page with the mouse unplugged: skip link first, skip-past-embed link
   before the frame, and confirm you can get back out of the frame.
 - Force `prefers-reduced-motion: reduce` — the logo must stop spinning.
-- Home page: try each theme button, reload (the choice must stick), then pick Auto and
-  flip the OS theme (the page must follow). Search "factors", toggle chips, change sort,
+- Theme: try each button on the home page and on an app page, reload (the choice must
+  stick), move between pages (it must carry over), then pick Auto and flip the OS theme
+  (the page must follow).
+- Home page: Search "factors", toggle chips, change sort,
   and check the "N of M apps shown" line updates. Turn JS off — all cards must still show.
 - Run axe DevTools or Lighthouse. Expect findings *inside* the iframe; record them in the
   `#limits` copy rather than hiding them.
