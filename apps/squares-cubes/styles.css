@@ -1,31 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transform Lab — Dr. Cole's Math Lab</title>
-
-<!-- META:START -->
-<link rel="canonical" href="https://drcolesmathlab.dr-stock-investing.workers.dev/transform-lab.html">
-<meta name="description" content="Drag shapes across a coordinate grid to explore translation, reflection, rotation and dilation. Playable in the browser, no sign-up.">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Dr. Cole's Math Lab">
-<meta property="og:url" content="https://drcolesmathlab.dr-stock-investing.workers.dev/transform-lab.html">
-<meta property="og:title" content="Transform Lab — Dr. Cole's Math Lab">
-<meta property="og:description" content="Drag shapes across a coordinate grid to explore translation, reflection, rotation and dilation. Playable in the browser, no sign-up.">
-<meta property="og:image" content="https://drcolesmathlab.dr-stock-investing.workers.dev/assets/og-transform-lab.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Transform Lab — Dr. Cole's Math Lab">
-<meta name="twitter:description" content="Drag shapes across a coordinate grid to explore translation, reflection, rotation and dilation. Playable in the browser, no sign-up.">
-<meta name="twitter:image" content="https://drcolesmathlab.dr-stock-investing.workers.dev/assets/og-transform-lab.png">
-<meta name="theme-color" content="#050610">
-<!-- META:END -->
-
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,4 100,40 82,100 18,100 0,40' fill='%2300d4ff'/></svg>">
-
-<style>
+/* ============================================================================
+   FONTS  —  the Dr. Cole's Math Lab brand faces
+   ========================================================================== */
 /* FONTS:START */
 /* Nunito + Space Mono, SIL Open Font License, inlined as base64 so the page has
    zero external requests and renders correctly opened straight from disk.
@@ -54,553 +29,730 @@
 }
 /* FONTS:END */
 
-/* SITE CHROME:START */
-/* ═══════════════════════════════════════════════════════════════════════════
-   DESIGN TOKENS
-   Carried from Dr. Cole's Transform Lab. One deliberate change: --mu was
-   #6b7498, which measures 4.40:1 on --bg and 4.23:1 on --sf — below the 4.5:1
-   WCAG AA floor for normal text, and it carries subtitles, card copy, tags and
-   footer meta. #7a83a8 measures 5.42:1 / 5.22:1. Full table in README.md.
-   ═══════════════════════════════════════════════════════════════════════════ */
-:root{
-  --bg:#050610;
-  --sf:#0c0b1d;
-  --sf2:#141328;
-  --tc:#00d4ff;
-  --tc2:rgba(0,212,255,.12);
-  --rc:#00ff7f;
-  --rc2:rgba(0,255,127,.12);
-  --oc:#ffcc00;
-  --oc2:rgba(255,204,0,.12);
-  --dc:#ff3355;
-  --dc2:rgba(255,51,85,.12);
-  --ax:#bb55ff;
-  --ax2:rgba(187,85,255,.12);
-  --or:#ff9500;
-  --or2:rgba(255,149,0,.12);
-  --pre:#ffffff;
-  --tx:#eef2ff;
-  --mu:#7a83a8;
-  --maxw:1080px;
-  --scroll-offset:60px;   /* shared by the sticky nav's top and every section's
-                             scroll-margin-top, so an anchor jump lands where the
-                             nav highlight says it will */
+/* ============================================================================
+   THEME TOKENS  —  Dr. Cole's Math Lab
+   Dark only, deliberately. The Math Lab palette is a dark one; a light variant
+   of it would be a different design rather than the same one turned up, so
+   there is no prefers-color-scheme branch and no data-theme hook here.
+   Surface and ink values are carried verbatim from the site's
+   tools/site.config.js `tokens`, where they are contrast-measured to WCAG AA.
+   ========================================================================== */
+:root {
+  color-scheme: dark;
+
+  --bg:            #050610;   /* brand --bg  */
+  --panel:         #0c0b1d;   /* brand --sf  */
+  --panel-2:       #141328;   /* brand --sf2 */
+  --ink:           #ffffff;   /* brand --pre */
+  --ink-soft:      #eef2ff;   /* brand --tx  */
+  --ink-faint:     #7a83a8;   /* brand --mu  */
+  --line:          #141328;
+  --line-strong:   #26243f;
+
+  /* Two colours carry the whole app, and the split is the lesson: yellow is
+     always a side length, blue is always the figure it builds. Both shapes use
+     the same pair — a cube is not a different topic from a square, it is the
+     same move in one more dimension. --*-fill tints the flat figures (the unit
+     row, the n x n square, the exploded layer plates), where one pass of alpha
+     over --bg is all that ever composites. */
+  --blue:          #00d4ff;   /* brand --tc */
+  --blue-fill:     rgba(0, 212, 255, .30);
+  --hl:            #ffd60a;   /* side length, everywhere it appears */
+  /* Yellow needs far more alpha than cyan to survive the composite over --bg:
+     below about .8 it lands on olive rather than on yellow. The unit divisions
+     inside a highlighted run come from the grid gap, not from the border, so
+     the near-opaque fill costs nothing. */
+  --hl-fill:       rgba(255, 214, 10, .88);
+
+  /* The assembled cube is the one place a tint will not do, and it needs its
+     own tokens. Its shell is up to 488 unit cubes of six faces each, so alpha
+     compounds through the stack until the figure is a solid block with no unit
+     edges showing. These are the same two hues composited over --bg once and
+     then frozen opaque, so the cube stays a lattice at every n. */
+  --blue-face:     #0a4a5e;
+  --hl-face:       #cfa900;
+
+  --accent:        var(--blue);
+  --fill:          var(--blue-fill);
+  --face:          var(--blue-face);
+  /* The gnomon flash has to be a third colour now: yellow is the standing mark
+     for "side length", and the L that appears when the square grows is a
+     different claim (it is the 2n + 1 between n² and (n+1)²), so it flashes
+     white and settles into whichever of the two colours the units belong to. */
+  --glow:          #ffffff;
+  --on-accent:     #04202b;   /* ink on a saturated accent, as the site uses */
+
+  --shadow:        0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.45);
+  --radius:        14px;
+
+  /* The two brand faces. Space Mono carries every number on the screen: the
+     side length, the totals, the notation and the layer tags all change as the
+     slider moves, and a proportional face makes them jitter as digits swap. */
+  --sans:  'Nunito', 'Avenir Next', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono:  'Space Mono', 'SF Mono', Consolas, monospace;
 }
 
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-
-body{
-  font-family:'Nunito','Avenir Next','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
-  background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;
-  line-height:1.6;-webkit-font-smoothing:antialiased;
+/* The side-length panel repoints the accent tokens to yellow, so everything
+   inside it — the readout, the slider, the unit row, the focus ring — is the
+   same colour as the highlighted edges of the figure it builds. */
+.panel.side {
+  --accent: var(--hl);
+  --fill:   var(--hl-fill);
+  --face:   var(--hl-face);
 }
 
-/* Brand atmosphere: scanline stripes + a soft vignette. Decorative and
-   pointer-transparent, sitting behind everything via z-index. */
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent 3px)}
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse at 50% 8%,rgba(255,255,255,.045) 0,transparent 55%)}
-
-.wrap{position:relative;z-index:1;width:100%;max-width:var(--maxw);margin:0 auto;padding:0 22px}
-
-/* ── Typography ──────────────────────────────────────────────────────────── */
-h2{font-size:clamp(1.35rem,3vw,1.75rem);font-weight:900;letter-spacing:-.4px;color:var(--pre)}
-h3{font-size:1.06rem;font-weight:800;color:var(--pre)}
-p{color:var(--tx)}
-a{color:var(--tc)}
-strong{color:var(--pre);font-weight:800}
-code,kbd,.mono{font-family:'Space Mono','SF Mono',Consolas,monospace}
-kbd{background:var(--sf2);border:1px solid #26243f;border-radius:5px;
-  padding:1px 6px;font-size:.82em;color:var(--pre);white-space:nowrap}
-
-/* ── Accessibility utilities ─────────────────────────────────────────────── */
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
-  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-
-/* The card grids and pill rows are marked up as lists so assistive tech announces
-   "list, 3 items" — but they are styled as grids, so the markers come off. Prose
-   lists inside .prose keep theirs. */
-.hero-facts,.app-grid,.app-tags,.about-grid,.page-nav ul{list-style:none}
-
-/* The skip link is the first focusable element on every page. It is off-screen
-   until focused, then becomes a solid chip in the top-left. */
-.skip-link{position:absolute;left:12px;top:-100px;z-index:100;
-  background:var(--tc);color:#04202b;font-weight:900;padding:12px 18px;
-  border-radius:0 0 10px 10px;text-decoration:none;transition:top .15s}
-.skip-link:focus{top:0}
-
-:focus-visible{outline:3px solid var(--tc);outline-offset:3px;border-radius:4px}
-
-/* ── Top bar (app pages only) ────────────────────────────────────────────── */
-/* Deliberately NOT sticky. The in-page nav below owns position:sticky, so there
-   is exactly one sticky element and the --scroll-offset math stays honest. */
-.topbar{border-bottom:1px solid var(--sf2);background:rgba(5,6,16,.6)}
-.topbar .wrap{display:flex;align-items:center;justify-content:space-between;
-  gap:14px;min-height:52px;flex-wrap:wrap}
-.topbar a{display:inline-flex;align-items:center;gap:7px;color:var(--mu);
-  text-decoration:none;font-weight:800;font-size:.86rem;white-space:nowrap;
-  padding:11px 4px;min-height:44px}
-.topbar .ico{flex:0 0 auto;width:16px;height:16px}
-.topbar a:hover{color:var(--tc)}
-.topbar .crumb-meta{color:var(--mu);font-size:.78rem;font-weight:700;
-  font-family:'Space Mono','SF Mono',Consolas,monospace;letter-spacing:.3px}
-
-/* ── Header / wordmark ───────────────────────────────────────────────────── */
-header.site{text-align:center;padding:26px 0 20px}
-.logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;justify-content:center}
-.logo-pre,.logo h1,.logo .wordmark{
-  font-size:clamp(1.8rem,5vw,2.6rem);font-weight:900;letter-spacing:-1px;line-height:1.1;
-  background:linear-gradient(90deg,#00d4ff,#00ff7f 45%,#ff3355);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+/* ============================================================================
+   BASE
+   ========================================================================== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.45 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
-.logo-icon{width:36px;height:36px;flex:0 0 36px;
-  background:linear-gradient(135deg,#00d4ff,#ff3355);
-  clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px #00d4ff)}
-@keyframes spin{to{transform:rotate(360deg)}}
-.subtitle{color:var(--mu);font-size:.92rem;font-weight:700;margin-top:6px}
-
-/* ── Hero facts ──────────────────────────────────────────────────────────── */
-.hero-facts{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:18px 0 4px}
-.hero-fact{display:inline-flex;align-items:center;gap:7px;background:var(--sf);
-  border:1px solid var(--sf2);border-radius:50px;padding:7px 15px;
-  color:var(--tx);font-size:.8rem;font-weight:700}
-.hero-fact .ico{width:15px;height:15px;color:var(--tc);flex:0 0 15px}
-
-/* ── Sections ────────────────────────────────────────────────────────────── */
-main{position:relative;z-index:1;display:block}
-section{scroll-margin-top:calc(var(--scroll-offset) + 14px);padding:34px 0 6px}
-.section-lead{color:var(--mu);font-size:.96rem;margin:8px 0 20px;max-width:66ch}
-section > h2 + .section-lead{margin-top:8px}
-
-/* ── In-page nav (app pages) ─────────────────────────────────────────────── */
-.page-nav{position:sticky;top:0;z-index:20;background:rgba(5,6,16,.94);
-  backdrop-filter:blur(8px);border-bottom:1px solid var(--sf2);margin-bottom:6px}
-.page-nav ul{display:flex;gap:4px;list-style:none;overflow-x:auto;
-  scrollbar-width:none;min-height:var(--scroll-offset);align-items:center}
-.page-nav ul::-webkit-scrollbar{display:none}
-.page-nav a{display:flex;align-items:center;min-height:44px;padding:0 13px;
-  color:var(--mu);text-decoration:none;font-weight:800;font-size:.83rem;
-  white-space:nowrap;border-bottom:2px solid transparent}
-.page-nav a:hover{color:var(--tx)}
-.page-nav a[aria-current="true"]{color:var(--tc);border-bottom-color:var(--tc)}
-
-/* ── App grid (home) ─────────────────────────────────────────────────────── */
-.app-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
-.app{display:flex;flex-direction:column;gap:9px;background:var(--sf);
-  border:1px solid var(--sf2);border-radius:14px;padding:19px 19px 17px;
-  text-decoration:none;color:inherit;transition:transform .2s,border-color .2s,box-shadow .2s}
-a.app:hover{transform:translateY(-3px);border-color:var(--cat);
-  box-shadow:0 10px 30px -14px var(--cat)}
-.app-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.app-icon{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
-  border-radius:11px;background:var(--cat-soft);color:var(--cat);border:1px solid var(--cat-soft)}
-.app-icon .ico{width:20px;height:20px}
-.app-num{font-family:'Space Mono','SF Mono',Consolas,monospace;font-size:.76rem;
-  font-weight:700;color:var(--mu)}
-.app h3{font-size:1.16rem}
-.app-sub{color:var(--cat);font-size:.79rem;font-weight:800;
-  text-transform:uppercase;letter-spacing:.6px;margin-top:-4px}
-.app-blurb{color:var(--mu);font-size:.9rem;flex:1}
-.app-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
-.app-tag{background:var(--sf2);color:var(--tx);border-radius:6px;
-  padding:3px 9px;font-size:.72rem;font-weight:700}
-.app-open{display:inline-flex;align-items:center;gap:7px;color:var(--cat);
-  font-weight:900;font-size:.88rem;margin-top:6px}
-.app-open .ico{width:17px;height:17px;transition:transform .2s}
-a.app:hover .app-open .ico{transform:translateX(4px)}
-
-/* Roadmap tiles: listed but not yet shipped, so not a link and not a dead end. */
-.app.pending{opacity:.62;cursor:default}
-.app.pending .app-status{display:inline-flex;align-items:center;gap:6px;
-  color:var(--mu);font-weight:900;font-size:.85rem;margin-top:6px}
-.app.pending .app-status::before{content:'';width:8px;height:8px;border-radius:50%;
-  background:var(--cat);box-shadow:0 0 8px var(--cat)}
-
-/* ── About grid (home) ───────────────────────────────────────────────────── */
-/* minmax(380px,1fr) so four cards land as a clean 2x2 rather than an orphaned
-   third column at common desktop widths. */
-.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px}
-.about-card{background:var(--sf);border:1px solid var(--sf2);border-radius:14px;padding:18px}
-.about-card .ico{width:19px;height:19px;color:var(--tc);flex:0 0 19px}
-.about-card h3{display:flex;align-items:center;gap:9px;margin-bottom:6px}
-.about-card p{color:var(--mu);font-size:.9rem}
-
-/* ── Prose blocks on app pages ───────────────────────────────────────────── */
-.prose{background:var(--sf);border:1px solid var(--sf2);border-radius:14px;
-  padding:20px 22px;max-width:none}
-.prose p + p,.prose ul + p,.prose p + ul,.prose ol + p,.prose p + ol{margin-top:12px}
-.prose ul,.prose ol{margin-left:20px;color:var(--tx)}
-.prose li{margin:6px 0}
-.prose li::marker{color:var(--mu)}
-.prose h3{margin:18px 0 7px}
-.prose h3:first-child{margin-top:0}
-.prose .muted{color:var(--mu);font-size:.92rem}
-
-.callout{border-left:3px solid var(--tc);background:var(--tc2);
-  border-radius:0 10px 10px 0;padding:14px 17px;margin:14px 0}
-.callout.warn{border-left-color:var(--oc);background:var(--oc2)}
-
-/* ── The embedded app ────────────────────────────────────────────────────── */
-.play-lead{color:var(--mu);font-size:.96rem;margin:8px 0 6px;max-width:70ch}
-
-/* An iframe is a single tab stop that drops a keyboard user into a document with
-   dozens of controls and no obvious way back. This link, placed BEFORE the frame,
-   is the escape hatch. Hidden until focused, then a visible chip. */
-.skip-embed{position:absolute;left:-9999px;display:inline-flex;align-items:center;
-  gap:7px;font-weight:800;font-size:.85rem;text-decoration:none}
-/* :focus, not :focus-visible — a skip link should show whenever it holds focus,
-   including when focus was moved programmatically. min-height keeps it at the 44px
-   target size; padding alone lands at 43.8px. */
-.skip-embed:focus{position:static;left:auto;background:var(--tc);color:#04202b;
-  padding:11px 16px;min-height:44px;border-radius:9px;margin:10px 0 0}
-
-.play-frame{position:relative;margin:16px 0 12px;border:1px solid var(--sf2);
-  border-radius:14px;overflow:hidden;background:var(--bg);
-  box-shadow:0 20px 50px -30px #000}
-.play-embed{display:block;width:100%;height:100%;border:0}
-.play-frame[data-app="transform-lab"]{height:clamp(620px, 80vh, 940px)}
-.play-frame[data-app="tiger-trail"]{height:clamp(440px, 76vh, 800px)}
-.play-frame[data-app="balancing-act"]{height:clamp(600px, 84vh, 900px);width:min(560px, 100%);margin-inline:auto}
-.play-frame[data-app="real-number-monsters"]{height:clamp(560px, 80vh, 860px)}
-.play-frame[data-app="squares-cubes"]{height:clamp(620px, 80vh, 940px)}
-
-.play-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
-.btn-play-full{display:inline-flex;align-items:center;gap:8px;min-height:44px;
-  padding:10px 18px;background:var(--sf);border:1px solid var(--tc);
-  border-radius:10px;color:var(--tc);font-weight:900;font-size:.88rem;text-decoration:none}
-.btn-play-full:hover{background:var(--tc2)}
-.btn-play-full .ico{width:16px;height:16px}
-.play-note{color:var(--mu);font-size:.83rem}
-
-/* ── Footer + pager ──────────────────────────────────────────────────────── */
-footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
-.footer-rule{border:0;border-top:1px solid var(--sf2);margin:0 0 22px}
-.pager{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:14px;margin-bottom:24px}
-.pager a{display:flex;flex-direction:column;gap:3px;background:var(--sf);
-  border:1px solid var(--sf2);border-radius:12px;padding:15px 17px;
-  text-decoration:none;color:inherit;min-height:44px}
-.pager a:hover{border-color:var(--tc)}
-.pager .dir{display:inline-flex;align-items:center;gap:6px;color:var(--mu);
-  font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px}
-.pager .dir .ico{width:14px;height:14px}
-.pager .pt{color:var(--pre);font-weight:800}
-.pager .ps{color:var(--mu);font-size:.83rem}
-.pager .next{text-align:right}
-.pager .next .dir{justify-content:flex-end}
-.footer-disclaimer{color:var(--mu);font-size:.85rem;max-width:78ch}
-.footer-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-  margin-top:14px;color:var(--mu);font-size:.78rem;
-  font-family:'Space Mono','SF Mono',Consolas,monospace}
-.footer-meta .sep{opacity:.45}
-.footer-back{display:inline-flex;align-items:center;gap:7px;min-height:44px;
-  color:var(--tc);font-weight:800;font-size:.87rem;text-decoration:none}
-.footer-back .ico{width:16px;height:16px}
-
-/* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width:640px){
-  .wrap{padding:0 16px}
-  .play-frame{height:clamp(420px,70vh,640px) !important;width:100% !important}
-  .about-grid{grid-template-columns:1fr}
-  .pager .next{text-align:left}
-  .pager .next .dir{justify-content:flex-start}
+.app {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 18px 22px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100%;
+}
+/* Figures carry display:grid, which would otherwise beat the UA rule for the
+   hidden attribute and leak the inactive figure onto the screen. */
+[hidden] { display: none !important; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
-/* ── Reduced motion ──────────────────────────────────────────────────────── */
-/* The upstream Transform Lab has no guard on its spinning logo — that gap is not
-   carried forward. Functional transitions collapse to near-zero rather than being
-   removed, so state changes stay perceivable. */
-@media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  .logo-icon{animation:none}
-  *,*::before,*::after{
-    animation-duration:.01ms !important;
-    animation-iteration-count:1 !important;
-    transition-duration:.01ms !important;
+/* ============================================================================
+   HEADER + CONTROLS
+   ========================================================================== */
+header.bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  box-shadow: var(--shadow);
+}
+.title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  color: var(--ink);
+  margin-right: auto;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+/* Wordmark, split the way the site splits it: a white "Dr. Cole's" against the
+   cyan "Math Lab". It sits on its own line above the app name at every width,
+   so the app never reads as being called "Dr. Cole's Math Lab Squares...".
+   Pinned to --blue rather than --accent: the accent is a reading cue inside the
+   figures, and the brand mark should take no part in it. */
+.title .wordmark {
+  flex-basis: 100%;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .02em;
+  color: var(--blue);
+}
+.title .wordmark b { color: var(--ink); font-weight: 900; }
+.title .level {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink-faint);
+}
+.group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.group > .glabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--ink-faint);
+}
+.seg {
+  display: inline-flex;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.seg button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink-soft);
+  transition: background .15s ease, color .15s ease;
+  white-space: nowrap;
+}
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.btn {
+  appearance: none;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.btn:hover { color: var(--ink); border-color: var(--line-strong); }
+.btn[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.btn[hidden], .group[hidden] { display: none; }
+button:focus-visible, input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ============================================================================
+   STAGE GRID  —  side length | operation | figure + count
+   ========================================================================== */
+.stage {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr minmax(180px, 260px) 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.panel.mid {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+.roleline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 2px;
+  min-height: 18px;
+}
+.role {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color .2s ease;
+}
+.role.is-input { color: var(--accent); }
+.panel h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--ink-soft);
+}
+
+/* ---- left: slider + unit row ---------------------------------------------- */
+.readout {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.readout .big {
+  font-family: var(--mono);
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 1;
+  /* Space Mono's "1" carries a full-width base serif, so at display size the
+     digits read as touching without a little air between them. */
+  letter-spacing: .02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.readout .unitword {
+  font-size: 14px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 30px;
+  background: transparent;
+  margin: 2px 0 0;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px; height: 28px;
+  margin-top: -10px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--panel);
+  box-shadow: 0 2px 6px rgba(0,0,0,.5);
+}
+input[type=range]::-moz-range-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+input[type=range]::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--panel);
+  box-shadow: 0 2px 6px rgba(0,0,0,.5);
+}
+.ticks {
+  font-family: var(--mono);
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  margin-top: -2px;
+}
+.rowwrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
+  padding: 14px 0 4px;
+  perspective: 1400px;
+}
+#unitRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  max-width: 100%;
+  transform-style: preserve-3d;
+}
+.rowcaption {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.rowcaption b { color: var(--ink); }
+
+/* ---- unit square (shared by row + big square + cube layers) ---------------- */
+.usq {
+  width: var(--u, 26px);
+  height: var(--u, 26px);
+  background: var(--fill);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+}
+.usq.thin { border-width: 1px; }
+
+/* ---- centre: arrow + notation --------------------------------------------- */
+.opblock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.oplabel {
+  /* A whole sentence, so it is set as prose: sentence case, ordinary tracking,
+     and a max-width that makes it break after "side" / "area" rather than
+     stretching the centre column. Two lines is the design, not an overflow. */
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--accent);
+  text-align: center;
+  text-wrap: balance;
+  max-width: 22ch;
+  min-height: 38px;
+}
+#arrow { width: 100%; max-width: 240px; height: 56px; overflow: visible; }
+#arrow .shaft, #arrow .head {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#arrow .head { fill: var(--accent); stroke-width: 0; }
+#arrowGroup { transition: transform .35s cubic-bezier(.4,0,.2,1); transform-origin: 120px 28px; }
+body[data-dir="left"] #arrowGroup { transform: scaleX(-1); }
+
+.notation {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 22px;
+  min-width: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 84px;
+}
+.math {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 38px;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: flex-start;
+  white-space: nowrap;
+}
+.math sup {
+  font-size: .52em;
+  line-height: 1;
+  vertical-align: super;
+  margin-left: .04em;
+  color: var(--accent);
+  font-weight: 600;
+}
+/* Radical: an SVG check-mark whose up-stroke ends exactly at the top edge, so
+   it meets the radicand's CSS overline with no seam. Index tucked top-left. */
+.radical {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  padding-left: .34em;
+}
+.radical .idx {
+  position: absolute;
+  left: 0;
+  top: -.02em;
+  font-size: .40em;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+}
+.radical .sign {
+  width: .46em;
+  height: .95em;
+  flex: none;
+  overflow: visible;
+}
+.radical .sign path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+}
+.radical .rad {
+  border-top: 3px solid var(--accent);
+  line-height: .74;
+  padding: .1em .2em 0 .1em;
+}
+.eqline {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-align: center;
+  min-height: 20px;
+}
+.eqline b { color: var(--ink); font-family: var(--mono); font-weight: 700; }
+/* A numeral that is a side length is yellow and a numeral that is a total is
+   blue, wherever it is written — the same code the figures are drawn in. The
+   b.* selectors are only there to outrank the rule just above. */
+.sideN,  .eqline b.sideN  { color: var(--hl); }
+.totalN, .eqline b.totalN { color: var(--blue); }
+
+/* ---- right: figure + counter ---------------------------------------------- */
+.figwrap {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  padding: 8px 0 4px;
+  position: relative;
+}
+/* The square and the two braces that measure it. The wrapper's padding is the
+   room the braces live in, so the whole assembly is one centred box that can
+   never overflow the panel. */
+#squareWrap {
+  position: relative;
+  padding-left: var(--bracePad);
+  padding-bottom: var(--bracePad);
+}
+#squareFig {
+  display: grid;
+  gap: 2px;
+}
+/* The units along the bottom and left edges are the side length, laid against
+   the figure they generate — same yellow as the row in the left panel. */
+#squareFig .usq.edge {
+  background: var(--hl-fill);
+  border-color: var(--hl);
+}
+#squareFig .usq { animation: none; }
+#squareFig .usq.isnew { animation: pop .45s cubic-bezier(.34,1.56,.64,1) backwards; }
+@keyframes pop {
+  0%   { transform: scale(.2); background: var(--glow); opacity: 0; }
+  60%  { background: var(--glow); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---- 3D cube stage --------------------------------------------------------- */
+#cubeFig {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  perspective: 1600px;
+  touch-action: none;
+  cursor: grab;
+}
+#cubeFig.dragging { cursor: grabbing; }
+#cubeStage {
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, -24deg)) rotateY(var(--ry, -32deg)) scale(var(--fit, 1));
+  transition: transform .45s cubic-bezier(.4,0,.2,1);
+  position: relative;
+  width: 0; height: 0;
+}
+#cubeStage.nosnap { transition: none; }
+.cubeBuild {
+  position: absolute;
+  left: 0; top: 0;
+  transform-style: preserve-3d;
+  transition: opacity .3s ease;
+}
+.cubeBuild[hidden] { display: none; }
+
+.ucube { position: absolute; transform-style: preserve-3d; }
+.ucube > i {
+  position: absolute;
+  display: block;
+  background: var(--face);
+  border: 1px solid var(--accent);
+  left: 0; top: 0;
+}
+/* The three edges meeting at the front-bottom-left corner: one run of s units
+   per dimension, so the cube carries its own side length on it. */
+.ucube.edge > i {
+  background: var(--hl-face);
+  border-color: var(--hl);
+}
+/* Per-orientation tint so edges read without lighting maths. */
+.ucube > i.f  { filter: brightness(1.06); }
+.ucube > i.bk { filter: brightness(.80); }
+.ucube > i.r  { filter: brightness(.90); }
+.ucube > i.l  { filter: brightness(.90); }
+.ucube > i.t  { filter: brightness(1.16); }
+.ucube > i.bt { filter: brightness(.72); }
+
+.layer {
+  position: absolute;
+  transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.4,0,.2,1);
+}
+.layerPlate {
+  position: absolute;
+  display: grid;
+  gap: 1px;
+  background: var(--line);
+  padding: 1px;
+}
+.layerTag {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  transform: translateZ(1px);
+}
+
+/* ---- braces  —  "Side length = s" along the highlighted edges -------------- */
+.brace { position: absolute; display: flex; align-items: center; gap: 4px; }
+.brace svg { display: block; overflow: visible; }
+.brace path {
+  fill: none;
+  stroke: var(--hl);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.braceLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hl);
+  white-space: nowrap;
+}
+.braceLabel b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+#sqBraceH { left: var(--bracePad); bottom: 0; flex-direction: column; }
+#sqBraceV {
+  left: 0; top: 0;
+  width: var(--bracePad);
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+/* Vertical writing rather than a rotate(): the box keeps the height flex is
+   centring against, so the label stays on the brace's midpoint at every n. */
+#sqBraceV .braceLabel { writing-mode: vertical-rl; transform: rotate(180deg); }
+
+/* The cube's brace is a real object in the 3D scene, fixed to the front-bottom
+   edge, so it turns with the cube and always measures that edge rather than the
+   width the projection happens to have. Only its label is pulled back upright:
+   the stage's own rotation and fit-scale are undone in reverse order, which
+   leaves the text facing the viewer at a constant size. */
+#cubeBrace {
+  position: absolute;
+  left: 0; top: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+#cubeBrace svg { position: absolute; left: 0; top: 0; }
+#cubeBrace .braceLabel {
+  position: absolute;
+  left: 50%;
+  transform-origin: 0 0;
+  transform:
+    scale(calc(1 / var(--fit, 1)))
+    rotateY(calc(-1 * var(--ry, 0deg)))
+    rotateX(calc(-1 * var(--rx, 0deg)))
+    translate(-50%, 0);
+}
+
+/* ---- counter --------------------------------------------------------------- */
+.counter {
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+  margin-top: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.counter .total {
+  font-family: var(--mono);
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 1;
+  /* Space Mono's "1" carries a full-width base serif, so at display size the
+     digits read as touching without a little air between them. */
+  letter-spacing: .02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.counter .total.tick { animation: tick .3s ease; }
+@keyframes tick { 0% { transform: translateY(-6px); opacity: .35; } 100% { transform: none; opacity: 1; } }
+.counter .meta { display: flex; flex-direction: column; gap: 2px; }
+.counter .meta .eq {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.counter .meta .sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.pulse { animation: pulse .55s ease; }
+@keyframes pulse {
+  0%, 100% { transform: none; }
+  35%      { transform: scale(1.06); }
+}
+
+.footnote {
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.footnote kbd {
+  font-family: var(--mono);
+  font-size: .9em;
+  background: var(--panel-2);
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 1px 6px;
+  color: var(--ink);
+}
+
+/* ============================================================================
+   RESPONSIVE  —  mobile is deliberately a working fallback, not a finished
+   design. Columns stack and the arrow turns to point down / up.
+   ========================================================================== */
+@media (max-width: 900px) {
+  .stage { grid-template-columns: 1fr; }
+  .panel.mid { padding: 6px 0; }
+  /* A square box so the rotated arrow always has room, and one rotation for
+     both directions — the group's own flip already turns "left" into "up". */
+  #arrow { width: 110px; height: 110px; max-width: none; transform: rotate(90deg); }
+  .figwrap, #cubeFig { min-height: 240px; }
+  .readout .big, .counter .total { font-size: 46px; }
+  .math { font-size: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
   }
-  a.app:hover{transform:none}
-  a.app:hover .app-open .ico{transform:none}
 }
-/* SITE CHROME:END */
-</style>
-</head>
-<body>
-
-<a class="skip-link" href="#main">Skip to main content</a>
-
-<div class="topbar">
-<!-- TOPBAR:START -->
-<div class="wrap">
-  <a href="index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H6"/><path d="m11 6-6 6 6 6"/></svg><span>All apps</span></a>
-  <span class="crumb-meta">App 01 / 05</span>
-</div>
-<!-- TOPBAR:END -->
-</div>
-
-<div class="wrap">
-  <header class="site">
-    <div class="logo">
-      <span class="logo-pre">Dr. Cole's</span>
-      <div class="logo-icon" aria-hidden="true"></div>
-      <h1 class="wordmark">Math Lab</h1>
-    </div>
-    <p class="subtitle">Transform Lab — geometric transformations you can drag</p>
-  </header>
-</div>
-
-<nav class="page-nav" aria-label="Sections on this page">
-<!-- PAGENAV:START -->
-<div class="wrap">
-  <ul>
-    <li><a href="#play">Play</a></li>
-    <li><a href="#how-to-play">How it works</a></li>
-    <li><a href="#skills">Skills</a></li>
-    <li><a href="#tips">Tips</a></li>
-    <li><a href="#limits">Limits</a></li>
-  </ul>
-</div>
-<!-- PAGENAV:END -->
-</nav>
-
-<main id="main">
-  <div class="wrap">
-
-    <section id="play" aria-labelledby="play-h">
-      <h2 id="play-h">Try it here</h2>
-      <p class="play-lead">
-        The whole app runs in this page — drag a shape on the grid and watch the coordinates
-        update. Six modes across the top; levels along the bottom. Mode tabs, level buttons
-        and the coordinate inputs are all keyboard-reachable; moving shapes needs a pointer.
-      </p>
-      <!-- PLAY:START -->
-<a class="skip-embed" href="#how-to-play">Skip past the interactive app</a>
-
-<div class="play-frame" data-app="transform-lab">
-  <iframe class="play-embed"
-          src="apps/transform-lab/index.html"
-          title="Transform Lab — Geometric transformations you can drag"
-          allow="fullscreen"
-          referrerpolicy="no-referrer"
-          loading="lazy"></iframe>
-</div>
-
-<p class="play-actions">
-  <a class="btn-play-full" href="apps/transform-lab/index.html" target="_blank" rel="noopener"><span>Open full screen</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg><span class="sr-only"> (opens in a new tab)</span></a>
-  <span class="play-note">Click or tab into the app first so it receives your keyboard. Works best on a screen at least 900&nbsp;px wide.</span>
-</p>
-<!-- PLAY:END -->
-    </section>
-
-    <section id="how-to-play" aria-labelledby="how-h">
-      <h2 id="how-h">How it works</h2>
-      <p class="section-lead">
-        Every mode follows the same rhythm: look at the pre-image, apply a transformation,
-        then read what happened to the coordinates.
-      </p>
-
-      <div class="prose">
-        <h3>The six modes</h3>
-        <ul>
-          <li><strong>Translation</strong> — slide a shape without turning or resizing it.
-            Four levels, ending with plotting an image yourself from a written rule.</li>
-          <li><strong>Reflection</strong> — flip across the <span class="mono">x</span>-axis,
-            the <span class="mono">y</span>-axis, <span class="mono">y&nbsp;=&nbsp;x</span>,
-            <span class="mono">y&nbsp;=&nbsp;−x</span>, and finally a line you drag yourself.</li>
-          <li><strong>Rotation</strong> — turn 90°, 180° or 270° about a centre point you can
-            move off the origin, which is where most of the difficulty actually lives.</li>
-          <li><strong>Dilation</strong> — scale by whole-number and fractional factors about a
-            centre, with the scale factor and side lengths shown as you go.</li>
-          <li><strong>Challenge</strong> — a randomly generated chain of two to four
-            transformations. You plot the image at each step and the app grades the whole
-            sequence, rolling back to the first step you got wrong.</li>
-          <li><strong>Freeform</strong> — a sandbox. Draw your own polygon with three to six
-            vertices, then stack up to four transformations on it and animate the result.</li>
-        </ul>
-
-        <h3>Controls</h3>
-        <ul>
-          <li><strong>Drag</strong> a shape, a reflection line, or a centre point to move it.
-            Everything snaps to the grid.</li>
-          <li>The <strong>shape bar</strong> above the grid switches between triangle, square
-            and pentagon.</li>
-          <li>The <strong>+ / − buttons</strong> on the right of the grid zoom; the middle
-            button re-fits everything into view.</li>
-          <li>On the higher levels you <strong>type coordinates</strong> into
-            <span class="mono">x</span> and <span class="mono">y</span> fields and check them,
-            rather than dragging.</li>
-        </ul>
-
-        <div class="callout">
-          <p><strong>The point of the levels.</strong> Level 1 lets you drag freely and just
-          watch the numbers. By the last level you are predicting the image before you see it.
-          That progression — explore, then describe, then predict — is the whole design.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="skills" aria-labelledby="skills-h">
-      <h2 id="skills-h">What it teaches</h2>
-      <p class="section-lead">
-        This maps to the transformations strand of most middle-school and early high-school
-        geometry courses.
-      </p>
-
-      <div class="prose">
-        <ul>
-          <li><strong>Coordinate notation for transformations</strong> — reading and writing
-            rules like <span class="mono">(x, y) → (x + 3, y − 2)</span> and connecting them to
-            a picture instead of memorising them.</li>
-          <li><strong>Rigid motions versus dilations</strong> — seeing directly that
-            translation, reflection and rotation preserve side lengths and angles while
-            dilation preserves angles but not lengths.</li>
-          <li><strong>Prime notation</strong> — that <span class="mono">A′</span> is the image
-            of <span class="mono">A</span>, kept visible on every vertex.</li>
-          <li><strong>Composition</strong> — Challenge mode is the part that matters most.
-            Chaining transformations, where each output becomes the next input, is where the
-            idea usually breaks down, and it is hard to practise on paper.</li>
-          <li><strong>Scale factor and similarity</strong> — including fractional factors,
-            which is where the "bigger number means bigger shape" assumption fails.</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="tips" aria-labelledby="tips-h">
-      <h2 id="tips-h">Tips for getting the most out of it</h2>
-
-      <div class="prose">
-        <ul>
-          <li><strong>Say the rule out loud before you drag.</strong> The app will happily let
-            you find the answer by nudging the shape until it looks right. You learn more by
-            predicting first and using the drag to check.</li>
-          <li><strong>Move the centre point off the origin.</strong> Rotation and dilation
-            about the origin are a special case that hides most of the difficulty. Drag the
-            centre somewhere awkward and try again.</li>
-          <li><strong>Use the pentagon.</strong> Triangles are symmetric enough that a wrong
-            reflection can still look plausible. A five-sided shape makes an error obvious.</li>
-          <li><strong>In Challenge mode, work one step at a time.</strong> The grader rolls
-            back to your first mistake, so a wrong step 1 invalidates everything after it —
-            check each image before moving on.</li>
-          <li><strong>Freeform is worth the detour.</strong> Building your own polygon and
-            stacking four transformations on it is the fastest way to see that order matters:
-            reflect-then-rotate and rotate-then-reflect land in different places.</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="limits" aria-labelledby="limits-h">
-      <h2 id="limits-h">Honest limits</h2>
-      <p class="section-lead">
-        What this app does not do. This section exists on every page here and it is not
-        marketing copy.
-      </p>
-
-      <div class="prose">
-        <h3>What it doesn't cover</h3>
-        <ul>
-          <li><strong>No proof or justification.</strong> You can see that a rigid motion
-            preserves length; the app never asks you to argue why. That is the part a teacher
-            has to supply.</li>
-          <li><strong>Integer and simple-fraction coordinates only.</strong> Everything snaps
-            to the grid, so irrational or awkward coordinates never come up.</li>
-          <li><strong>No rotations other than multiples of 90°.</strong> Arbitrary angles are
-            the natural next step and are not implemented.</li>
-          <li><strong>No transformation matrices.</strong> This is the coordinate-rules
-            treatment, not the linear-algebra one.</li>
-          <li><strong>It is a demo, not a curriculum.</strong> There is no assessment, no
-            record of what you have done, and nothing adapts to you. It is one idea shown
-            clearly, which is all it is trying to be.</li>
-        </ul>
-
-        <h3>Known rough edge</h3>
-        <p class="muted">
-          Challenge mode generates a random chain and retries until it finds one that fits on
-          the visible grid. In a short browser window it can run out of attempts and show only
-          the starting shape — switching modes and back, or using a taller window, regenerates
-          it. This is inherited from the original app.
-        </p>
-
-        <!-- A11Y:START -->
-<h3>Accessibility, honestly</h3>
-<p>The page around this app meets <strong>WCAG 2.1 AA</strong>: a skip link as the first focusable element, a "skip past the interactive app" link before the frame so keyboard users are never trapped inside it, verified colour contrast on every token pair, visible focus rings, 44&nbsp;px touch targets, and full <code>prefers-reduced-motion</code> support.</p>
-<p>The app itself is an existing project embedded here, and it does not meet that bar in full. Specifically: Mode tabs, level buttons and the x/y coordinate inputs are all real, keyboard-reachable controls with proper labels. But every shape, reflection axis and centre of rotation is moved by dragging, and there is no keyboard equivalent for dragging. The canvas state is not announced to a screen reader.</p>
-<p class="muted">This app stores nothing — no local storage, no cookies, no analytics, no network requests of any kind.</p>
-<!-- A11Y:END -->
-      </div>
-    </section>
-
-  </div>
-</main>
-
-<footer class="site">
-  <div class="wrap">
-    <hr class="footer-rule">
-    <!-- FOOTER:START -->
-<nav class="pager" aria-label="More apps">
-  <a class="next" href="tiger-trail.html">
-    <span class="dir"><span>Next</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg></span>
-    <span class="pt">Tiger Trail</span>
-    <span class="ps">Jungle Math Runner</span>
-  </a>
-</nav>
-<p><a class="footer-back" href="index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H6"/><path d="m11 6-6 6 6 6"/></svg><span>Back to all apps</span></a></p>
-<p class="footer-disclaimer">These are teaching demos built to show one idea clearly. They are not a full curriculum and they are not a substitute for instruction or practice.</p>
-<p class="footer-meta">Dr. Cole's Math Lab<span class="sep">·</span>App 1 of 5 — Transform Lab<span class="sep">·</span>No tracking, no third-party requests</p>
-<!-- FOOTER:END -->
-  </div>
-</footer>
-
-<!-- SCROLLSPY:START -->
-<script>
-(function () {
-  var nav = document.querySelector('.page-nav');
-  if (!nav) return;
-
-  var ids = ["play","how-to-play","skills","tips","limits"];
-  var links = {}, sections = [];
-  ids.forEach(function (id) {
-    var el = document.getElementById(id);
-    var a = nav.querySelector('a[href="#' + id + '"]');
-    if (el && a) { links[id] = a; sections.push(el); }
-  });
-  if (!sections.length) return;
-
-  var offset = parseInt(
-    getComputedStyle(document.documentElement).getPropertyValue('--scroll-offset'), 10
-  ) || 60;
-
-  var current = null, ticking = false;
-
-  function update() {
-    ticking = false;
-    var line = offset + 16;
-    var pick = sections[0];
-    for (var i = 0; i < sections.length; i++) {
-      if (sections[i].getBoundingClientRect().top <= line) pick = sections[i];
-    }
-    // The last section is often short enough that its top never reaches the line,
-    // so at the bottom of the page select it explicitly.
-    if (window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight - 2) {
-      pick = sections[sections.length - 1];
-    }
-    if (pick.id === current) return;
-    if (current && links[current]) links[current].removeAttribute('aria-current');
-    current = pick.id;
-    links[current].setAttribute('aria-current', 'true');
-  }
-
-  function onScroll() {
-    if (!ticking) { ticking = true; requestAnimationFrame(update); }
-  }
-
-  addEventListener('scroll', onScroll, { passive: true });
-  addEventListener('resize', onScroll, { passive: true });
-  update();
-})();
-</script>
-<!-- SCROLLSPY:END -->
-
-</body>
-</html>
