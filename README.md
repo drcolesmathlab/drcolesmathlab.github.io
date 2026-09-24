@@ -3,9 +3,9 @@
 A portfolio site for a set of interactive math apps. The point is that every app is
 **actually usable in the page** — not a screenshot, not a video, not an app-store link.
 
-Live at `https://drcolesmathlab.dr-stock-investing.workers.dev` (Cloudflare Worker, canonical) and
-`https://drcolesmathlab.github.io` (GitHub Pages, kept so older links still work). See
-*Deploying* below.
+Live at `https://drcolesmathlab.github.io` (GitHub Pages, canonical) and
+`https://drcolesmathlab.dr-stock-investing.workers.dev` (Cloudflare Worker). See
+*Deploying* below for why the canonical host is GitHub Pages.
 
 ---
 
@@ -233,11 +233,15 @@ mode (white on `#60A5FA` was 2.54:1, now `#060810`). The mockup's decorative gre
 
 The same `main` branch is served two ways, with no build step:
 
-- **Cloudflare Worker: `https://drcolesmathlab.dr-stock-investing.workers.dev`
-  (canonical).** `site.origin` in `tools/site.config.js` points here, so canonical,
-  `og:url` and `og:image` all do too. The Worker is static assets only — no script.
-- **GitHub Pages: `https://drcolesmathlab.github.io`.** Kept live so links shared before
-  the move keep working.
+- **GitHub Pages: `https://drcolesmathlab.github.io` (canonical).** `site.origin` in
+  `tools/site.config.js` points here, so canonical, `og:url` and `og:image` all do too.
+- **Cloudflare Worker: `https://drcolesmathlab.dr-stock-investing.workers.dev`.** Static
+  assets only — no script. Every page works here, but **share the github.io links**:
+  LinkedIn's Post Inspector cannot load any page on `workers.dev` ("We cannot display a
+  preview for this URL"), so a shared workers.dev link gets no card. The likely cause is
+  Cloudflare's bot protection treating LinkedInBot as a bad bot; `workers.dev` is
+  Cloudflare's domain, not ours, so there is nowhere to add a rule letting it through.
+  A custom domain on the Worker would give us that zone (see below).
 
 ### How the Cloudflare Worker is set up
 
@@ -271,7 +275,13 @@ To check a change the way Cloudflare will serve it, run `npx wrangler dev` from 
 root and open `http://localhost:8787`. `/.git/config`, `/tools/…` and `/README.md` must
 all be 404.
 
-**Custom domain later:** add it in the Worker's **Settings → Domains & Routes**, then set
+Preview (non-`main`) branch builds are **switched off** in the dashboard (**Settings →
+Build → Previews Base → Builds for Preview branches**). With preview URLs off they only
+ever failed, which put a red *Workers Builds* check on every PR.
+
+**Custom domain later:** add it in the Worker's **Settings → Domains & Routes**, confirm a
+page on it passes LinkedIn's Post Inspector (allow LinkedInBot in the zone's security
+settings if it doesn't), then set
 `site.origin` to it, run `node tools/apply-site-chrome.js`, update the URLs in
 `tools/og-cards.html`, re-render the cards and commit.
 
