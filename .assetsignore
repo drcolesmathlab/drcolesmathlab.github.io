@@ -6,6 +6,7 @@
 node_modules
 .wrangler
 tools/
+docs/
 README.md
 wrangler.jsonc
 .assetsignore
