@@ -97,7 +97,13 @@ header.site{
 }
 .brand-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding-block:.6rem}
 .brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.02rem;letter-spacing:-.01em;text-decoration:none;min-height:2.75rem}
-.gem{width:.95em;height:.95em;flex-shrink:0}
+/* The pentagon mark, shared by the header brand and the hero wordmark. */
+.logo-icon{display:block;
+  background:var(--wm-icon);
+  clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
+  animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px var(--wm-glow))}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand .logo-icon{width:1.1em;height:1.1em;flex:0 0 1.1em;filter:drop-shadow(0 0 4px var(--wm-glow))}
 
 .theme-toggle{display:flex;border:1px solid var(--border);border-radius:.6rem;overflow:hidden}
 .theme-toggle button{
@@ -118,11 +124,7 @@ header.site{
 }
 /* Same lockup as the app pages: two gradient words either side of a spinning pentagon. */
 .wordmark .grad{background-image:var(--wm);background-clip:text;-webkit-background-clip:text;color:transparent}
-.wordmark .logo-icon{width:.88em;height:.88em;flex:0 0 .88em;
-  background:var(--wm-icon);
-  clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px var(--wm-glow))}
-@keyframes spin{to{transform:rotate(360deg)}}
+.wordmark .logo-icon{width:.88em;height:.88em;flex:0 0 .88em}
 /* Windows High Contrast / forced colours drops background images, which would leave
    transparent text. Fall back to the system text colour. */
 @media (forced-colors:active){.wordmark .grad{color:CanvasText;background:none}}
