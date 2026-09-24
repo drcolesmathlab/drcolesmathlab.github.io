@@ -30,11 +30,38 @@
 <script>
 (function () {
   var d = document.documentElement;
+  var KEY = 'mathlab.theme', OLD = 'mathlab.home.theme';
   d.className = d.className.replace(/\bno-js\b/, 'js');
-  try {
-    var t = localStorage.getItem('mathlab.home.theme');
-    if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
-  } catch (e) {}
+
+  function read() {
+    try { return localStorage.getItem(KEY) || localStorage.getItem(OLD) || 'auto'; }
+    catch (e) { return 'auto'; }
+  }
+  function apply(pref, save) {
+    if (pref === 'light' || pref === 'dark') d.setAttribute('data-theme', pref);
+    else { pref = 'auto'; d.removeAttribute('data-theme'); }
+    var btns = document.querySelectorAll('[data-theme-choice]');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute('aria-pressed', String(btns[i].getAttribute('data-theme-choice') === pref));
+    }
+    if (save) {
+      try { localStorage.setItem(KEY, pref); localStorage.removeItem(OLD); } catch (e) {}
+    }
+  }
+  apply(read(), false);
+
+  document.addEventListener('DOMContentLoaded', function () {
+    apply(read(), false);
+    var groups = document.querySelectorAll('.theme-toggle[hidden]');
+    for (var i = 0; i < groups.length; i++) groups[i].hidden = false;
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-theme-choice]');
+      if (b) apply(b.getAttribute('data-theme-choice'), true);
+    });
+  });
+  window.addEventListener('storage', function (e) {
+    if (e.key === KEY) apply(e.newValue || 'auto', false);
+  });
 })();
 </script>
 <!-- THEME BOOT:END -->
@@ -511,25 +538,6 @@ footer.site p{margin:0 0 .4rem}
 <script>
 (function () {
   'use strict';
-  var KEY = 'mathlab.home.theme';
-  var root = document.documentElement;
-
-  /* ── theme ── */
-  var themeBtns = document.querySelectorAll('[data-theme-choice]');
-  function applyTheme(pref, save) {
-    if (pref === 'light' || pref === 'dark') root.setAttribute('data-theme', pref);
-    else { pref = 'auto'; root.removeAttribute('data-theme'); }
-    for (var i = 0; i < themeBtns.length; i++) {
-      themeBtns[i].setAttribute('aria-pressed', String(themeBtns[i].getAttribute('data-theme-choice') === pref));
-    }
-    if (save) { try { localStorage.setItem(KEY, pref); } catch (e) {} }
-  }
-  applyTheme(root.getAttribute('data-theme') || 'auto', false);
-  for (var i = 0; i < themeBtns.length; i++) {
-    themeBtns[i].addEventListener('click', function () {
-      applyTheme(this.getAttribute('data-theme-choice'), true);
-    });
-  }
 
   /* ── library ── */
   var grid = document.getElementById('grid');

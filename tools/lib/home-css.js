@@ -1,9 +1,8 @@
 /*
  * home-css.js — the home page stylesheet (light / dark / auto).
  *
- * The app pages keep the dark-only SITE CHROME sheet in chrome-css.js — they frame
- * permanently dark apps, and a light theme around a dark iframe would look broken.
- * The home page has no iframe, so it gets its own sheet with a real theme toggle.
+ * The app pages use chrome-css.js, which resolves the theme the same way, so one
+ * choice covers the whole site (the script is THEME BOOT in apply-site-chrome.js).
  *
  * Theme resolution, in order:
  *   <html data-theme="light|dark">   explicit choice from the toggle (persisted)
