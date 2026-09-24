@@ -139,11 +139,10 @@ function buildMeta(page) {
   // someone shared, LinkedIn canonicalises to the og:url and the shared link shows the
   // uglier variant.
   //
-  // App pages advertise the extensionless path. Cloudflare Pages 308-redirects
-  // /foo.html to /foo, so a canonical ending in .html would point at a redirect.
-  // GitHub Pages serves both forms, and in-page links keep .html so the site still
-  // works opened from disk.
-  const url = page.kind === 'home' ? `${origin}/` : `${origin}/${page.file.replace(/\.html$/, '')}`;
+  // App pages advertise the real file path (/foo.html). The Cloudflare Worker serves
+  // files at exactly their own path (html_handling "none" in wrangler.jsonc), so there
+  // is no extensionless form to canonicalise to.
+  const url = page.kind === 'home' ? `${origin}/` : `${origin}/${page.file}`;
   const img = `${origin}/assets/og-${page.ogSlug}.png`;
   return [
     `<link rel="canonical" href="${url}">`,

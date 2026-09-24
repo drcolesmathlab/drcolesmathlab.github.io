@@ -18,11 +18,11 @@
 
 module.exports = {
   site: {
-    // Served by Cloudflare Pages (the canonical host) and also by GitHub Pages at
-    // drcolesmathlab.github.io, so links shared before the move keep working. Canonical,
-    // og:url and og:image all point here. If Cloudflare assigns a different project
-    // subdomain, change this and re-run the generator.
-    origin: 'https://drcolesmathlab.pages.dev',
+    // Served by a Cloudflare Worker (the canonical host; see wrangler.jsonc) and also by
+    // GitHub Pages at drcolesmathlab.github.io, so links shared before the move keep
+    // working. Canonical, og:url and og:image all point here. If a custom domain is
+    // attached to the Worker later, change this and re-run the generator.
+    origin: 'https://drcolesmathlab.dr-stock-investing.workers.dev',
     name: "Dr. Cole's Math Lab",
     wordmarkPre: "Dr. Cole's",
     wordmark: 'Math Lab',
