@@ -18,9 +18,12 @@
 
 // Wordmark gradient stops. Exported so tools/check-contrast.js measures these exact
 // values — each stop is large bold text on --bg and must clear 3:1.
+// Dark is the app pages' wordmark exactly (chrome-css.js .logo): cyan → green → red on
+// each half, split by the spinning pentagon. Light keeps the same hues, darkened until
+// every stop clears 3:1 on white — the app-page stops are too pale for a light page.
 const WORDMARK = {
-  light: { pre: ['#0E7490', '#047857'], mid: ['#047857', '#4D7C0F'], post: ['#BE185D', '#9D174D'] },
-  dark: { pre: ['#22D3EE', '#4ADE80'], mid: ['#4ADE80', '#A3E635'], post: ['#F472B6', '#FDA4AF'] },
+  light: { stops: ['#0E7490', '#047857', '#BE123C'] },
+  dark: { stops: ['#00D4FF', '#00FF7F', '#FF3355'] },
 };
 
 function themeBlock(config, theme) {
@@ -28,11 +31,11 @@ function themeBlock(config, theme) {
   for (const c of config.categories) {
     lines.push(`  --${c.id}:${c[theme].color}; --${c.id}-soft:${c[theme].soft};`);
   }
-  const w = WORDMARK[theme];
+  const [a, b, c] = WORDMARK[theme].stops;
   lines.push(
-    `  --wm-pre:linear-gradient(90deg,${w.pre.join(',')});`,
-    `  --wm-mid:linear-gradient(90deg,${w.mid.join(',')});`,
-    `  --wm-post:linear-gradient(90deg,${w.post.join(',')});`,
+    `  --wm:linear-gradient(90deg,${a},${b} 45%,${c});`,
+    `  --wm-icon:linear-gradient(135deg,${a},${c});`,
+    `  --wm-glow:${a};`,
     `  color-scheme:${theme};`
   );
   return lines.join('\n');
@@ -110,13 +113,16 @@ header.site{
 /* ── Hero ────────────────────────────────────────────────────────────────── */
 .hero{padding-block:3.5rem 2rem;text-align:center}
 .wordmark{
-  margin:0;display:flex;align-items:center;justify-content:center;gap:.35em;flex-wrap:wrap;
-  font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-.02em;line-height:1.15;
+  margin:0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+  font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-1px;line-height:1.1;
 }
-.wordmark .grad{background-clip:text;-webkit-background-clip:text;color:transparent}
-.wordmark .w-pre{background-image:var(--wm-pre)}
-.wordmark .w-mid{background-image:var(--wm-mid)}
-.wordmark .w-post{background-image:var(--wm-post)}
+/* Same lockup as the app pages: two gradient words either side of a spinning pentagon. */
+.wordmark .grad{background-image:var(--wm);background-clip:text;-webkit-background-clip:text;color:transparent}
+.wordmark .logo-icon{width:.88em;height:.88em;flex:0 0 .88em;
+  background:var(--wm-icon);
+  clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
+  animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px var(--wm-glow))}
+@keyframes spin{to{transform:rotate(360deg)}}
 /* Windows High Contrast / forced colours drops background images, which would leave
    transparent text. Fall back to the system text colour. */
 @media (forced-colors:active){.wordmark .grad{color:CanvasText;background:none}}

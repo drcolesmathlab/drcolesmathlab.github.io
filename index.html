@@ -85,9 +85,9 @@
   --stats:#0E7490; --stats-soft:#CFFAFE;
   --testprep:#BE185D; --testprep-soft:#FCE7F3;
   --games:#6D28D9; --games-soft:#EDE9FE;
-  --wm-pre:linear-gradient(90deg,#0E7490,#047857);
-  --wm-mid:linear-gradient(90deg,#047857,#4D7C0F);
-  --wm-post:linear-gradient(90deg,#BE185D,#9D174D);
+  --wm:linear-gradient(90deg,#0E7490,#047857 45%,#BE123C);
+  --wm-icon:linear-gradient(135deg,#0E7490,#BE123C);
+  --wm-glow:#0E7490;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
@@ -106,9 +106,9 @@
     --stats:#22D3EE; --stats-soft:#0E2A30;
     --testprep:#F472B6; --testprep-soft:#331D28;
     --games:#A78BFA; --games-soft:#241D3A;
-    --wm-pre:linear-gradient(90deg,#22D3EE,#4ADE80);
-    --wm-mid:linear-gradient(90deg,#4ADE80,#A3E635);
-    --wm-post:linear-gradient(90deg,#F472B6,#FDA4AF);
+    --wm:linear-gradient(90deg,#00D4FF,#00FF7F 45%,#FF3355);
+    --wm-icon:linear-gradient(135deg,#00D4FF,#FF3355);
+    --wm-glow:#00D4FF;
     color-scheme:dark;
   }
 }
@@ -127,9 +127,9 @@
   --stats:#22D3EE; --stats-soft:#0E2A30;
   --testprep:#F472B6; --testprep-soft:#331D28;
   --games:#A78BFA; --games-soft:#241D3A;
-  --wm-pre:linear-gradient(90deg,#22D3EE,#4ADE80);
-  --wm-mid:linear-gradient(90deg,#4ADE80,#A3E635);
-  --wm-post:linear-gradient(90deg,#F472B6,#FDA4AF);
+  --wm:linear-gradient(90deg,#00D4FF,#00FF7F 45%,#FF3355);
+  --wm-icon:linear-gradient(135deg,#00D4FF,#FF3355);
+  --wm-glow:#00D4FF;
   color-scheme:dark;
 }
 
@@ -187,13 +187,16 @@ header.site{
 /* ── Hero ────────────────────────────────────────────────────────────────── */
 .hero{padding-block:3.5rem 2rem;text-align:center}
 .wordmark{
-  margin:0;display:flex;align-items:center;justify-content:center;gap:.35em;flex-wrap:wrap;
-  font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-.02em;line-height:1.15;
+  margin:0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+  font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-1px;line-height:1.1;
 }
-.wordmark .grad{background-clip:text;-webkit-background-clip:text;color:transparent}
-.wordmark .w-pre{background-image:var(--wm-pre)}
-.wordmark .w-mid{background-image:var(--wm-mid)}
-.wordmark .w-post{background-image:var(--wm-post)}
+/* Same lockup as the app pages: two gradient words either side of a spinning pentagon. */
+.wordmark .grad{background-image:var(--wm);background-clip:text;-webkit-background-clip:text;color:transparent}
+.wordmark .logo-icon{width:.88em;height:.88em;flex:0 0 .88em;
+  background:var(--wm-icon);
+  clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
+  animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px var(--wm-glow))}
+@keyframes spin{to{transform:rotate(360deg)}}
 /* Windows High Contrast / forced colours drops background images, which would leave
    transparent text. Fall back to the system text colour. */
 @media (forced-colors:active){.wordmark .grad{color:CanvasText;background:none}}
@@ -333,10 +336,9 @@ footer.site p{margin:0 0 .4rem}
 <div class="wrap">
   <section class="hero" aria-labelledby="hero-title">
     <h1 class="wordmark" id="hero-title">
-      <span class="grad w-pre">Dr. Cole's</span>
-      <svg class="gem" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2 20 9 12 22 4 9Z" fill="url(#gem-grad)"/></svg>
-      <span class="grad w-mid">Math</span>
-      <span class="grad w-post">Lab</span>
+      <span class="grad">Dr. Cole's</span>
+      <span class="logo-icon" aria-hidden="true"></span>
+      <span class="grad">Math Lab</span>
     </h1>
     <p class="tagline">Every interactive app in one place — search, filter, and open the one you need in a click.</p>
     <ul class="hero-facts">
