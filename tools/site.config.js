@@ -350,6 +350,63 @@ module.exports = {
         { id: 'limits',        label: 'Limits',     heading: 'Honest limits' },
       ],
     },
+
+    {
+      slug: 'squares-cubes',
+      title: 'Squares & Cubes Explorer',
+      subtitle: 'See what the exponent is doing',
+      blurb:
+        'Set a side length and watch the square or cube build itself, with the notation ' +
+        'and the count changing alongside — so n\u00b2 and n\u00b3 stay attached to the ' +
+        'shapes they name.',
+      published: true,
+
+      category: 'algebra',
+      dateAdded: '2026-09-24',
+      tags: ['Perfect squares', 'Perfect cubes', 'Square & cube roots'],
+
+      payload: 'apps/squares-cubes/index.html',
+      // Three panels side by side, and the cube needs headroom above the counter.
+      // Below about 900px the app drops to a single column and gets much taller than
+      // any frame worth giving it, which is what the "works best wide" note is for.
+      frame: { height: 'clamp(620px, 80vh, 940px)' },
+
+      storageKeys: [],
+      thirdParty: [],
+
+      a11y: {
+        // 'partial' because rotating the cube is pointer-only. Everything the app
+        // actually teaches is reachable without it, but a drag with no keyboard
+        // equivalent is a drag with no keyboard equivalent.
+        keyboard: 'partial',
+        liveRegion: true,
+        notes:
+          'every control is a real button or a range input, the slider is fully operable ' +
+          'with arrow keys, S/C/E/R/D drive the modes from the keyboard, there is no ' +
+          'timer, and a live region announces the side length, the total and the notation ' +
+          'on every change — so the arithmetic is available without seeing the figures. ' +
+          'Two gaps. Rotating the cube is a drag with no keyboard equivalent, though it ' +
+          'only changes the viewing angle and R returns it to the opening one. And the ' +
+          'figures themselves — the square, the cube, the exploded layers — are ' +
+          'decorative to a screen reader: the live region carries the count, but not the ' +
+          'shape of it, which is the part the app exists to show.',
+      },
+
+      og: {
+        title: "Squares & Cubes Explorer — Dr. Cole's Math Lab",
+        description:
+          'Grow a square or a cube one unit at a time and watch the notation and the ' +
+          'count follow. Runs in the browser, no sign-up.',
+      },
+
+      sections: [
+        { id: 'play',        label: 'Explore',      heading: 'Explore it here' },
+        { id: 'how-to-play', label: 'How it works', heading: 'How it works' },
+        { id: 'skills',      label: 'Skills',       heading: 'What it teaches' },
+        { id: 'tips',        label: 'Tips',         heading: 'Tips for getting the most out of it' },
+        { id: 'limits',      label: 'Limits',       heading: 'Honest limits' },
+      ],
+    },
   ],
 
   /*

@@ -40,6 +40,7 @@ tools/build-transform-lab.js  vendors Transform Lab (ES modules → one classic 
 tools/vendor-tiger-trail.js   vendors Tiger Trail (copy + five documented patches)
 tools/vendor-balancing-act.js vendors Balancing Act (copies six files BY NAME — see below)
 tools/build-real-number-monsters.js  builds Real Number Monsters (Vite → one classic script)
+tools/vendor-squares-cubes.js vendors Squares & Cubes Explorer (lifts its inline <style> into styles.css)
 tools/check-external.js     the no-external-origins gate
 tools/og-cards.html         card templates
 tools/build-og-cards.js     screenshots them into assets/
