@@ -22,6 +22,16 @@ Tips, Honest limits).
 
 Site-wide promises shown to visitors: runs in the browser, no sign-up, no tracking.
 
+### Who it is for
+
+Two audiences, and every app must work for both:
+
+- **Students** using it on their own, on a laptop, Chromebook, tablet or phone.
+- **Teachers presenting it** to a class on a projector or interactive board.
+
+Any grade range is in scope, but the collection so far is mostly **middle school math**.
+Standards alignment is to the **Common Core State Standards for Mathematics (CCSS-M)**.
+
 Every app page carries this disclaimer, so apps must be designed to fit it:
 
 > These are teaching demos built to show one idea clearly. They are not a full
@@ -41,8 +51,12 @@ Before proposing a new app, check it does not duplicate one of these.
 
 ### Categories
 
-Only these exist: **Algebra, Geometry, Statistics, Test Prep, Games**. A new category
-needs Dr. Cole's explicit confirmation — do not invent one in a handoff.
+Existing categories: **Algebra, Geometry, Statistics, Test Prep, Games**. Use one of these
+when it fits. If none fits well, the Project may **propose a new category** in the
+handoff, marked `[NEW CATEGORY]`, with a label, a one-character glyph, and one sentence on
+why no existing category fits. Dr. Cole approves it by bringing the handoff to Claude Code.
+Claude Code then picks the category colours, since they must be unique and pass the
+contrast checks.
 
 ---
 
@@ -112,6 +126,13 @@ Where a goal is not met, the handoff says so plainly. That text becomes the page
   to clarify a mechanic, but final code is written in Claude Code against the repo.
   If a prototype is included, label it `PROTOTYPE — not final` and note any §2 rule it
   breaks (e.g. uses a CDN).
+- **Design for both audiences.** Students working alone need clear instructions and
+  feedback without a teacher. A teacher presenting needs text and numbers readable from
+  the back of a room, no tiny targets, and a way to pause or step through at the
+  class's pace.
+- **Align to Common Core.** Cite the specific CCSS-M standard codes the app addresses
+  (e.g. `7.EE.B.4a`), and only standards the app genuinely practises. If the fit is
+  loose, say so rather than stretching.
 - **One app per handoff document.**
 - **Math must be correct.** Any generated problems, answer checking, or edge cases
   (zero, negatives, fractions, rounding, duplicates) must be spelled out and verified.
@@ -136,10 +157,11 @@ Date: YYYY-MM-DD
 - Title:
 - Subtitle: <short phrase, ~5 words>
 - Blurb: <1–2 sentences for the home card>
-- Category: Algebra | Geometry | Statistics | Test Prep | Games
 - Tags: <3 short topic tags>
-- Grade band: <e.g. Grade 6–7, Algebra I> or [TBD — confirm with Dr. Cole]
-- Standards (optional): <e.g. CCSS 8.EE.C.7> — only if confirmed
+- Category: <existing id> or [NEW CATEGORY] <label, glyph, why no existing one fits>
+- Grade band: <e.g. Grade 6–7, Algebra I>
+- Common Core standards: <codes, e.g. 8.EE.C.7a, each with one line on how the app
+  addresses it>
 
 ## 2. Learning goal
 - The one idea this app shows:
@@ -171,6 +193,7 @@ Date: YYYY-MM-DD
 ## 7. Layout and visuals             (→ frame size in site.config.js)
 - Orientation: landscape | portrait/phone-shaped | either
 - Minimum size it needs to work (width × height), and why:
+- Presenting on a projector: readable from the back of a room? pause / step-through?
 - Visual style notes (dark theme; colours; characters; animation):
 - Sound: yes/no, and a mute control
 
