@@ -1,0 +1,15 @@
+# Files the Cloudflare Worker must NOT publish (gitignore syntax).
+# The Worker serves the repo root, so anything not listed here is public.
+# Never remove .git — it would publish the repository internals, including .git/config.
+.git
+.github
+node_modules
+.wrangler
+tools/
+README.md
+wrangler.jsonc
+.assetsignore
+.gitignore
+.nojekyll
+.DS_Store
+*.bundle

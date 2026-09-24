@@ -1,0 +1,6 @@
+# Cloudflare Worker static-asset rewrites (status 200 = serve the file, no redirect).
+# wrangler.jsonc sets html_handling "none", so a directory URL does not map to its
+# index.html on its own. These two do, without a redirect, because Tiger Trail's
+# service worker precaches "./" and Chrome rejects cached redirected navigations.
+/                    /index.html                    200
+/apps/tiger-trail/   /apps/tiger-trail/index.html   200

@@ -1,0 +1,20 @@
+// Cloudflare Worker (static assets only — no Worker script).
+// Committed so the dashboard's `npx wrangler deploy` never generates its own config.
+// Its generated config had no ignore list and published .git/ as public files.
+// What gets uploaded is controlled by .assetsignore next to this file.
+{
+  "name": "drcolesmathlab",
+  "compatibility_date": "2026-09-21",
+  "assets": {
+    "directory": ".",
+    // Serve every file at exactly its own path: no /foo.html -> /foo redirects.
+    // The default ("auto-trailing-slash") 307-redirects apps/tiger-trail/index.html,
+    // and Tiger Trail's service worker precaches that URL. Chrome refuses to use a
+    // cached *redirected* response for a navigation, so the game frame would fail on
+    // every repeat visit. With "none", URLs match the file:// and GitHub Pages layout.
+    "html_handling": "none"
+  },
+  "workers_dev": true,
+  // Per-commit preview URLs off: only the main URL is public.
+  "preview_urls": false
+}

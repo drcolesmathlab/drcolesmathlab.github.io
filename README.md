@@ -3,7 +3,7 @@
 A portfolio site for a set of interactive math apps. The point is that every app is
 **actually usable in the page** — not a screenshot, not a video, not an app-store link.
 
-Live at `https://drcolesmathlab.pages.dev` (Cloudflare Pages, canonical) and
+Live at `https://drcolesmathlab.dr-stock-investing.workers.dev` (Cloudflare Worker, canonical) and
 `https://drcolesmathlab.github.io` (GitHub Pages, kept so older links still work). See
 *Deploying* below.
 
@@ -43,7 +43,10 @@ tools/check-external.js     the no-external-origins gate
 tools/og-cards.html         card templates
 tools/build-og-cards.js     screenshots them into assets/
 .nojekyll                   stops Jekyll from reinterpreting anything
-_headers                    Cloudflare Pages response headers (GitHub Pages ignores it)
+_headers                    Cloudflare response headers (GitHub Pages ignores it)
+_redirects                  Cloudflare rewrites: / and apps/tiger-trail/ → their index.html
+wrangler.jsonc              Cloudflare Worker config (static assets, no script)
+.assetsignore               what the Worker must NOT publish — .git, tools/, README …
 ```
 
 ---
@@ -228,31 +231,47 @@ mode (white on `#60A5FA` was 2.54:1, now `#060810`). The mockup's decorative gre
 
 The same `main` branch is served two ways, with no build step:
 
-- **Cloudflare Pages: `https://drcolesmathlab.pages.dev` (canonical).** `site.origin` in
-  `tools/site.config.js` points here, so canonical, `og:url` and `og:image` all do too.
+- **Cloudflare Worker: `https://drcolesmathlab.dr-stock-investing.workers.dev`
+  (canonical).** `site.origin` in `tools/site.config.js` points here, so canonical,
+  `og:url` and `og:image` all do too. The Worker is static assets only — no script.
 - **GitHub Pages: `https://drcolesmathlab.github.io`.** Kept live so links shared before
   the move keep working.
 
-### One-time Cloudflare Pages setup
+### How the Cloudflare Worker is set up
 
-1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-   Authorise the Cloudflare GitHub app for `drcolesmathlab/drcolesmathlab.github.io`.
-2. Project name **`drcolesmathlab`**. If Cloudflare says it's taken and gives you
-   something like `drcolesmathlab-abc.pages.dev`, change `site.origin` to that, run
-   `node tools/apply-site-chrome.js`, and commit.
-3. Production branch **`main`**. Framework preset **None**. Build command **empty**.
-   Build output directory **`/`**. No environment variables.
-4. Save and deploy. Every push to `main` redeploys automatically. Other branches get
-   preview URLs.
+The dashboard project (**Workers & Pages → drcolesmathlab**) is connected to this repo
+and redeploys on every push to `main`. Build settings: **no build command**, deploy
+command **`npx wrangler deploy`**. Everything else lives in committed files:
 
-Two Cloudflare behaviours to know:
+- **`wrangler.jsonc`** — Worker name `drcolesmathlab` (must match the dashboard), assets
+  served from the repo root, `workers_dev` on, **preview URLs off**. Without this file,
+  `wrangler deploy` generates its own config on the build machine — and that generated
+  config is what published `.git/` as public files on the very first deploy.
+- **`.assetsignore`** — because the Worker serves the repo root, *anything not listed
+  here is public*. It excludes `.git`, `tools/`, `README.md`, `wrangler.jsonc`, the dot
+  files and `.wrangler/`. **Never remove `.git` from it.** `LICENSE-apps.md` and
+  `assets/fonts/OFL-*.txt` are deliberately public (the OFL requires the licence to
+  travel with the fonts).
+- **`html_handling: "none"`** — every file is served at exactly its own path, with no
+  automatic `/foo.html → /foo` redirects. Cloudflare's default does redirect, and in a
+  local `wrangler dev` test that broke the embedded app frames and left Tiger Trail's
+  frame without a working service worker. The site's URLs are the real file paths, the
+  same as from disk and on GitHub Pages.
+- **`_redirects`** — with `html_handling: "none"` a directory URL doesn't map to its
+  `index.html` by itself, so `/` and `/apps/tiger-trail/` (which Tiger Trail's service
+  worker precaches) are rewritten — status `200`, not a redirect. If you add another app
+  with a service worker that caches `./`, add a line for it.
+- **`_headers`** — `nosniff`, a referrer policy, `SAMEORIGIN` framing, and revalidation
+  for `.html` and Tiger Trail's `sw.js`. Don't use `X-Frame-Options: DENY`; the app
+  pages frame their own apps.
 
-- **Cloudflare strips `.html`.** `/tiger-trail.html` 308-redirects to `/tiger-trail`. So
-  the generator writes extensionless canonical URLs for app pages, while in-page links
-  keep `.html` so the site still works opened from disk. GitHub Pages serves both forms.
-- **`_headers`** sets `nosniff`, a referrer policy, `SAMEORIGIN` framing, and
-  revalidation for `.html` and Tiger Trail's `sw.js`. Don't add `X-Frame-Options: DENY`,
-  because the app pages frame their own apps.
+To check a change the way Cloudflare will serve it, run `npx wrangler dev` from the repo
+root and open `http://localhost:8787`. `/.git/config`, `/tools/…` and `/README.md` must
+all be 404.
+
+**Custom domain later:** add it in the Worker's **Settings → Domains & Routes**, then set
+`site.origin` to it, run `node tools/apply-site-chrome.js`, update the URLs in
+`tools/og-cards.html`, re-render the cards and commit.
 
 Before sharing a new or changed URL, paste it into LinkedIn's Post Inspector to confirm
 the card renders. LinkedIn caches aggressively, so check before you share, not after.
