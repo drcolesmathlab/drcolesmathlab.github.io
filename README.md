@@ -39,6 +39,7 @@ tools/check-contrast.js     measures every home colour pair against WCAG AA
 tools/build-transform-lab.js  vendors Transform Lab (ES modules → one classic script)
 tools/vendor-tiger-trail.js   vendors Tiger Trail (copy + five documented patches)
 tools/vendor-balancing-act.js vendors Balancing Act (copies six files BY NAME — see below)
+tools/build-real-number-monsters.js  builds Real Number Monsters (Vite → one classic script)
 tools/check-external.js     the no-external-origins gate
 tools/og-cards.html         card templates
 tools/build-og-cards.js     screenshots them into assets/
@@ -340,3 +341,15 @@ Then, manually:
   ~69 MB of video plus another party's commercial branding and Terms-of-Use PDFs, and
   this repo is public. `tools/vendor-balancing-act.js` copies six files by name and then
   asserts nothing else came along — keep it that way if you ever re-vendor.
+- **Real Number Monsters is built, not copied.** Upstream
+  (`drstockinvesting/real-number-monsters`) is a Vite project of ES modules, and Vite's
+  normal output is a `type="module"` script, which does not load from `file://`.
+  `tools/build-real-number-monsters.js` runs upstream's own Vite (so `npm ci` in a sibling
+  checkout at `../real-number-monsters` first, or set `RNM_SRC`) with an override config
+  that emits one classic IIFE `game.js`, a `game.css`, and an `index.html` with a `defer`
+  script and no `crossorigin`. No game code is changed. The stylesheet is deliberately
+  `game.css`, not `style.css`: the game uses a system font stack everywhere, so the
+  generator's base64 font injection would be ~76 KB of dead weight. Its storage keys
+  (`rnm-best`, `rnm-muted`, `rnm-touchbar`) are kept as upstream wrote them; they are
+  already prefixed and listed in the config for the collision check. After any upstream
+  change, re-run the script — the site's copy does not update by itself.

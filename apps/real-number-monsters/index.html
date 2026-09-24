@@ -1,0 +1,123 @@
+<!doctype html>
+<!-- Vendored from real-number-monsters @ 4d9393e by tools/build-real-number-monsters.js. Do not edit; re-run the script. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Real Number Monsters</title>
+  <meta name="description" content="A Tetris-style math game: feed each falling number to the monster of its most specific set — Natural, Whole, Integer, Rational or Irrational." />
+
+  <!-- Inline SVG favicon: no binary asset, keeps the build fully self-contained. -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%91%BE</text></svg>" />
+
+  <!-- Link preview when the URL is shared in Google Classroom / email / chat. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Real Number Monsters" />
+  <meta property="og:description" content="Feed every falling number to the monster of its most specific set. Natural ⊂ Whole ⊂ Integer ⊂ Rational, with Irrational standing alone." />
+  <meta name="twitter:card" content="summary" />
+
+  <script defer src="./game.js"></script>
+  <link rel="stylesheet" href="./game.css">
+</head>
+<body>
+  <div id="app">
+    <header id="hud">
+      <div class="hud-item score-item">Score: <span id="hud-score">0</span></div>
+      <div class="hud-item ok-item">&#10004; <span id="hud-right">0</span>/20</div>
+      <div class="hud-item bad-item">&#10008; <span id="hud-wrong">0</span>/10</div>
+      <div class="hud-item best-item">Best: <span id="hud-best">0</span></div>
+      <button id="pause-btn" class="hud-btn" title="Pause (P or Esc)">&#9208;&#65039;</button>
+
+      <!-- Shown only while paused. The game area stays visible behind it so a
+           class can read the number and talk through the answer. -->
+      <div id="pause-controls" class="hidden">
+        <span id="paused-flag">PAUSED</span>
+        <button id="restart-btn" class="hud-btn" title="Restart round" aria-label="Restart round">&#128260;<span class="btn-label"> Restart</span></button>
+        <button id="menu-btn" class="hud-btn" title="Main menu" aria-label="Main menu">&#127968;<span class="btn-label"> Main Menu</span></button>
+      </div>
+
+      <button id="mute-btn" class="hud-btn" title="Toggle sound">&#128266;</button>
+    </header>
+
+    <div id="stage">
+      <canvas id="game"></canvas>
+
+      <!-- Title screen: clean start / rules choice -->
+      <div id="title-overlay" class="overlay">
+        <div class="panel start-panel">
+          <div class="logo-emoji">👾</div>
+          <h1>Real Number Monsters</h1>
+          <p class="tagline">Feed every falling number to the monster of its <em>most specific</em> set!</p>
+          <div class="btn-row">
+            <button id="start-btn" class="big-btn">Start Feeding!</button>
+            <button id="rules-btn" class="ghost-btn">How to Play</button>
+          </div>
+          <button class="link-btn touchbar-toggle">Thumb controls: on</button>
+        </div>
+      </div>
+
+      <!-- Rules screen (opened from the How to Play button) -->
+      <div id="rules-overlay" class="overlay hidden">
+        <div class="panel">
+          <h1>How to Play</h1>
+          <div class="howto">
+            <ul>
+              <li><strong>&larr; &rarr;</strong> move the number &bull; hold <strong>&darr;</strong> to fall fast &bull; <strong>Space</strong> slams it in.</li>
+              <li>No keyboard? <strong>Drag</strong> the number with mouse / finger, or just <strong>tap a bin</strong> to send it straight there.</li>
+              <li>On a phone, use the <strong>colour bar under the monsters</strong>: slide to aim without covering the number, tap to drop. Turn it on or off from this screen.</li>
+              <li><strong>P</strong> or <strong>Esc</strong> (or the <strong>&#9208;&#65039;</strong> button) pauses &mdash; the monsters and the number stay on screen so you can take your time. Restart and Main Menu appear in the top bar while paused.</li>
+              <li>The bins are nested: <span class="tag t-nat">Natural</span> inside <span class="tag t-who">Whole</span> inside <span class="tag t-int">Integer</span> inside <span class="tag t-rat">Rational</span> &mdash; and <span class="tag t-irr">Irrational</span> stands alone.</li>
+              <li>Feeding an inner monster feeds every monster around it too: <strong>+10 per happy monster</strong>. A natural number in the Natural bin scores <strong>+40</strong>!</li>
+              <li>Feed the wrong monster: <strong>&minus;10</strong> each. Not specific enough? Each <em>deprived</em> inner monster costs <strong>&minus;10</strong>.</li>
+              <li>Round ends after <strong>20 right</strong> or <strong>10 wrong</strong>. Score never drops below 0.</li>
+              <li>Watch decimals with &hellip; &mdash; a repeating pattern means rational, no pattern means (most likely) irrational!</li>
+              <li>Stay sharp: some fractions <em>reduce</em>. 6&frasl;3 is really 2 &mdash; a natural number!</li>
+            </ul>
+          </div>
+          <div class="btn-row">
+            <button id="rules-start-btn" class="big-btn">Start Feeding!</button>
+            <button id="rules-back-btn" class="ghost-btn">Back</button>
+          </div>
+          <button class="link-btn touchbar-toggle">Thumb controls: on</button>
+        </div>
+      </div>
+
+      <!-- End-of-round summary -->
+      <div id="summary-overlay" class="overlay hidden">
+        <div class="panel wide">
+          <h1 id="summary-heading">Round Over</h1>
+          <p id="summary-sub"></p>
+          <div class="table-wrap">
+            <table id="summary-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Number</th>
+                  <th>Your bin</th>
+                  <th>Correct bin</th>
+                  <th>It belongs to&hellip;</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody id="summary-body"></tbody>
+            </table>
+          </div>
+          <div class="btn-row">
+            <button id="again-btn" class="big-btn">Play Again</button>
+            <button id="summary-menu-btn" class="ghost-btn">Main Menu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optional thumb control: aim from below instead of covering the
+         numbers with your hand. Segments line up with the bins above. -->
+    <div id="touch-bar" class="hidden" aria-hidden="true">
+      <div id="bar-track">
+        <div id="bar-knob"></div>
+      </div>
+      <div id="bar-hint">slide to aim &bull; tap to drop</div>
+    </div>
+  </div>
+</body>
+</html>

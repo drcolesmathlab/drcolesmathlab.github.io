@@ -264,6 +264,7 @@ a.app:hover .app-open .ico{transform:translateX(4px)}
 .play-frame[data-app="transform-lab"]{height:clamp(620px, 80vh, 940px)}
 .play-frame[data-app="tiger-trail"]{height:clamp(440px, 76vh, 800px)}
 .play-frame[data-app="balancing-act"]{height:clamp(600px, 84vh, 900px);width:min(560px, 100%);margin-inline:auto}
+.play-frame[data-app="real-number-monsters"]{height:clamp(560px, 80vh, 860px)}
 
 .play-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
 .btn-play-full{display:inline-flex;align-items:center;gap:8px;min-height:44px;
@@ -333,7 +334,7 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
 <!-- TOPBAR:START -->
 <div class="wrap">
   <a href="index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H6"/><path d="m11 6-6 6 6 6"/></svg><span>All apps</span></a>
-  <span class="crumb-meta">App 03 / 03</span>
+  <span class="crumb-meta">App 03 / 04</span>
 </div>
 <!-- TOPBAR:END -->
 </div>
@@ -554,7 +555,7 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
         <!-- A11Y:START -->
 <h3>Accessibility, honestly</h3>
 <p>The page around this app meets <strong>WCAG 2.1 AA</strong>: a skip link as the first focusable element, a "skip past the interactive app" link before the frame so keyboard users are never trapped inside it, verified colour contrast on every token pair, visible focus rings, 44&nbsp;px touch targets, and full <code>prefers-reduced-motion</code> support.</p>
-<p>The app itself is an existing project embedded here, and it does not meet that bar in full. Specifically: this is the closest of the three to genuinely accessible. Every control is a real button, the balance-beam graphic is labelled, there is no timer, and the feedback line is a live region, so prompts and right/wrong results are announced. Two gaps remain: the streak readout is not announced (it redraws on every keypress, so announcing it would talk over you constantly), and the beam itself carries information — tipped means unbalanced — that reaches you only through the feedback text, not through the graphic.</p>
+<p>The app itself is an existing project embedded here, and it does not meet that bar in full. Specifically: this is the closest of the apps here to genuinely accessible. Every control is a real button, the balance-beam graphic is labelled, there is no timer, and the feedback line is a live region, so prompts and right/wrong results are announced. Two gaps remain: the streak readout is not announced (it redraws on every keypress, so announcing it would talk over you constantly), and the beam itself carries information — tipped means unbalanced — that reaches you only through the feedback text, not through the graphic.</p>
 <p class="muted">This app saves progress in your browser's local storage (<code>eqBalanceBest</code>, <code>eqBalanceSound</code>, <code>eqBalanceShowProps</code>). Nothing is sent anywhere. Safari clears script-written storage after about a week without a visit, so saved scores can disappear there — that is a browser policy, not a bug I can fix.</p>
 <!-- A11Y:END -->
       </div>
@@ -573,10 +574,15 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
     <span class="pt">Tiger Trail</span>
     <span class="ps">Jungle Math Runner</span>
   </a>
+  <a class="next" href="real-number-monsters.html">
+    <span class="dir"><span>Next</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg></span>
+    <span class="pt">Real Number Monsters</span>
+    <span class="ps">Sort the real number system</span>
+  </a>
 </nav>
 <p><a class="footer-back" href="index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H6"/><path d="m11 6-6 6 6 6"/></svg><span>Back to all apps</span></a></p>
 <p class="footer-disclaimer">These are teaching demos built to show one idea clearly. They are not a full curriculum and they are not a substitute for instruction or practice.</p>
-<p class="footer-meta">Dr. Cole's Math Lab<span class="sep">·</span>App 3 of 3 — Balancing Act<span class="sep">·</span>No tracking, no third-party requests</p>
+<p class="footer-meta">Dr. Cole's Math Lab<span class="sep">·</span>App 3 of 4 — Balancing Act<span class="sep">·</span>No tracking, no third-party requests</p>
 <!-- FOOTER:END -->
   </div>
 </footer>

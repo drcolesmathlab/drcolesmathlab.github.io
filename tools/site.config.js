@@ -272,7 +272,7 @@ module.exports = {
         keyboard: 'full',
         liveRegion: true,
         notes:
-          'this is the closest of the three to genuinely accessible. Every control is a ' +
+          'this is the closest of the apps here to genuinely accessible. Every control is a ' +
           'real button, the balance-beam graphic is labelled, there is no timer, and the ' +
           'feedback line is a live region, so prompts and right/wrong results are ' +
           'announced. Two gaps remain: the streak readout is not announced (it redraws ' +
@@ -286,6 +286,59 @@ module.exports = {
         description:
           'Solve linear equations with a balance beam that reacts when you break the ' +
           'property of equality. Playable in the browser, no sign-up.',
+      },
+
+      sections: [
+        { id: 'play',          label: 'Play',       heading: 'Play it here' },
+        { id: 'how-to-play',   label: 'Controls',   heading: 'How to play' },
+        { id: 'rules-scoring', label: 'Scoring',    heading: 'Rules and scoring' },
+        { id: 'skills',        label: 'Skills',     heading: 'What it teaches' },
+        { id: 'tips',          label: 'Tips',       heading: 'Tips' },
+        { id: 'limits',        label: 'Limits',     heading: 'Honest limits' },
+      ],
+    },
+
+    {
+      slug: 'real-number-monsters',
+      title: 'Real Number Monsters',
+      subtitle: 'Sort the real number system',
+      blurb:
+        'Numbers fall from a machine and five hungry monsters wait below. Feed each one ' +
+        'to the monster of its most specific set: Natural, Whole, Integer, Rational or ' +
+        'Irrational.',
+      published: true,
+
+      category: 'games',
+      dateAdded: '2026-09-24',
+      tags: ['Real number system', 'Rational vs irrational', 'Classifying numbers'],
+
+      // Built, not copied: tools/build-real-number-monsters.js turns the upstream Vite
+      // project into one classic script so it runs from file://.
+      payload: 'apps/real-number-monsters/index.html',
+      // The game reflows to whatever box it gets (layout() in upstream src/bins.js), but
+      // five bins plus the machine need vertical room; landscape reads best.
+      frame: { height: 'clamp(560px, 80vh, 860px)' },
+
+      storageKeys: ['rnm-best', 'rnm-muted', 'rnm-touchbar'],
+      thirdParty: [],
+
+      a11y: {
+        keyboard: 'full',
+        liveRegion: false,
+        notes:
+          'Fully playable from the keyboard: arrow keys steer, Space drops, P or Esc ' +
+          'pauses, and every menu control is a real button. But the falling number, the ' +
+          'bins and the monsters are drawn on a canvas that has no text alternative, and ' +
+          'right/wrong feedback is visual and audio only — nothing is announced to a ' +
+          'screen reader. The number keeps falling until you pause, so it is timed unless ' +
+          'you choose to stop the clock.',
+      },
+
+      og: {
+        title: "Real Number Monsters — Dr. Cole's Math Lab",
+        description:
+          'Feed every falling number to the monster of its most specific set: Natural, ' +
+          'Whole, Integer, Rational or Irrational. Playable in the browser, no sign-up.',
       },
 
       sections: [
