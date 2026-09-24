@@ -18,11 +18,14 @@
 
 module.exports = {
   site: {
-    // Served by a Cloudflare Worker (the canonical host; see wrangler.jsonc) and also by
-    // GitHub Pages at drcolesmathlab.github.io, so links shared before the move keep
-    // working. Canonical, og:url and og:image all point here. If a custom domain is
-    // attached to the Worker later, change this and re-run the generator.
-    origin: 'https://drcolesmathlab.dr-stock-investing.workers.dev',
+    // Served by GitHub Pages here and by a Cloudflare Worker at
+    // drcolesmathlab.dr-stock-investing.workers.dev (see wrangler.jsonc). Canonical,
+    // og:url and og:image all point here, not at the Worker: LinkedIn's Post Inspector
+    // cannot load any page on workers.dev ("We cannot display a preview for this URL"),
+    // and workers.dev is Cloudflare's domain, so there is no zone of ours in which to
+    // let LinkedInBot through. If a custom domain is attached to the Worker later,
+    // check it in Post Inspector first, then change this and re-run the generator.
+    origin: 'https://drcolesmathlab.github.io',
     name: "Dr. Cole's Math Lab",
     wordmarkPre: "Dr. Cole's",
     wordmark: 'Math Lab',
