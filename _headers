@@ -1,0 +1,16 @@
+# Cloudflare Pages response headers. GitHub Pages ignores this file.
+# Format: Cloudflare Pages docs → Configuration → Headers.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Pages are small and change on every deploy — always revalidate.
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# The service worker must never be served stale, or visitors stay on an old build.
+/apps/tiger-trail/sw.js
+  Cache-Control: no-cache

@@ -12,14 +12,17 @@
  *   3. Create <slug>.html from an existing page as a skeleton.
  *   4. Run: node tools/apply-site-chrome.js
  *
- * Apps with `published: false` render as a muted "In progress" tile on the home page
- * and are excluded from numbering and the pager chain, so you can list a roadmap
- * without shipping dead links.
+ * Apps with `published: false` are left off the home page and out of the pager, so an
+ * app can be staged here before it ships.
  */
 
 module.exports = {
   site: {
-    origin: 'https://drcolesmathlab.github.io',
+    // Served by Cloudflare Pages (the canonical host) and also by GitHub Pages at
+    // drcolesmathlab.github.io, so links shared before the move keep working. Canonical,
+    // og:url and og:image all point here. If Cloudflare assigns a different project
+    // subdomain, change this and re-run the generator.
+    origin: 'https://drcolesmathlab.pages.dev',
     name: "Dr. Cole's Math Lab",
     wordmarkPre: "Dr. Cole's",
     wordmark: 'Math Lab',
@@ -93,6 +96,53 @@ module.exports = {
     { icon: 'shield', text: 'No sign-up, no tracking' },
   ],
 
+  /*
+   * Home-page categories: the filter chips, the card colour and the card glyph.
+   * Chips with no apps in them are hidden, so listing a category here costs nothing
+   * until an app uses it. Confirm with Dr. Cole before adding a new one.
+   *
+   * Each has a light and a dark colour pair, because the home page has a theme toggle.
+   * `color` is used as text (the card kicker, the "Open" link, the active chip) on
+   * `soft` and on the card surface, so it must clear 4.5:1 against both — tools/check-contrast.js
+   * enforces that. Colours must stay unique per category (colour is one of three
+   * signals, alongside glyph and label, and must not become ambiguous).
+   */
+  categories: [
+    { id: 'algebra',  label: 'Algebra',    glyph: '=',
+      light: { color: '#B45309', soft: '#FEF3C7' }, dark: { color: '#F0B429', soft: '#3A2E12' } },
+    { id: 'geometry', label: 'Geometry',   glyph: '△',
+      light: { color: '#047857', soft: '#D1FAE5' }, dark: { color: '#34D399', soft: '#0F2B22' } },
+    { id: 'stats',    label: 'Statistics', glyph: '▦',
+      light: { color: '#0E7490', soft: '#CFFAFE' }, dark: { color: '#22D3EE', soft: '#0E2A30' } },
+    { id: 'testprep', label: 'Test Prep',  glyph: '◎',
+      light: { color: '#BE185D', soft: '#FCE7F3' }, dark: { color: '#F472B6', soft: '#331D28' } },
+    { id: 'games',    label: 'Games',      glyph: '⚡',
+      light: { color: '#6D28D9', soft: '#EDE9FE' }, dark: { color: '#A78BFA', soft: '#241D3A' } },
+  ],
+
+  /*
+   * Home-page neutral palette, light and dark. Same contrast rules as above; see
+   * tools/check-contrast.js for the exact pairs that are measured.
+   *
+   * Three values differ from the design mockup, because they measured below AA:
+   *   --text-faint light #6B7181 → #5F6576  (was 4.20:1 on --border-soft)
+   *   --text-faint dark  #7480A0 → #7F8AA8  (was 4.40:1 on --border-soft)
+   *   --on-focus   dark  #FFFFFF → #060810  (white on #60A5FA was 2.54:1)
+   * The mockup's --text-decorative (#9AA0AF, 2.6:1) is dropped entirely.
+   */
+  homeTokens: {
+    light: {
+      '--bg': '#F7F8FA', '--bg-elevated': '#FFFFFF', '--border': '#E1E4EB', '--border-soft': '#ECEEF2',
+      '--text': '#14171F', '--text-soft': '#4B5165', '--text-faint': '#5F6576',
+      '--focus': '#1D4ED8', '--on-focus': '#FFFFFF',
+    },
+    dark: {
+      '--bg': '#060810', '--bg-elevated': '#0E111B', '--border': '#1D2233', '--border-soft': '#161A29',
+      '--text': '#E9EBF2', '--text-soft': '#8B93A6', '--text-faint': '#7F8AA8',
+      '--focus': '#60A5FA', '--on-focus': '#060810',
+    },
+  },
+
   apps: [
     {
       slug: 'transform-lab',
@@ -103,8 +153,13 @@ module.exports = {
         'predict where the image lands before you check your answer.',
       published: true,
 
-      // Colour + icon + text label, always all three. Colour alone is never the signal.
-      category: { key: 'geometry', label: 'Geometry', token: '--rc', icon: 'triangle' },
+      // Category id from `categories` above. Colour + glyph + text label are all
+      // derived from it, so colour is never the only signal.
+      // dateAdded drives "Newest first" on the home page; ties keep array order.
+      // Optional `grade` (e.g. 'Algebra I') adds a grade tag to the home card —
+      // left off until Dr. Cole confirms the band for each app.
+      category: 'geometry',
+      dateAdded: '2026-07-29',
       tags: ['Coordinate plane', 'Transformations', 'Prediction'],
 
       payload: 'apps/transform-lab/index.html',
@@ -153,7 +208,8 @@ module.exports = {
         'coins, dodge the wrong ones, and keep your speed up as the trail accelerates.',
       published: true,
 
-      category: { key: 'arcade', label: 'Speed & arcade', token: '--ax', icon: 'bolt' },
+      category: 'games',
+      dateAdded: '2026-07-29',
       tags: ['Multiples', 'Factors', 'Speed recall'],
 
       payload: 'apps/tiger-trail/index.html',
@@ -200,7 +256,8 @@ module.exports = {
         'that tips the moment you do something to one side and not the other.',
       published: true,
 
-      category: { key: 'algebra', label: 'Algebra', token: '--oc', icon: 'equals' },
+      category: 'algebra',
+      dateAdded: '2026-07-29',
       tags: ['Linear equations', 'Inverse operations', 'Properties of equality'],
 
       payload: 'apps/balancing-act/index.html',

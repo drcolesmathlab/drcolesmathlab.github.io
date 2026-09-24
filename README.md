@@ -3,7 +3,9 @@
 A portfolio site for a set of interactive math apps. The point is that every app is
 **actually usable in the page** — not a screenshot, not a video, not an app-store link.
 
-Live at `https://drcolesmathlab.github.io` (once Pages is enabled — see *Deploying* below).
+Live at `https://drcolesmathlab.pages.dev` (Cloudflare Pages, canonical) and
+`https://drcolesmathlab.github.io` (GitHub Pages, kept so older links still work). See
+*Deploying* below.
 
 ---
 
@@ -24,13 +26,16 @@ check on every page it writes. Both exit non-zero on a violation.
 ## Layout
 
 ```
-index.html                  home — wordmark, hero facts, app grid, about, footer
+index.html                  home — search, category filter, sort, light/dark/auto theme
 <slug>.html                 one page per app; embeds the app and explains it
 apps/<slug>/                the app itself, self-contained, relative paths only
 assets/fonts/               woff2 source files + OFL licence text
 assets/og-<slug>.png        1200x630 social preview cards
 tools/site.config.js        SINGLE SOURCE OF TRUTH — read this first
 tools/apply-site-chrome.js  regenerates every shared region of every page
+tools/lib/home-css.js       the home page stylesheet (light / dark / auto)
+tools/lib/chrome-css.js     the app-page stylesheet (dark only)
+tools/check-contrast.js     measures every home colour pair against WCAG AA
 tools/build-transform-lab.js  vendors Transform Lab (ES modules → one classic script)
 tools/vendor-tiger-trail.js   vendors Tiger Trail (copy + five documented patches)
 tools/vendor-balancing-act.js vendors Balancing Act (copies six files BY NAME — see below)
@@ -38,6 +43,7 @@ tools/check-external.js     the no-external-origins gate
 tools/og-cards.html         card templates
 tools/build-og-cards.js     screenshots them into assets/
 .nojekyll                   stops Jekyll from reinterpreting anything
+_headers                    Cloudflare Pages response headers (GitHub Pages ignores it)
 ```
 
 ---
@@ -45,7 +51,11 @@ tools/build-og-cards.js     screenshots them into assets/
 ## Adding an app
 
 1. Add an entry to `apps` in [`tools/site.config.js`](tools/site.config.js). Array order
-   is display order, and it drives numbering, the prev/next pager, and OG filenames.
+   drives the prev/next pager and OG filenames. Give it a `category` id from
+   `categories` (algebra, geometry, stats, testprep, games — confirm with Dr. Cole before
+   adding a new one) and a `dateAdded` (`YYYY-MM-DD`), which drives "Newest first" on the
+   home page. `grade` is optional and adds a grade tag to the home card; leave it off
+   until the band is confirmed.
 2. Copy the app's files into `apps/<slug>/` so its `payload` path resolves. Relative
    paths only; no CDN references.
 3. Give its stylesheet a `/* FONTS:START */` … `/* FONTS:END */` marker pair so the
@@ -56,11 +66,13 @@ tools/build-og-cards.js     screenshots them into assets/
 5. Set `published: true` and run:
 
    ```bash
-   node tools/apply-site-chrome.js && node tools/check-external.js && node tools/build-og-cards.js
+   node tools/apply-site-chrome.js && node tools/check-external.js && node tools/check-contrast.js && node tools/build-og-cards.js
    ```
 
-Apps with `published: false` show on the home page as a muted "In progress" tile and are
-excluded from numbering and the pager — so you can publish a roadmap without dead links.
+Apps with `published: false` are left off the home page and out of the pager.
+
+There is deliberately **no add/edit UI on the site** — no button, form or admin panel.
+The app list changes only by editing `site.config.js` and redeploying.
 
 ### What the generator owns
 
@@ -72,8 +84,9 @@ lost.** Everything outside is hand-authored and never touched.
 | `META` | every page | canonical, OG, Twitter, theme-color |
 | `FONTS` | every page + payload CSS | `@font-face` blocks, base64 |
 | `CACHE NAME` | payload `sw.js` | service-worker cache version, hashed from the payload |
-| `SITE CHROME` | every page | the shared stylesheet |
-| `HERO FACTS`, `APP GRID`, `ABOUT` | home | the three generated regions |
+| `SITE CHROME` | app pages | the dark app-page stylesheet |
+| `HOME CHROME`, `THEME BOOT`, `THEME TOGGLE` | home | light/dark/auto stylesheet, pre-paint theme script, toggle buttons |
+| `HERO FACTS`, `CHIPS`, `APP GRID`, `ABOUT`, `HOME SCRIPT` | home | fact pills, filter chips, cards, about cards, search/filter/sort script |
 | `TOPBAR`, `PAGENAV`, `PLAY`, `A11Y`, `SCROLLSPY` | app pages | chrome + embed + a11y statement |
 | `FOOTER` | every page | pager, disclaimer, footer meta |
 
@@ -189,23 +202,64 @@ Cheap, attribute-only improvements *were* made to the vendored app: `tabindex="0
 `role="img"` and a descriptive `aria-label` on each of the six canvases, a
 reduced-motion guard, and a visible note about what needs a pointer.
 
-**Dark mode only, deliberately.** A theme toggle on the chrome would flip the page around
-a permanently dark app frame — it would look broken and help nobody. A real one means
-editing each app's CSS, which is a different project. Shipping dark-only with verified
-contrast and saying why is the more defensible call.
+**The home page has a Light / Dark / Auto toggle; app pages are dark only.** The home
+page has no iframe, so it gets a real theme toggle: the choice is saved in
+`localStorage` (`mathlab.home.theme`), a tiny script in `<head>` applies it before first
+paint so it never flashes, and Auto follows `prefers-color-scheme` live. The app pages
+stay dark on purpose. A theme toggle there would flip the page around a permanently dark
+app frame, which would look broken and help nobody. A real one means editing each app's
+CSS, which is a different project.
+
+The home page also has search (across name, subtitle, description, category and topic
+tags), multi-select category chips with per-category counts, and a Newest / A→Z /
+By-category sort. The count is announced through an `aria-live` region. It is progressive
+enhancement: with JavaScript off, every card still renders and the controls are hidden.
+Chips for categories with no apps are not rendered.
+
+The home palette comes from the design mockup, checked by `node tools/check-contrast.js`
+(66 pairs, both themes). Three mockup values failed AA and were changed: `--text-faint`
+(light and dark, 4.20 and 4.40:1 on `--border-soft`) and the pressed-button text in dark
+mode (white on `#60A5FA` was 2.54:1, now `#060810`). The mockup's decorative grey
+(`#9AA0AF`, 2.6:1) is not used.
 
 ---
 
 ## Deploying
 
-Live at `drcolesmathlab.github.io`, served by GitHub Pages from `main` / root. The repo
-name must keep matching the `origin` in `tools/site.config.js`, because `og:image` and
-`og:url` have to be absolute `https://` URLs — LinkedIn's crawler will not resolve a
-relative path or a `data:` URI, and without them a shared link shows no preview card at
-all.
+The same `main` branch is served two ways, with no build step:
+
+- **Cloudflare Pages: `https://drcolesmathlab.pages.dev` (canonical).** `site.origin` in
+  `tools/site.config.js` points here, so canonical, `og:url` and `og:image` all do too.
+- **GitHub Pages: `https://drcolesmathlab.github.io`.** Kept live so links shared before
+  the move keep working.
+
+### One-time Cloudflare Pages setup
+
+1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
+   Authorise the Cloudflare GitHub app for `drcolesmathlab/drcolesmathlab.github.io`.
+2. Project name **`drcolesmathlab`**. If Cloudflare says it's taken and gives you
+   something like `drcolesmathlab-abc.pages.dev`, change `site.origin` to that, run
+   `node tools/apply-site-chrome.js`, and commit.
+3. Production branch **`main`**. Framework preset **None**. Build command **empty**.
+   Build output directory **`/`**. No environment variables.
+4. Save and deploy. Every push to `main` redeploys automatically. Other branches get
+   preview URLs.
+
+Two Cloudflare behaviours to know:
+
+- **Cloudflare strips `.html`.** `/tiger-trail.html` 308-redirects to `/tiger-trail`. So
+  the generator writes extensionless canonical URLs for app pages, while in-page links
+  keep `.html` so the site still works opened from disk. GitHub Pages serves both forms.
+- **`_headers`** sets `nosniff`, a referrer policy, `SAMEORIGIN` framing, and
+  revalidation for `.html` and Tiger Trail's `sw.js`. Don't add `X-Frame-Options: DENY`,
+  because the app pages frame their own apps.
 
 Before sharing a new or changed URL, paste it into LinkedIn's Post Inspector to confirm
 the card renders. LinkedIn caches aggressively, so check before you share, not after.
+
+`tools/build-og-cards.js` needs a desktop Chrome/Chromium with Nunito available (a Mac
+has it via the page's font stack). On a headless Linux box the cards render in a
+fallback font, so check the PNGs before committing them.
 
 ---
 
@@ -215,6 +269,7 @@ the card renders. LinkedIn caches aggressively, so check before you share, not a
 node tools/apply-site-chrome.js   # regenerate; fails loudly on a structural problem
 node tools/apply-site-chrome.js   # run twice — the second run must produce no diff
 node tools/check-external.js      # must report zero external origins
+node tools/check-contrast.js      # every home colour pair, both themes, must pass AA
 ```
 
 Then, manually:
@@ -226,6 +281,9 @@ Then, manually:
 - Tab through each page with the mouse unplugged: skip link first, skip-past-embed link
   before the frame, and confirm you can get back out of the frame.
 - Force `prefers-reduced-motion: reduce` — the logo must stop spinning.
+- Home page: try each theme button, reload (the choice must stick), then pick Auto and
+  flip the OS theme (the page must follow). Search "factors", toggle chips, change sort,
+  and check the "N of M apps shown" line updates. Turn JS off — all cards must still show.
 - Run axe DevTools or Lighthouse. Expect findings *inside* the iframe; record them in the
   `#limits` copy rather than hiding them.
 - Check 375 / 768 / 1280 / 1920 px widths.
