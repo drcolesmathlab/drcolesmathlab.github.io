@@ -164,12 +164,10 @@
     $('activity').hidden = !live;
     $('levelNav').hidden = !live;
     $('preview').hidden = live;
-    if (live) {
-      var n = PC.Activity.levelsFor(m.id).length;
-      $('statusHead').textContent = (n === 1 ? 'Level 1 is' : 'Levels 1–' + n + ' are') + ' ready.';
-      $('statusText').textContent = 'More levels are being designed.';
-      return;
-    }
+    // A mode with levels is finished (Modes 1–4 end at Level 4), so it has no status
+    // line; the level buttons say what is there (Dr. Cole, 2026-09-28).
+    $('statusNote').hidden = live;
+    if (live) return;
     $('statusHead').textContent = 'This mode is still being designed.';
     $('statusText').textContent = m.id === 'mixed'
       ? 'Its practice sets arrive in a later update.'
