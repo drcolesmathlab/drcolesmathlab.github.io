@@ -5,7 +5,7 @@
  * Three layers, so the editing rules can be tested without a browser:
  *   InputModel   the model (see parse.js for its shape) and a cursor, edited by
  *                named commands: char, sup, frac, left, right, up, down, leave,
- *                back, clear, home, end.
+ *                back, clear, home, end, place.
  *   keyCommand   maps a keydown to one of those commands. The keypad buttons carry
  *                the same command names in data-cmd, so `^` and the exponent
  *                button (and `/` and the fraction button) run identical code.
@@ -200,6 +200,13 @@
     return a && a.k === 'frac' ? a : b && b.k === 'frac' ? b : null;
   };
 
+  /* A click or tap: straight to a spot { row, i } in any row of the answer. */
+  InputModel.prototype.cmd_place = function (at) {
+    if (!at || !at.row || (at.row !== this.root && !this.parentOf(at.row))) return no('');
+    this.cur = { row: at.row, i: Math.max(0, Math.min(at.i, at.row.items.length)) };
+    return ok();
+  };
+
   InputModel.prototype.cmd_home = function () { this.cur = { row: this.root, i: 0 }; return ok(); };
   InputModel.prototype.cmd_end = function () {
     this.cur = { row: this.root, i: this.root.items.length }; return ok();
@@ -325,8 +332,19 @@
     el.addEventListener('focus', function () { self.render(); });
     el.addEventListener('blur', function () { self.render(); });
     // Tapping the box focuses it without summoning a soft keyboard: it is not
-    // editable text, so phones leave the on-screen keypad as the way in.
-    el.addEventListener('pointerdown', function () { el.focus(); });
+    // editable text, so phones leave the on-screen keypad as the way in. The
+    // cursor goes where the box was clicked, measured on the drawing the student
+    // clicked, before focus redraws it.
+    el.addEventListener('pointerdown', function (e) {
+      var at = e.button === 0 && !self.locked ? self.hit(e.target, e.clientX) : null;
+      el.focus();
+      var c = self.model.cur;
+      if (at && (at.row !== c.row || at.i !== c.i)) self.run('place', at);
+    });
+    // Both of those redraw the box, so the element under the mouse is gone by
+    // the time mousedown's default runs, and it would move focus to the page.
+    // The box has focus already; nothing else of that default is wanted.
+    el.addEventListener('mousedown', function (e) { e.preventDefault(); });
     this.render();
   }
 
@@ -346,6 +364,22 @@
     this.say(r.ok ? describe(this.model) : r.msg);
     if (this.opts.onChange) this.opts.onChange(r);
     return r;
+  };
+
+  /* The spot a click lands on: the innermost row under it (an exponent, a
+     numerator or denominator, else the main line, which includes the box's own
+     padding), then the gap between that row's items nearest the click. */
+  MathInput.prototype.hit = function (target, x) {
+    var box = target && target.closest ? target.closest('.m-row, .m-exp, .m-num, .m-den') : null;
+    if (!box || !this.el.contains(box)) box = this.el.querySelector('.m-row');
+    if (!box || !box.pcRow) return null;
+    var els = box.pcItems, i = 0;
+    while (i < els.length) {
+      var b = els[i].getBoundingClientRect();
+      if (x < (b.left + b.right) / 2) break;
+      i++;
+    }
+    return { row: box.pcRow, i: i };
   };
 
   MathInput.prototype.clear = function () { this.model.clear(); this.render(); };
@@ -378,6 +412,8 @@
     function build(r, cls) {
       var box = document.createElement('span');
       box.className = cls;
+      box.pcRow = r;          // for clicks: the row this box draws,
+      box.pcItems = [];       // and each item's element, in order
       if (!r.items.length) {
         // An empty numerator or denominator holds a dashed slot, so its own
         // border (the fraction bar) shows from the moment / is pressed.
@@ -392,20 +428,21 @@
       }
       r.items.forEach(function (it, idx) {
         if (m.cur.row === r && m.cur.i === idx) box.appendChild(caret);
+        var s;
         if (it.k === 'ch') {
-          var s = document.createElement('span');
+          s = document.createElement('span');
           s.className = /[a-z]/.test(it.c) ? 'm-var' : 'm-ch';
           s.textContent = it.c === '-' ? '−' : it.c;
-          box.appendChild(s);
         } else if (it.k === 'sup') {
-          box.appendChild(build(it.row, 'm-exp'));
+          s = build(it.row, 'm-exp');
         } else {
-          var f = document.createElement('span');
-          f.className = 'm-frac';
-          f.appendChild(build(it.num, 'm-num'));
-          f.appendChild(build(it.den, 'm-den'));
-          box.appendChild(f);
+          s = document.createElement('span');
+          s.className = 'm-frac';
+          s.appendChild(build(it.num, 'm-num'));
+          s.appendChild(build(it.den, 'm-den'));
         }
+        box.pcItems.push(s);
+        box.appendChild(s);
       });
       if (m.cur.row === r && m.cur.i === r.items.length) box.appendChild(caret);
       return box;
