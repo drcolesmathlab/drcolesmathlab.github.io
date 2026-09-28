@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Power Crusher — Dr. Cole's Math Lab</title>
+<meta name="description" content="Discover the exponent properties by exploring the process behind each one.">
+<meta name="theme-color" content="#000000">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+
+  <header class="bar">
+    <div class="title">
+      <span class="wordmark"><b>Dr. Cole&rsquo;s</b> Math Lab</span>
+      <h1>Power Crusher</h1>
+    </div>
+    <button type="button" class="btn" id="homeBtn" hidden>&larr; All properties</button>
+    <button type="button" class="btn" id="settingsBtn" aria-haspopup="dialog">Settings</button>
+  </header>
+
+  <main id="main" tabindex="-1">
+
+    <!-- =============================== HOME =============================== -->
+    <section class="panel" id="home" aria-labelledby="homeH">
+      <h2 id="homeH" tabindex="-1">Choose a property</h2>
+      <p class="lede">Six exponent properties, then Mixed Practice to put them together.
+        They are listed in the recommended order, but every one is open &mdash; start anywhere.</p>
+      <p class="continue" id="continue" hidden></p>
+      <ol class="modes" id="modeList"></ol>
+      <p class="home-tools"><button type="button" class="btn" id="homeStatsBtn" aria-haspopup="dialog">Stats</button></p>
+    </section>
+
+    <!-- ============================ MODE SCREEN ============================ -->
+    <section id="mode" hidden aria-labelledby="modeH">
+      <div class="panel">
+        <div class="mode-head">
+          <div class="grow">
+            <span class="eyebrow" id="modeEyebrow"></span>
+            <h2 id="modeH" tabindex="-1"></h2>
+          </div>
+          <button type="button" class="btn" id="modeStatsBtn" aria-haspopup="dialog">Stats</button>
+        </div>
+        <div class="mode-meta">
+          <p class="status-note">
+            <strong id="statusHead"></strong>
+            <span id="statusText"></span>
+          </p>
+          <div class="level-nav" id="levelNav" role="group" aria-label="Levels" hidden></div>
+        </div>
+      </div>
+
+      <div class="work">
+        <!-- A mode's levels (Modes 1 to 4 so far). The problem comes
+             first in the page order; from 900px the history sits to its left. -->
+        <div class="activity" id="activity" hidden>
+          <section class="panel play" aria-labelledby="question">
+            <h2 class="sub question" id="question"></h2>
+            <div class="stage" id="stage"></div>
+            <form class="crush-form" id="crushForm" novalidate autocomplete="off">
+              <input class="count" id="countInput" type="text" inputmode="numeric" pattern="[0-9]*"
+                     maxlength="3" spellcheck="false" aria-labelledby="question">
+              <!-- Mode 4 Level 1: two counts, top and bottom, submitted together. They sit
+                   in the answer's own shape: the two bases as a fraction, a box for each
+                   exponent (Dr. Cole, 2026-09-28). The bases are filled in per problem. -->
+              <div class="counts" id="counts" hidden>
+                <span class="count-frac">
+                  <span class="count-row"><span class="count-base" id="topBase" aria-hidden="true"></span><input
+                    class="count count-exp" id="topCount" type="text" inputmode="numeric" pattern="[0-9]*"
+                    maxlength="3" spellcheck="false" aria-describedby="question"></span>
+                  <span class="count-row count-den"><span class="count-base" id="bottomBase" aria-hidden="true"></span><input
+                    class="count count-exp" id="bottomCount" type="text" inputmode="numeric" pattern="[0-9]*"
+                    maxlength="3" spellcheck="false" aria-describedby="question"></span>
+                </span>
+              </div>
+              <!-- Levels 3+: the math answer box, in place of the whole-number field. -->
+              <div class="mathbox play-box" id="playAnswer" tabindex="0" role="textbox" hidden
+                   aria-roledescription="math input" aria-labelledby="question"
+                   aria-describedby="playDesc playHelp"></div>
+              <button type="submit" class="btn primary" id="crushBtn">Crush it!</button>
+              <button type="button" class="btn" id="nextProblemBtn">Next</button>
+            </form>
+            <span class="sr-only" id="playDesc"></span>
+            <span class="sr-only" id="playHelp">Type digits and x, y, z. Caret key starts an exponent,
+              slash starts a fraction, right arrow or Tab leaves it. Up and down arrows move between numerator and denominator. Enter crushes it.</span>
+            <span class="sr-only" id="playEcho" aria-live="polite"></span>
+            <p class="result" id="result"></p>
+            <div class="play-keys" id="playKeys" hidden>
+              <div class="keypad" id="playKeypad" role="group" aria-label="Keypad"></div>
+              <p class="hint"><kbd>^</kbd> exponent &nbsp; <kbd>/</kbd> fraction &nbsp;
+                <kbd>&rarr;</kbd> or <kbd>Tab</kbd> out of a box &nbsp;
+                <kbd>&uarr;</kbd> <kbd>&darr;</kbd> numerator, denominator &nbsp; <kbd>Enter</kbd> Crush it!</p>
+            </div>
+            <p class="sr-only" id="announce" aria-live="polite"></p>
+          </section>
+          <section class="panel history" aria-labelledby="historyH">
+            <h2 class="sub" id="historyH">History</h2>
+            <p class="hint tight">Your last 5 correct answers in each level, newest first.</p>
+            <div id="historyList"></div>
+          </section>
+        </div>
+
+        <section class="panel preview" id="preview" aria-labelledby="previewH">
+          <span class="preview-tag">Preview</span>
+          <h2 id="previewH" class="sub">Try the answer box</h2>
+          <p class="lede tight">A worked example from the design notes, so the answer
+            box and checker can be tried now. It is not this mode&rsquo;s activity.</p>
+
+          <span class="problem-label" id="problemLbl">Simplify</span>
+          <div class="problem" id="problem" aria-describedby="problemLbl"></div>
+
+          <span class="answer-label" id="answerLbl">Your answer</span>
+          <div class="mathbox" id="answer" tabindex="0" role="textbox"
+               aria-roledescription="math input" aria-labelledby="answerLbl"
+               aria-describedby="answerDesc answerHelp"></div>
+          <span class="sr-only" id="answerDesc"></span>
+          <span class="sr-only" id="answerHelp">Type digits and x, y, z. Caret key starts an exponent,
+            slash starts a fraction, right arrow or Tab leaves it. Up and down arrows move between numerator and denominator. Enter checks.</span>
+          <span class="sr-only" id="answerEcho" aria-live="polite"></span>
+          <div class="keypad" id="keypad" role="group" aria-label="Keypad"></div>
+
+          <div class="actions">
+            <button type="button" class="btn primary" id="submitBtn">Check</button>
+            <button type="button" class="btn" id="nextBtn">Another example</button>
+          </div>
+          <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+          <p class="hint"><kbd>^</kbd> exponent &nbsp; <kbd>/</kbd> fraction &nbsp;
+            <kbd>&rarr;</kbd> or <kbd>Tab</kbd> out of a box &nbsp;
+                <kbd>&uarr;</kbd> <kbd>&darr;</kbd> numerator, denominator &nbsp; <kbd>Enter</kbd> check</p>
+        </section>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================== DIALOGS ============================== -->
+  <dialog class="panel dlg" id="statsDlg" aria-labelledby="statsH">
+    <div class="dlg-head">
+      <h2 id="statsH">Stats</h2>
+      <button type="button" class="btn" data-close>Close</button>
+    </div>
+    <p class="lede tight">Every answer you check, for each mode and level.</p>
+    <div class="table-wrap" id="statsBody" tabindex="0" role="region" aria-label="Stats table"></div>
+  </dialog>
+
+  <dialog class="panel dlg" id="settingsDlg" aria-labelledby="settingsH">
+    <div class="dlg-head">
+      <h2 id="settingsH">Settings</h2>
+      <button type="button" class="btn" data-close>Close</button>
+    </div>
+    <div class="toggles">
+      <label class="toggle"><input type="checkbox" id="setSound"> <span>Sound</span></label>
+      <label class="toggle"><input type="checkbox" id="setMotion" aria-describedby="motionNote">
+        <span>Reduced motion</span></label>
+      <p class="hint tight" id="motionNote"></p>
+      <label class="toggle"><input type="checkbox" id="setAnnounce" aria-describedby="announceNote">
+        <span>Screen reader announcements</span></label>
+      <p class="hint tight" id="announceNote">Reads each result aloud, for example
+        &ldquo;Correct. 3 to the power 4.&rdquo;</p>
+    </div>
+    <p class="hint">Results are always shown on screen too, so sound is never the only signal.</p>
+  </dialog>
+</div>
+
+<script src="src/rational.js"></script>
+<script src="src/expr.js"></script>
+<script src="src/parse.js"></script>
+<script src="src/check.js"></script>
+<script src="src/render.js"></script>
+<script src="src/mathinput.js"></script>
+<script src="src/generate.js"></script>
+<script src="src/store.js"></script>
+<script src="src/modes.js"></script>
+<script src="src/product.js"></script>
+<script src="src/quotient.js"></script>
+<script src="src/power.js"></script>
+<script src="src/powerquotient.js"></script>
+<script src="src/sound.js"></script>
+<script src="src/crush.js"></script>
+<script src="src/activity.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

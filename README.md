@@ -41,6 +41,7 @@ tools/vendor-tiger-trail.js   vendors Tiger Trail (copy + five documented patche
 tools/vendor-balancing-act.js vendors Balancing Act (copies six files BY NAME — see below)
 tools/build-real-number-monsters.js  builds Real Number Monsters (Vite → one classic script)
 tools/vendor-squares-cubes.js vendors Squares & Cubes Explorer (lifts its inline <style> into styles.css)
+tools/vendor-power-crusher.js vendors Power Crusher (byte-for-byte; file list read from its index.html)
 tools/check-external.js     the no-external-origins gate
 tools/og-cards.html         card templates
 tools/build-og-cards.js     screenshots them into assets/
@@ -376,3 +377,14 @@ Then, manually:
   (`rnm-best`, `rnm-muted`, `rnm-touchbar`) are kept as upstream wrote them; they are
   already prefixed and listed in the config for the collision check. After any upstream
   change, re-run the script — the site's copy does not update by itself.
+- **Power Crusher is vendored, not built, and is still growing.** Upstream
+  (`drcolesmathlab/power-crusher`) was written for this site: classic IIFE scripts, an
+  empty FONTS block, and storage only under `mathlab.power-crusher.progress` and
+  `.settings`. `tools/vendor-power-crusher.js` copies it unchanged (the generator then
+  fills its FONTS block) from a sibling checkout at `../power-crusher` (or a path given
+  as the first argument). The files it
+  copies are exactly `index.html`, `styles.css` and the `<script src>` tags in that
+  `index.html`, so upstream's developer test bench (`sandbox.html`), tests and design
+  notes never ship. It is published with four of its seven modes built; after each new
+  mode merges upstream, re-run the script and the generator, and update the page's
+  *Honest limits*.
