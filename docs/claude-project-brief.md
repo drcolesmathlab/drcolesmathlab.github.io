@@ -37,7 +37,7 @@ Every app page carries this disclaimer, so apps must be designed to fit it:
 > These are teaching demos built to show one idea clearly. They are not a full
 > curriculum and they are not a substitute for instruction or practice.
 
-### Current apps (as of 2026-09-24)
+### Current apps (as of 2026-09-28)
 
 | # | Slug | Title | Category | Topic |
 |---|---|---|---|---|
@@ -46,6 +46,7 @@ Every app page carries this disclaimer, so apps must be designed to fit it:
 | 3 | `balancing-act` | Balancing Act | Algebra | Solving linear equations with a balance beam |
 | 4 | `real-number-monsters` | Real Number Monsters | Games | Sorting numbers into Natural / Whole / Integer / Rational / Irrational |
 | 5 | `squares-cubes` | Squares & Cubes Explorer | Algebra | Building squares and cubes to connect n² and n³ to shapes |
+| 6 | `power-crusher` | Power Crusher | Algebra | The exponent properties, built from repeated multiplication (4 of 7 modes so far) |
 
 Before proposing a new app, check it does not duplicate one of these.
 

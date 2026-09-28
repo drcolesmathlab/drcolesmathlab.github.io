@@ -451,6 +451,66 @@ module.exports = {
         { id: 'limits',      label: 'Limits',       heading: 'Honest limits' },
       ],
     },
+
+    {
+      slug: 'power-crusher',
+      title: 'Power Crusher',
+      subtitle: 'Discover the exponent properties',
+      blurb:
+        'Watch repeated factors crush into a single power, then simplify products, ' +
+        'quotients and powers of powers yourself — each property built from the ' +
+        'multiplication it abbreviates, not memorised as a rule.',
+      published: true,
+
+      category: 'algebra',
+      dateAdded: '2026-09-28',
+      // Dr. Cole confirmed the Grade 8 tag on 2026-09-28 (CCSS-M 8.EE.A.1).
+      grade: 'Grade 8',
+      tags: ['Exponent properties', 'Product & quotient of powers', 'Power of a power'],
+
+      // Vendored, not built: tools/vendor-power-crusher.js copies upstream
+      // drcolesmathlab/power-crusher byte for byte. It is still being built one mode at
+      // a time (four of seven so far), so re-run the script after each phase.
+      payload: 'apps/power-crusher/index.html',
+      // The app scrolls inside its own document (home list, then a mode's problem,
+      // answer box, keypad and history), so the frame needs height, not a fixed fit.
+      frame: { height: 'clamp(640px, 84vh, 960px)' },
+
+      storageKeys: ['mathlab.power-crusher.progress', 'mathlab.power-crusher.settings'],
+      thirdParty: [],
+
+      a11y: {
+        keyboard: 'full',
+        liveRegion: true,
+        notes:
+          'every control is a real button or field, and the whole app works from the ' +
+          'keyboard: the answer box takes exponents and fractions as you type (^ and / to ' +
+          'enter them, the arrow keys to move between them), with an on-screen keypad as ' +
+          'an alternative. Every problem has a spoken form, results are announced through ' +
+          'a live region (switchable in Settings), right and wrong are marked with ✓ and ✗ ' +
+          'as well as colour, nothing is timed, and reduced motion — from your system or ' +
+          'from Settings — replaces each crush animation with an instant change. The gap: ' +
+          'the answer box is a custom control rather than a plain text field. It passes ' +
+          'automated checks (axe), but it has not yet been tested with a real screen ' +
+          'reader, so how NVDA, JAWS or VoiceOver read an answer back while you type it ' +
+          'is unverified.',
+      },
+
+      og: {
+        title: "Power Crusher — Dr. Cole's Math Lab",
+        description:
+          'Watch repeated factors crush into a single power, then simplify products, ' +
+          'quotients and powers yourself. Runs in the browser, no sign-up.',
+      },
+
+      sections: [
+        { id: 'play',        label: 'Play',         heading: 'Play it here' },
+        { id: 'how-to-play', label: 'How it works', heading: 'How it works' },
+        { id: 'skills',      label: 'Skills',       heading: 'What it teaches' },
+        { id: 'tips',        label: 'Tips',         heading: 'Tips' },
+        { id: 'limits',      label: 'Limits',       heading: 'Honest limits' },
+      ],
+    },
   ],
 
   /*
