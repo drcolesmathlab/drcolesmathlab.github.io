@@ -603,6 +603,14 @@ kbd {
 .btn:disabled { opacity: .55; cursor: default; filter: none; }
 /* Levels 3+: the math answer box takes the whole-number field's place. */
 .crush-form .play-box { flex: 1 1 14em; min-width: 0; min-height: 56px; font-size: clamp(24px, 2.6vw, 32px); }
+/* Mode 5 Level 4: a box per part, stacked, each under its prompt; the buttons
+   wrap below them. Each box is marked ✓ or ✗ after Crush it!. */
+.parts { flex: 1 1 100%; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.part-label { display: block; margin-bottom: 4px; font-size: 16px; font-weight: 700; color: var(--ink); }
+.part-row { display: flex; align-items: center; gap: 8px; }
+.part-mark { flex: 0 0 1.2em; font-size: 24px; font-weight: 800; text-align: center; }
+.part-mark.good { color: var(--good); }
+.part-mark.bad { color: var(--bad); }
 .mathbox.is-locked { border-color: var(--good); cursor: default; }
 .mathbox.is-locked .caret { visibility: hidden; }
 .play-keys { margin-top: 8px; }
