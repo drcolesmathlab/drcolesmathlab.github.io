@@ -164,7 +164,7 @@
     $('activity').hidden = !live;
     $('levelNav').hidden = !live;
     $('preview').hidden = live;
-    // A mode with levels is finished (Modes 1–5 end at Level 4), so it has no status
+    // A mode with levels is finished (Modes 1–6 end at Level 4), so it has no status
     // line; the level buttons say what is there (Dr. Cole, 2026-09-28).
     $('statusNote').hidden = live;
     if (live) return;

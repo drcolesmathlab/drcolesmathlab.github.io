@@ -3,11 +3,13 @@
  * feedback, the in-mode history panel, and statistics (Mode 1 design §3, §5, §6).
  *
  * Product of Powers (src/product.js), Quotient of Powers (src/quotient.js),
- * Power of a Power (src/power.js), Power of a Quotient (src/powerquotient.js)
- * and Zero Exponent (src/zero.js) have levels so far. A level's `input` says what it takes: 'count' (one whole
+ * Power of a Power (src/power.js), Power of a Quotient (src/powerquotient.js),
+ * Zero Exponent (src/zero.js) and Negative Exponent (src/negative.js) have levels
+ * so far. A level's `input` says what it takes: 'count' (one whole
  * number), 'counts' (two, top and bottom: Mode 4 Level 1), 'math' (the
- * Phase 0 math answer box and keypad) or 'parts' (an answer box per part of
- * the problem, each under its own prompt: Mode 5 Level 4). The flow for one problem:
+ * Phase 0 math answer box and keypad), 'parts' (an answer box per part of
+ * the problem, each under its own prompt: Mode 5 Level 4) or 'choices' (two
+ * dropdowns in a sentence: Mode 6 Level 1). The flow for one problem:
  *   right → crush runs, reward sound, input and Crush it! lock, history entry,
  *           the student chooses Next (no auto-advance, so they can study it)
  *   wrong → no crush, red flash and shake, buzz; they may edit and resubmit,
@@ -15,6 +17,9 @@
  * 'parts' boxes are all sent by one Crush it! and count as one attempt (Dr.
  * Cole, 2026-09-29). Each box is marked ✓ or ✗, so a wrong answer says which
  * box to fix. Enter in a box before the last moves to the next one.
+ * 'choices' are also sent by one Crush it! and count as one attempt, but a wrong
+ * answer marks nothing per dropdown: the whole statement flashes red and shakes
+ * (Mode 6 design §4), so it is never a hint.
  */
 (function (PC) {
   'use strict';
@@ -30,11 +35,12 @@
     emptyCounts: 'Type a number in each box, then Crush it!',   // Mode 4 design §4
     emptyMath: 'Type your answer, then Crush it!',   // Levels 3+ (spec §3)
     emptyParts: 'Type an answer in each box, then Crush it!',   // Mode 5 Level 4 [my wording]
+    emptyChoices: 'Choose both answers, then Crush it!',   // Mode 6 design §4
   };
 
   /* Each mode with levels: its module (problems, grading, history entries). */
   var LIBS = { product: 'Product', quotient: 'Quotient', 'power-of-power': 'Power', 'power-of-quotient': 'PowerQuotient',
-    zero: 'Zero' };
+    zero: 'Zero', negative: 'Negative' };
   function lib(modeId) { return LIBS[modeId] ? PC[LIBS[modeId]] : null; }
 
   /* The levels built for a mode so far, or null while it is still being designed. */
@@ -68,6 +74,24 @@
         var c = PC.Product.clean(input.value);
         if (c !== input.value) input.value = c;
         if (!self.locked) { PC.Crush.reset($('stage')); self.say('', ''); }
+      });
+    });
+    // Mode 6 Level 1: two dropdowns. Changing either clears the red (design §4).
+    // Enter submits from anywhere in the statement, except while a dropdown's
+    // list is open: there it picks the option, as browsers do. Not the "next
+    // dropdown" of Mode 5 Level 4's boxes.
+    ['pickSide', 'pickSign'].forEach(function (id) {
+      var sel = $(id);
+      sel.addEventListener('change', function () {
+        if (!self.locked) { $('choices').classList.remove('is-wrong'); self.say('', ''); }
+      });
+      sel.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        var open = false;
+        try { open = sel.matches(':open'); } catch (err) { /* no :open here: treat it as closed */ }
+        if (open) return;
+        e.preventDefault();
+        self.submit();
       });
     });
     // Levels 3+: the Phase 0 math answer box and keypad. Editing clears the red
@@ -140,9 +164,11 @@
     this.problem = this.level.make(this.rng, this.problem);
     this.locked = false;
     var kind = this.level.input, math = kind === 'math', parts = kind === 'parts';
-    this.fields().forEach(function (f) { f.value = ''; f.readOnly = false; });
+    this.fields().forEach(function (f) { f.value = ''; f.readOnly = false; f.disabled = false; });
     $('countInput').hidden = kind !== 'count';
     $('counts').hidden = kind !== 'counts';
+    $('choices').hidden = kind !== 'choices';
+    $('choices').classList.remove('is-wrong');
     $('playAnswer').hidden = !math;
     $('parts').hidden = !parts;
     $('playKeys').hidden = !math && !parts;
@@ -154,14 +180,34 @@
     $('crushBtn').disabled = false;
     $('nextProblemBtn').classList.remove('primary');
     if (kind === 'counts') this.countBases();
+    if (kind === 'choices') $('choiceBase').replaceChildren(PC.Render.draw(PC.Product.baseNode(this.problem.base)));
     // With a prompt over each box, the heading would say them twice, so it is
     // only for screen readers (Dr. Cole, 2026-09-29).
-    $('question').textContent = this.problem.question;
+    this.showQuestion();
     $('question').classList.toggle('sr-only', parts);
     PC.Crush.show($('stage'), this.problem.shown);
     this.say('', '');
     $('announce').textContent = '';
     if (focus) input.focus();
+  };
+
+  /* The question above the stage. Most are plain words. A problem with
+     `questionParts` (Mode 6 Level 3) mixes words with expressions, which are drawn
+     with real superscripts like everything else; the heading then carries the whole
+     question in words as its label, and the drawing is hidden from screen readers. */
+  Activity.prototype.showQuestion = function () {
+    var el = $('question'), p = this.problem;
+    el.removeAttribute('aria-label');
+    if (!p.questionParts) { el.textContent = p.question; return; }
+    el.replaceChildren();
+    p.questionParts.forEach(function (part) {
+      if (typeof part === 'string') { el.appendChild(document.createTextNode(part)); return; }
+      var math = PC.Render.draw(part);
+      math.classList.add('q-math');
+      math.setAttribute('aria-hidden', 'true');
+      el.appendChild(math);
+    });
+    el.setAttribute('aria-label', p.question);
   };
 
   /* Mode 4 Level 1: the problem's bases label the two exponent boxes, drawn as
@@ -205,19 +251,29 @@
     el.appendChild(word);
   };
 
-  /* The whole-number fields of this level: one, or two for 'counts'. */
+  /* The fields of this level: one whole-number field, two for 'counts', or the
+     two dropdowns of 'choices'. */
   Activity.prototype.fields = function () {
-    return this.level && this.level.input === 'counts' ? [$('topCount'), $('bottomCount')] : [$('countInput')];
+    var kind = this.level && this.level.input;
+    return kind === 'counts' ? [$('topCount'), $('bottomCount')]
+      : kind === 'choices' ? [$('pickSide'), $('pickSign')] : [$('countInput')];
+  };
+
+  /* A right answer locks the fields: a dropdown can't be read-only, so it is disabled. */
+  Activity.prototype.lockFields = function (fields) {
+    fields.forEach(function (f) { if (f.tagName === 'SELECT') f.disabled = true; else f.readOnly = true; });
   };
 
   Activity.prototype.submit = function () {
     if (!this.problem || this.locked) return;
     var kind = this.level.input, math = kind === 'math', parts = kind === 'parts', fields = this.fields();
+    var choices = kind === 'choices';
     var input = math ? $('playAnswer') : parts ? this.parts[0].el : fields[0];
     var L = lib(this.modeId);
     var p = this.problem, self = this;
     var r = math ? L.gradeMath(p, this.box.model.root)
       : parts ? L.gradeParts(p, p.parts.map(function (pt, i) { return self.parts[i].model.root; }))
+      : choices ? L.gradeChoices(p, fields.map(function (f) { return f.value; }))
       : kind === 'counts' ? L.grade(p, fields.map(function (f) { return f.value; }))
       : L.grade(p, input.value);
     if (r.status === 'empty' || r.status === 'invalid') {
@@ -225,9 +281,10 @@
       // read (an empty exponent box) gets the checker's placeholder hint.
       this.say(r.status === 'invalid' ? r.message : math ? MESSAGES.emptyMath
         : parts ? (p.parts.length > 1 ? MESSAGES.emptyParts : MESSAGES.emptyMath)
-        : kind === 'counts' ? MESSAGES.emptyCounts : MESSAGES.empty, '');
+        : kind === 'counts' ? MESSAGES.emptyCounts : choices ? MESSAGES.emptyChoices : MESSAGES.empty, '');
       // Two fields or boxes: the first empty (or unreadable) one.
       if (kind === 'counts') input = fields.filter(function (f) { return PC.Product.clean(f.value) === ''; })[0] || input;
+      if (choices) input = fields.filter(function (f) { return f.value === ''; })[0] || input;
       if (parts) input = this.parts[r.at].el;
       input.focus();
       return;
@@ -239,7 +296,7 @@
 
     if (right) {
       this.locked = true;
-      if (math || parts) this.lockBox(true); else fields.forEach(function (f) { f.readOnly = true; });
+      if (math || parts) this.lockBox(true); else this.lockFields(fields);
       $('crushBtn').disabled = true;
       var next = $('nextProblemBtn');
       next.classList.add('primary');
@@ -258,7 +315,7 @@
       var said = parts && p.parts.length > 1 ? PC.Render.speak(p.mid) + ', equals ' : '';
       this.announce(MESSAGES.correct + ' ' + said + PC.Render.speak(p.answer) + '.');
     } else {
-      PC.Crush.mismatch(stage);
+      if (choices) this.flashStatement(); else PC.Crush.mismatch(stage);
       if (set.sound) PC.Sound.play('buzz');
       this.say('✗ ' + MESSAGES.wrong, 'bad');
       if (parts && p.parts.length > 1) {
@@ -269,9 +326,20 @@
         this.parts[r.parts.indexOf('wrong')].el.focus();
       } else {
         this.announce(MESSAGES.wrong);
-        if (math || parts) input.focus(); else input.select();
+        // A wrong statement sends focus back to the first dropdown (design §4).
+        if (choices) fields[0].focus(); else if (math || parts) input.focus(); else input.select();
       }
     }
+  };
+
+  /* Mode 6 Level 1: the whole statement flashes red and shakes, restarted on
+     every wrong answer. Reduced motion keeps the red, without the shake, until
+     a dropdown changes (styles.css). */
+  Activity.prototype.flashStatement = function () {
+    var el = $('choices');
+    el.classList.remove('is-wrong');
+    void el.offsetWidth;
+    el.classList.add('is-wrong');
   };
 
   Activity.prototype.lockBox = function (on) {

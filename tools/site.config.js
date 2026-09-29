@@ -470,7 +470,7 @@ module.exports = {
 
       // Vendored, not built: tools/vendor-power-crusher.js copies upstream
       // drcolesmathlab/power-crusher byte for byte. It is still being built one mode at
-      // a time (five of seven so far), so re-run the script after each phase.
+      // a time (six of seven so far), so re-run the script after each phase.
       payload: 'apps/power-crusher/index.html',
       // The app scrolls inside its own document (home list, then a mode's problem,
       // answer box, keypad and history), so the frame needs height, not a fixed fit.

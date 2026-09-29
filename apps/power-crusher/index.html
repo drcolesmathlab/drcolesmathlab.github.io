@@ -53,7 +53,7 @@
       </div>
 
       <div class="work">
-        <!-- A mode's levels (Modes 1 to 5 so far). The problem comes
+        <!-- A mode's levels (Modes 1 to 6 so far). The problem comes
              first in the page order; from 900px the history sits to its left. -->
         <div class="activity" id="activity" hidden>
           <section class="panel play" aria-labelledby="question">
@@ -73,6 +73,28 @@
                   <span class="count-row count-den"><span class="count-base" id="bottomBase" aria-hidden="true"></span><input
                     class="count count-exp" id="bottomCount" type="text" inputmode="numeric" pattern="[0-9]*"
                     maxlength="3" spellcheck="false" aria-describedby="question"></span>
+                </span>
+              </div>
+              <!-- Mode 6 Level 1: a statement with two dropdowns in line, both on screen
+                   with one Crush it! (Mode 6 design §4). A wrong answer flashes and
+                   shakes the whole statement, not the wrong dropdown. -->
+              <div class="statement" id="choices" role="group" aria-labelledby="question" hidden>
+                <span>The</span>
+                <select id="pickSide" aria-label="Numerator or denominator">
+                  <option value="">choose</option>
+                  <option value="numerator">numerator</option>
+                  <option value="denominator">denominator</option>
+                </select>
+                <span>has more factors of <span class="statement-base" id="choiceBase"></span>.</span>
+                <span>So the simplified expression will have</span>
+                <span class="statement-end">
+                  <span>a</span>
+                  <select id="pickSign" aria-label="Positive or negative">
+                    <option value="">choose</option>
+                    <option value="positive">positive</option>
+                    <option value="negative">negative</option>
+                  </select>
+                  <span>exponent.</span>
                 </span>
               </div>
               <!-- Levels 3+: the math answer box, in place of the whole-number field. -->
@@ -206,6 +228,7 @@
 <script src="src/power.js"></script>
 <script src="src/powerquotient.js"></script>
 <script src="src/zero.js"></script>
+<script src="src/negative.js"></script>
 <script src="src/sound.js"></script>
 <script src="src/crush.js"></script>
 <script src="src/activity.js"></script>
