@@ -7,6 +7,8 @@
  * `examples` are the verified worked examples from handoff §4 (plus the §11
  * acceptance-check problems), used only by the Phase 0 answer-box preview. They
  * are not the modes' real problem sets; those come with each mode's own phase.
+ * Only Mixed Practice still shows the preview; the others' examples are kept for
+ * the sandbox and the limits test.
  * `policy` names the checker policy in check.js.
  */
 (function (PC) {

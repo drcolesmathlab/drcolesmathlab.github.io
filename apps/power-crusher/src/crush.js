@@ -11,7 +11,10 @@
  *                             Mode 4 runs on a fraction too), Mode 4
  *                             Level 1's copies crush (plan.type 'copies'),
  *                             or Mode 5 Level 4's zero powers becoming 1
- *                             (plan.type 'zero')
+ *                             (plan.type 'zero'), or Mode 6's Level 2 unfold
+ *                             and cancel (plan.type 'expand') and Levels 3
+ *                             and 4's powers crossing the bar (plan.type
+ *                             'cross')
  *   mismatch(host)            the factors flash red and shake; nothing crushes
  *   reset(host)               clear the red highlight (after the student edits)
  *
@@ -22,7 +25,10 @@
  * and so does Mode 3's on every exponent, and Mode 4 Levels 2 to 4's (Mode 5
  * design §9.5). Mode 4 Level 1 (plan.lit 'answer') swaps first, and lights
  * the answer's exponents for the same time. Mode 5 (plan.lit 'problem')
- * lights the whole problem, holds, then swaps (Mode 5 design §3).
+ * lights the whole problem, holds, then swaps (Mode 5 design §3). Mode 6
+ * does too (plan.lit 'cross' lights the flipped exponents after the swap for
+ * another HOLD_MS; 'expanded' shows the unfolded fraction with its canceling
+ * pairs lit).
  * The stage's spoken label always matches what is drawn.
  */
 (function (PC) {
@@ -70,6 +76,7 @@
   function show(host, tree) {
     var token = host[TOKEN] = (host[TOKEN] || 0) + 1;
     host.classList.remove('is-crushed', 'is-wrong', 'is-crushing');
+    host.style.minHeight = '';
     PC.Render.into(host, tree);
     fit(host);
     watch(host);
@@ -91,6 +98,10 @@
     var top = host.firstElementChild, can = !!top && typeof top.animate === 'function';
     if (reduce && plan && plan.lit === 'answer') return litAnswer(host, tree);
     if (reduce && plan && plan.lit === 'problem') return litProblem(host, tree);
+    if (reduce && plan && plan.lit === 'cross') return litCross(host, tree, plan);
+    if (reduce && plan && plan.lit === 'expanded') return litExpanded(host, tree, plan);
+    if (plan && plan.type === 'cross' && can) return cross(host, tree, plan);
+    if (plan && plan.type === 'expand' && can) return expand(host, tree, plan);
     if (plan && plan.type === 'zero' && can) return zero(host, tree, plan);
     if (plan && plan.type === 'copies' && can) return copies(host, tree, plan);
     if (plan && plan.type === 'cancel' && can) return cancel(host, tree, plan, reduce);
@@ -725,11 +736,15 @@
   /* ---- Mode 5 (Mode 5 design §3 to §7) -------------------------------------- */
   /* Reduced motion, every level (design §3): the whole problem lights, the
      light is held HOLD_MS, then the answer swaps in. */
-  function litProblem(host, tree) {
-    var token = host[TOKEN];
+  function lightProblem(host) {
     host.classList.remove('is-wrong');
     Array.prototype.forEach.call(host.querySelectorAll('.m-ch, .m-var, .m-exp, .m-op, .m-paren, .m-den'),
       function (el) { el.classList.add('is-lit'); });
+  }
+
+  function litProblem(host, tree) {
+    var token = host[TOKEN];
+    lightProblem(host);
     return wait(HOLD_MS).then(function () { if (host[TOKEN] === token) { swap(host, tree); fit(host); } });
   }
 
@@ -798,6 +813,241 @@
           });
         });
       });
+    });
+  }
+
+  /* ---- Mode 6 (Mode 6 design §3 to §7) -------------------------------------- */
+  var DIP_MS = 460, EMERGE_MS = 460, UNFOLD_MS = 320, UNFOLD_HOLD_MS = 500;
+
+  /* Level 2, reduced motion (design §5): the fraction unfolded, x · x over
+     x · x · x · x · x, with every canceling pair lit; held HOLD_MS, then
+     1/(x · x · x) swaps in. The pairs carry the meaning, so they stay visible. */
+  function litExpanded(host, tree, plan) {
+    var token = host[TOKEN];
+    host.classList.remove('is-wrong');
+    PC.Render.into(host, plan.mid);
+    fit(host);
+    var frac = host.firstElementChild;
+    var tops = items(frac.querySelector('.m-num')), bottoms = items(frac.querySelector('.m-den'));
+    for (var i = 0; i < plan.pairs; i++) { tops[i].classList.add('is-lit'); bottoms[i].classList.add('is-lit'); }
+    return wait(HOLD_MS).then(function () { if (host[TOKEN] === token) { swap(host, tree); fit(host); } });
+  }
+
+  /* Level 2 (design §5): x²/x⁵.
+       1. The exponents let go and each power unfolds: (x · x) over (x · x · x ·
+          x · x).
+       2. A highlight sweeps over the canceling pairs, top and bottom together.
+       3. The pairs are pushed onto the bar and destroyed; the factors left
+          below slide together and a 1 appears on top. It stops there, at
+          1/(x · x · x): never 1/x³ or x⁻³. */
+  function expand(host, tree, plan) {
+    var token = host[TOKEN];
+    host.classList.remove('is-wrong');
+    host.classList.add('is-crushing');
+    return done(Array.prototype.map.call(host.querySelectorAll('.m-exp'), fade)).then(function () {
+      if (host[TOKEN] !== token) return;
+      PC.Render.into(host, plan.mid);
+      fit(host);
+      var frac = host.firstElementChild;
+      var num = frac.querySelector('.m-num'), den = frac.querySelector('.m-den');
+      var unfold = [];
+      [num, den].forEach(function (part) {
+        var fs = items(part), from = centre(fs[0].getBoundingClientRect());
+        fs.forEach(function (el, i) {
+          if (!i) return;
+          var at = centre(el.getBoundingClientRect());
+          unfold.push(el.animate([
+            { transform: 'translate(' + (from.x - at.x) + 'px, 0) scale(.4)', opacity: 0 },
+            { transform: 'none', opacity: 1 },
+          ], { duration: UNFOLD_MS, delay: i * 40, easing: 'cubic-bezier(.2,1.3,.4,1)', fill: 'backwards' }));
+        });
+        dots(part).forEach(function (el, i) {
+          unfold.push(el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: UNFOLD_MS, delay: (i + 1) * 40, fill: 'backwards' }));
+        });
+      });
+      return done(unfold).then(function () { return wait(UNFOLD_HOLD_MS); }).then(function () {
+        if (host[TOKEN] !== token) return;
+        var tops = items(num), bottoms = items(den), n = plan.pairs, i;
+        function light(k) {
+          if (host[TOKEN] !== token) return;
+          tops[k].classList.add('is-lit');
+          bottoms[k].classList.add('is-lit');
+        }
+        for (i = 0; i < n; i++) setTimeout(light.bind(null, i), i * SWEEP_MS);
+        return wait(n * SWEEP_MS + 200).then(function () {
+          if (host[TOKEN] !== token) return;
+          var bar = den.getBoundingClientRect().top;
+          var anims = tops.concat(bottoms.slice(0, n)).map(function (el) { return squash(el, bar, CANCEL_MS); });
+          // Each canceled factor's "·" goes with it; the bar stays, since factors are left below.
+          dots(num).concat(dots(den).slice(0, n)).forEach(function (el) { anims.push(fade(el)); });
+          return done(anims).then(function () {
+            if (host[TOKEN] !== token) return;
+            var left = bottoms.slice(n).map(function (el) { return centre(el.getBoundingClientRect()); });
+            swap(host, tree);
+            fit(host);
+            var end = host.firstElementChild;
+            var slides = items(end.querySelector('.m-den')).map(function (el, k) {
+              var at = centre(el.getBoundingClientRect());
+              return el.animate([{ transform: 'translate(' + (left[k].x - at.x) + 'px,' + (left[k].y - at.y) + 'px)' }, { transform: 'none' }],
+                { duration: SLIDE_MS, easing: 'cubic-bezier(.45,0,.2,1)' });
+            });
+            slides.push(end.querySelector('.m-num').firstElementChild.animate(
+              [{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'none' }],
+              { duration: SLIDE_MS, easing: 'cubic-bezier(.2,1.5,.4,1)' }));
+            dots(end.querySelector('.m-den')).forEach(function (el) {
+              slides.push(el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.6 }, { opacity: 1 }], { duration: SLIDE_MS }));
+            });
+            return done(slides);
+          });
+        });
+      });
+    });
+  }
+
+  /* The drawn parts whose exponent flipped, once the answer is on screen: what
+     is emphasized after they land (design §3). A part whose exponent is a
+     hidden 1 has no exponent to light, so the part itself is lit. */
+  function flipped(host, plan) {
+    var parts = drawnParts(host.firstElementChild), out = [];
+    plan.to.forEach(function (k, i) {
+      if (!plan.flips[k] || !parts[i]) return;
+      var exp = parts[i].classList.contains('m-pow') ? parts[i].lastElementChild : null;
+      out.push(exp && exp.classList.contains('m-exp') ? exp : parts[i]);
+    });
+    return out;
+  }
+
+  /* Levels 3 and 4, reduced motion (design §6, §7): the problem lights, is
+     held HOLD_MS, then the answer swaps in with the new exponents lit for
+     HOLD_MS more, so the sign change is still marked. */
+  function litCross(host, tree, plan) {
+    var token = host[TOKEN];
+    lightProblem(host);
+    return wait(HOLD_MS).then(function () {
+      if (host[TOKEN] !== token) return;
+      swap(host, tree);
+      fit(host);
+      var lit = flipped(host, plan);
+      lit.forEach(function (el) { el.classList.add('is-lit'); });
+      return wait(HOLD_MS).then(function () { lit.forEach(function (el) { el.classList.remove('is-lit'); }); });
+    });
+  }
+
+  /* Levels 3 and 4 (design §3, §6, §7): every power with a negative exponent
+     crosses the bar at once, and its sign flips as it crosses.
+     plan = { from, to, flips }: `from` is the key of each drawn part of the
+     problem and `to` of the answer, top then bottom ('one' is a 1 with
+     nothing to multiply); `flips` says which cross, 'down' or 'up'.
+       1. The answer is drawn. A bar that the problem lacked fades in as the
+          power dips into it, and then a 1 pops in above; a bar (and a lone 1)
+          it had that the answer lacks fade out. Powers that stay slide to
+          their place (FLIP) once the crossing power is out of their way.
+       2. Each crossing power dips into the bar, squashed flat, still with its
+          negative exponent, and is gone: it is never below a bar while it
+          moves with the minus on it (1/x⁻³ is x³, not a step toward 1/x³).
+       3. Its positive twin grows out of the bar into its place.
+       4. The new exponents are emphasized at once. */
+  function cross(host, tree, plan) {
+    var token = host[TOKEN], top = host.firstElementChild;
+    host.classList.remove('is-wrong');
+    host.classList.add('is-crushing');
+    var hostBox = host.getBoundingClientRect();
+    // A fraction that becomes one line would shrink the stage and clip the
+    // powers still crossing it, so it keeps its height until the next problem.
+    host.style.minHeight = host.offsetHeight + 'px';
+    var olds = drawnParts(top), oldEl = {}, oldAt = {};
+    plan.from.forEach(function (k, i) {
+      if (!olds[i]) return;
+      oldEl[k] = olds[i];
+      oldAt[k] = centre(olds[i].getBoundingClientRect());
+    });
+    var oldDen = top.classList.contains('m-frac') ? top.querySelector('.m-den') : null;
+    var oldBarY = oldDen ? oldDen.getBoundingClientRect().top : null;
+
+    // Copies of what leaves its place: the crossing powers, and a 1 that goes.
+    var ghosts = {};
+    plan.from.forEach(function (k) {
+      var el = oldEl[k];
+      if (!el || (!plan.flips[k] && plan.to.indexOf(k) >= 0)) return;
+      var g = ghost(host, el, hostBox);
+      if (el.closest('.m-frac')) g.classList.add('m-ghost-frac');
+      ghosts[k] = g;
+    });
+    // The problem's bar, when the answer has none (5/x⁻² → 5x²).
+    var barGhost = null;
+    if (oldDen && tree.t !== 'div') {
+      var b = oldDen.getBoundingClientRect(), cs = getComputedStyle(oldDen);
+      barGhost = document.createElement('span');
+      barGhost.setAttribute('aria-hidden', 'true');
+      barGhost.style.cssText = 'position:absolute;height:0;border-top:' + cs.borderTopWidth + ' solid ' + cs.borderTopColor +
+        ';width:' + b.width + 'px;left:' + (b.left - hostBox.left - host.clientLeft) + 'px;top:' + (b.top - hostBox.top - host.clientTop) + 'px';
+    }
+
+    // 1. The answer, laid out.
+    var layout = PC.Render.draw(tree);
+    layout.setAttribute('aria-hidden', 'true');
+    host.replaceChildren(layout);
+    fit(host);
+    Object.keys(ghosts).forEach(function (k) { host.appendChild(ghosts[k]); });
+    if (barGhost) host.appendChild(barGhost);
+    var news = drawnParts(layout), newEl = {}, newAt = {};
+    plan.to.forEach(function (k, i) {
+      if (!news[i]) return;
+      newEl[k] = news[i];
+      newAt[k] = centre(news[i].getBoundingClientRect());
+    });
+    var den = layout.classList.contains('m-frac') ? layout.querySelector('.m-den') : null;
+    var barY = den ? den.getBoundingClientRect().top : oldBarY !== null ? oldBarY : centre(layout.getBoundingClientRect()).y;
+
+    var anims = [];
+    plan.to.forEach(function (k) {
+      var el = newEl[k];
+      if (!el) return;
+      if (!oldEl[k]) {   // the 1 that appears with the bar
+        anims.push(el.animate([{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'none' }],
+          { duration: EMERGE_MS * 0.7, delay: DIP_MS * 0.9, easing: 'cubic-bezier(.2,1.5,.4,1)', fill: 'backwards' }));
+      } else if (plan.flips[k]) {   // 3. grows out of the bar, where its twin went into it
+        anims.push(el.animate([
+          { transform: 'translate(' + (oldAt[k].x - newAt[k].x) + 'px, ' + (barY - newAt[k].y) + 'px) scale(.9, .15)', opacity: 0 },
+          { transform: 'none', opacity: 1 },
+        ], { duration: EMERGE_MS, delay: DIP_MS, easing: 'cubic-bezier(.2,1.4,.4,1)', fill: 'backwards' }));
+      } else {   // stays on its side, sliding to its new place
+        anims.push(el.animate([
+          { transform: 'translate(' + (oldAt[k].x - newAt[k].x) + 'px,' + (oldAt[k].y - newAt[k].y) + 'px)' },
+          { transform: 'none' },
+        ], { duration: SLIDE_MS, delay: DIP_MS * 0.75, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'backwards' }));
+      }
+    });
+    // 2. Each crossing power dips into the bar, negative exponent and all.
+    Object.keys(ghosts).forEach(function (k) {
+      var g = ghosts[k];
+      if (!plan.flips[k]) { anims.push(fade(g)); return; }
+      var end = 'translate(0, ' + (barY - oldAt[k].y) + 'px)';
+      anims.push(g.animate([
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+        { transform: end + ' scale(.9, .7)', opacity: 1, offset: 0.75 },
+        { transform: end + ' scale(.5, .1)', opacity: 0 },
+      ], { duration: DIP_MS, easing: 'ease-in', fill: 'forwards' }));
+    });
+    if (den && !oldDen) {   // a new bar fades in
+      anims.push(den.animate([{ borderTopColor: 'rgba(0, 0, 0, 0)' }, { borderTopColor: getComputedStyle(den).borderTopColor }],
+        { duration: DIP_MS * 0.7, delay: DIP_MS * 0.3, easing: 'ease-in', fill: 'backwards' }));
+    }
+    if (barGhost) anims.push(barGhost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: DIP_MS, easing: 'ease-in', fill: 'forwards' }));
+
+    return done(anims).then(function () {
+      if (host[TOKEN] !== token) return;
+      Object.keys(ghosts).forEach(function (k) { ghosts[k].remove(); });
+      if (barGhost) barGhost.remove();
+      swap(host, tree);
+      fit(host);
+      // 4. The new exponents are emphasized at once.
+      var lit = flipped(host, plan);
+      lit.forEach(function (el) { el.classList.add('is-lit'); });
+      setTimeout(function () { lit.forEach(function (el) { el.classList.remove('is-lit'); }); }, HOLD_MS);
+      return done(lit.map(function (el) {
+        return el.animate([{ transform: 'scale(1.7)' }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,1.6,.4,1)' });
+      }));
     });
   }
 

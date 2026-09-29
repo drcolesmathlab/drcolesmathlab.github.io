@@ -529,8 +529,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
     <section id="play" aria-labelledby="play-h">
       <h2 id="play-h">Play it here</h2>
       <p class="play-lead">
-        Pick a property, pick a level, and simplify. Five of the seven modes are playable
-        now, each with four levels; the other two are still being designed. Everything
+        Pick a property, pick a level, and simplify. Six of the seven modes are playable
+        now, each with four levels; the other one is still being designed. Everything
         works from the keyboard, and progress is saved in this browser.
       </p>
       <!-- PLAY:START -->
@@ -578,7 +578,7 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             superscripts and fractions.</li>
         </ul>
 
-        <h3>The five modes that are ready</h3>
+        <h3>The six modes that are ready</h3>
         <ul>
           <li><strong>Product of Powers.</strong>
             <span class="mono">3&nbsp;&middot;&nbsp;3&nbsp;&middot;&nbsp;3&nbsp;&middot;&nbsp;3&nbsp;=&nbsp;3&#8308;</span>,
@@ -601,6 +601,13 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             them together, the zero powers and then the value:
             <span class="mono">(5x)&#8304;&nbsp;=&nbsp;5&#8304;x&#8304;&nbsp;=&nbsp;1</span>, but
             <span class="mono">5x&#8304;&nbsp;=&nbsp;5</span>.</li>
+          <li><strong>Negative Exponent.</strong> The side with more factors decides the sign,
+            and <span class="mono">x&sup2;&nbsp;/&nbsp;x&#8309;</span> is counted out as
+            <span class="mono">1/(x&nbsp;&middot;&nbsp;x&nbsp;&middot;&nbsp;x)</span>. Then a
+            negative power crosses the fraction bar and its sign flips:
+            <span class="mono">x&#8315;&sup3;&nbsp;=&nbsp;1/x&sup3;</span>, up to
+            <span class="mono">5x&#8315;&sup2;&nbsp;=&nbsp;5/x&sup2;</span> and
+            <span class="mono">1/2&#8315;&sup3;&nbsp;=&nbsp;2&sup3;</span>.</li>
         </ul>
 
         <h3>Checking an answer</h3>
@@ -615,7 +622,9 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             or <span class="mono">1/x&sup2;</span>, <span class="mono">81x&#8312;</span> or
             <span class="mono">3&#8308;x&#8312;</span>. Typing the problem back unchanged does not.
             Zero Exponent is stricter: each step asks for one form,
-            <span class="mono">x&#8304;</span> first and then its value, 1.</li>
+            <span class="mono">x&#8304;</span> first and then its value, 1. Negative Exponent's
+            last level asks for only positive exponents, so <span class="mono">1/x&sup2;</span>
+            counts there and <span class="mono">x&#8315;&sup2;</span> does not.</li>
         </ul>
 
         <h3>The answer box</h3>
@@ -698,9 +707,9 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
       <div class="prose">
         <h3>What it doesn&rsquo;t cover yet</h3>
         <ul>
-          <li><strong>Two of the seven modes are not built.</strong> Negative Exponent and
-            Mixed Practice are listed and open, but each only says it is still being designed
-            and offers a preview of the answer box. They arrive one at a time.</li>
+          <li><strong>One of the seven modes is not built.</strong> Mixed Practice is listed and
+            open, but it only says it is still being designed and offers a preview of the
+            answer box.</li>
           <li><strong>Feedback is right or wrong, not why.</strong> A wrong answer is marked
             wrong without saying which step went astray. Feedback that explains the mistake is
             still to be written.</li>

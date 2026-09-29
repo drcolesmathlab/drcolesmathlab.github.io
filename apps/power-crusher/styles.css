@@ -489,6 +489,8 @@ kbd {
   .activity > .history { grid-column: 1; grid-row: 1; }
 }
 .panel h2.question { font-size: clamp(17px, 2vw, 20px); margin-bottom: 4px; }
+/* Mode 6 Level 3: the base and the expression sit in the question, drawn as maths. */
+.question .q-math { display: inline-flex; padding: 0 .1em; }
 
 .stage {
   position: relative;
@@ -611,6 +613,39 @@ kbd {
 .part-mark { flex: 0 0 1.2em; font-size: 24px; font-weight: 800; text-align: center; }
 .part-mark.good { color: var(--good); }
 .part-mark.bad { color: var(--bad); }
+/* Mode 6 Level 1: a sentence with two dropdowns in line. A wrong answer turns
+   the whole statement red and shakes it, so it is never a hint at one dropdown
+   (Mode 6 design §4). Reduced motion keeps the red, without the shake. */
+.statement {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 6px 4px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.statement-base { font-size: 1.1em; }
+/* "a [choose] exponent." stays on one line, so the second dropdown never sits alone. */
+.statement-end { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.statement select {
+  min-height: var(--tap);
+  padding: 2px 10px;
+  font: 800 18px/1.2 var(--sans);
+  color: var(--ink);
+  background: var(--bg);
+  border: 2px solid var(--line-strong);
+  border-radius: 8px;
+}
+.statement select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.statement select:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.statement select:disabled { color: var(--good); border-color: var(--good); opacity: 1; }
+.statement.is-wrong { color: var(--bad); animation: shake .45s cubic-bezier(.36,.07,.19,.97); }
+.statement.is-wrong select { color: var(--bad); border-color: var(--bad); }
+.statement.is-wrong .m-ch, .statement.is-wrong .m-var { color: var(--bad); }
 .mathbox.is-locked { border-color: var(--good); cursor: default; }
 .mathbox.is-locked .caret { visibility: hidden; }
 .play-keys { margin-top: 8px; }
@@ -624,6 +659,9 @@ kbd {
    further apart than that, so each pair stays with its base. */
 .m-slot { display: inline-flex; align-items: baseline; margin: 0 .4em; }
 .m-exp.m-got { margin-left: .55em; }
+/* Mode 6, mid-crush: a copy of a power that was inside a fraction keeps that
+   fraction's exponent height, though it now sits on the stage. */
+.m-ghost-frac .m-exp { top: -.8em; }
 /* Mode 2 Level 4's columns, mid-crush: each base's top factor over its bottom
    one, sized like the fraction they came from. The bottom cells' borders meet
    in one bar. */
@@ -737,6 +775,7 @@ table.stats { width: 100%; border-collapse: collapse; font-size: 14px; }
   transition-duration: .001ms !important;
 }
 .reduce-motion .caret.on { animation: none; }
+.reduce-motion .statement.is-wrong,
 .reduce-motion .stage.is-wrong > .m-mul,
 .reduce-motion .stage.is-wrong > .m-pow,
 .reduce-motion .stage.is-wrong > .m-frac,
