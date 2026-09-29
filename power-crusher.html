@@ -529,8 +529,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
     <section id="play" aria-labelledby="play-h">
       <h2 id="play-h">Play it here</h2>
       <p class="play-lead">
-        Pick a property, pick a level, and simplify. Four of the seven modes are playable
-        now, each with four levels; the other three are still being designed. Everything
+        Pick a property, pick a level, and simplify. Five of the seven modes are playable
+        now, each with four levels; the other two are still being designed. Everything
         works from the keyboard, and progress is saved in this browser.
       </p>
       <!-- PLAY:START -->
@@ -578,7 +578,7 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             superscripts and fractions.</li>
         </ul>
 
-        <h3>The four modes that are ready</h3>
+        <h3>The five modes that are ready</h3>
         <ul>
           <li><strong>Product of Powers.</strong>
             <span class="mono">3&nbsp;&middot;&nbsp;3&nbsp;&middot;&nbsp;3&nbsp;&middot;&nbsp;3&nbsp;=&nbsp;3&#8308;</span>,
@@ -595,6 +595,12 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
           <li><strong>Power of a Quotient.</strong> Copies of a fraction join into one, then
             the outer exponent goes to the top and the bottom at once:
             <span class="mono">(x&sup2;/5&sup3;)&#8308;&nbsp;=&nbsp;x&#8312;/5&sup1;&sup2;</span>.</li>
+          <li><strong>Zero Exponent.</strong> A number over itself is 1, and
+            <span class="mono">3&#8308;&nbsp;/&nbsp;3&#8308;</span> cancels completely to
+            <span class="mono">3&#8304;</span>. At Level 4 you first simplify to the zero
+            powers, then give the value:
+            <span class="mono">(5x)&#8304;&nbsp;=&nbsp;5&#8304;x&#8304;&nbsp;=&nbsp;1</span>, but
+            <span class="mono">5x&#8304;&nbsp;=&nbsp;5</span>.</li>
         </ul>
 
         <h3>Checking an answer</h3>
@@ -607,7 +613,9 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             by itself.</li>
           <li>Any equal form in simplest shape counts: <span class="mono">x&#8315;&sup2;</span>
             or <span class="mono">1/x&sup2;</span>, <span class="mono">81x&#8312;</span> or
-            <span class="mono">3&#8308;x&#8312;</span>. Typing the problem back unchanged does not.</li>
+            <span class="mono">3&#8308;x&#8312;</span>. Typing the problem back unchanged does not.
+            Zero Exponent is stricter: each step asks for one form,
+            <span class="mono">x&#8304;</span> first and then its value, 1.</li>
         </ul>
 
         <h3>The answer box</h3>
@@ -690,10 +698,9 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
       <div class="prose">
         <h3>What it doesn&rsquo;t cover yet</h3>
         <ul>
-          <li><strong>Three of the seven modes are not built.</strong> Zero Exponent,
-            Negative Exponent and Mixed Practice are listed and open, but each only says it
-            is still being designed and offers a preview of the answer box. They arrive one
-            at a time.</li>
+          <li><strong>Two of the seven modes are not built.</strong> Negative Exponent and
+            Mixed Practice are listed and open, but each only says it is still being designed
+            and offers a preview of the answer box. They arrive one at a time.</li>
           <li><strong>Feedback is right or wrong, not why.</strong> A wrong answer is marked
             wrong without saying which step went astray. Feedback that explains the mistake is
             still to be written.</li>

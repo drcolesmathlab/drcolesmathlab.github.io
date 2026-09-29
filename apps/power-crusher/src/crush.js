@@ -8,8 +8,10 @@
  *                             one of Mode 2's vertical crushes (plan.type
  *                             'cancel', 'vertical' or 'columns'), Mode 3's
  *                             outer exponent crush (plan.type 'outer', which
- *                             Mode 4 runs on a fraction too), or Mode 4
- *                             Level 1's copies crush (plan.type 'copies')
+ *                             Mode 4 runs on a fraction too), Mode 4
+ *                             Level 1's copies crush (plan.type 'copies'),
+ *                             or Mode 5 Level 4's zero powers becoming 1
+ *                             (plan.type 'zero')
  *   mismatch(host)            the factors flash red and shake; nothing crushes
  *   reset(host)               clear the red highlight (after the student edits)
  *
@@ -17,8 +19,10 @@
  * makes the crush an instant swap; the shake is CSS, and html.reduce-motion
  * turns it into a static red highlight. Mode 2 Level 1's highlight then shows
  * on every canceled pair at once, held a moment before the swap so it is seen,
- * and so does Mode 3's on every exponent. Mode 4 (plan.lit 'answer') swaps
- * first, and lights the answer's exponents for the same time.
+ * and so does Mode 3's on every exponent, and Mode 4 Levels 2 to 4's (Mode 5
+ * design §9.5). Mode 4 Level 1 (plan.lit 'answer') swaps first, and lights
+ * the answer's exponents for the same time. Mode 5 (plan.lit 'problem')
+ * lights the whole problem, holds, then swaps (Mode 5 design §3).
  * The stage's spoken label always matches what is drawn.
  */
 (function (PC) {
@@ -86,6 +90,8 @@
     var reduce = opts && opts.reduce, plan = opts && opts.plan;
     var top = host.firstElementChild, can = !!top && typeof top.animate === 'function';
     if (reduce && plan && plan.lit === 'answer') return litAnswer(host, tree);
+    if (reduce && plan && plan.lit === 'problem') return litProblem(host, tree);
+    if (plan && plan.type === 'zero' && can) return zero(host, tree, plan);
     if (plan && plan.type === 'copies' && can) return copies(host, tree, plan);
     if (plan && plan.type === 'cancel' && can) return cancel(host, tree, plan, reduce);
     if (plan && plan.type === 'outer' && can) return outer(host, tree, reduce);
@@ -711,6 +717,85 @@
         Array.prototype.forEach.call(host.querySelectorAll('.m-exp'), function (el) {
           el.animate([{ transform: 'translateY(.5em) scale(.4)', opacity: 0 }, { transform: 'none', opacity: 1 }],
             { duration: 380, delay: 90, easing: 'cubic-bezier(.2,1.6,.4,1)', fill: 'backwards' });
+        });
+      });
+    });
+  }
+
+  /* ---- Mode 5 (Mode 5 design §3 to §7) -------------------------------------- */
+  /* Reduced motion, every level (design §3): the whole problem lights, the
+     light is held HOLD_MS, then the answer swaps in. */
+  function litProblem(host, tree) {
+    var token = host[TOKEN];
+    host.classList.remove('is-wrong');
+    Array.prototype.forEach.call(host.querySelectorAll('.m-ch, .m-var, .m-exp, .m-op, .m-paren, .m-den'),
+      function (el) { el.classList.add('is-lit'); });
+    return wait(HOLD_MS).then(function () { if (host[TOKEN] === token) { swap(host, tree); fit(host); } });
+  }
+
+  /* Level 4 (design §7, as proposed there; Dr. Cole, 2026-09-28). plan.mid is
+     the problem with only zero powers left (x⁰y⁰, 5⁰x⁰, or 5x⁰ itself), and
+     plan.first the crush that gets there, if any: a fraction's vertical crush
+     (3⁴/3⁴ → 3⁰, as at Level 3) or the outer exponent's ((5x)⁰ → 5⁰x⁰).
+       1. plan.first runs, and its result is held a moment.
+       2. Each zero power crushes into 1, all at once: 1 · 1, or 5 · 1.
+       3. The 1s go, leaving the value: 1 (the first 1 stays when all are 1s),
+          or the coefficient, 5. */
+  var ZERO_HOLD_MS = 360, ONE_MS = 340;
+
+  function zero(host, tree, plan) {
+    var token = host[TOKEN];
+    var first = plan.first ? crush(host, plan.mid, { plan: plan.first }) : Promise.resolve();
+    return first.then(function () {
+      if (host[TOKEN] !== token) return;
+      return wait(plan.first ? ZERO_HOLD_MS : 0).then(function () {
+        if (host[TOKEN] !== token) return;
+        host.classList.remove('is-wrong', 'is-crushed');
+        host.classList.add('is-crushing');
+        // 2. Each zero power shrinks into its middle and becomes 1.
+        var parts = factorsOf(plan.mid), els = drawnParts(host.firstElementChild);
+        var isZero = parts.map(function (f) { return f.t === 'pow' && f.exp === 0; });
+        var at = els.map(function (el) { return centre(el.getBoundingClientRect()); });
+        var anims = [];
+        els.forEach(function (el, i) {
+          if (!isZero[i]) return;
+          anims.push(el.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.3)', opacity: 0 }],
+            { duration: CANCEL_MS, easing: 'cubic-bezier(.55,0,.8,.2)', fill: 'forwards' }));
+        });
+        return done(anims).then(function () {
+          if (host[TOKEN] !== token) return;
+          var ones = parts.map(function (f, i) { return isZero[i] ? { t: 'num', v: 1 } : f; });
+          var onesTree = ones.length === 1 ? ones[0] : { t: 'mul', factors: ones, dot: true };
+          PC.Render.into(host, onesTree);
+          fit(host);
+          var now = drawnParts(host.firstElementChild);
+          var grow = now.map(function (el, i) {
+            var c = centre(el.getBoundingClientRect()), dx = at[i] ? at[i].x - c.x : 0;
+            return el.animate([
+              { transform: 'translateX(' + dx + 'px) scale(' + (isZero[i] ? 1.5 : 1) + ')', opacity: isZero[i] ? 0.2 : 1 },
+              { transform: 'none', opacity: 1 },
+            ], { duration: ONE_MS, easing: 'cubic-bezier(.2,1.5,.4,1)' });
+          });
+          return done(grow).then(function () { return wait(ZERO_HOLD_MS); }).then(function () {
+            if (host[TOKEN] !== token) return;
+            // 3. Every 1 but the one that stays, and the dots, go.
+            var keep = isZero.indexOf(false);
+            if (keep < 0) keep = 0;
+            var from = centre(now[keep].getBoundingClientRect());
+            var go = now.filter(function (el, i) { return i !== keep; }).concat(dots(host))
+              .map(function (el) {
+                return el.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-.4em) scale(.4)', opacity: 0 }],
+                  { duration: ONE_MS, easing: 'ease-in', fill: 'forwards' });
+              });
+            return done(go).then(function () {
+              if (host[TOKEN] !== token) return;
+              swap(host, tree);
+              fit(host);
+              var el = host.firstElementChild, c = centre(el.getBoundingClientRect());
+              el.animate([{ transform: 'translate(' + (from.x - c.x) + 'px,' + (from.y - c.y) + 'px) scale(1.3)', opacity: 0.6 },
+                { transform: 'none', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,1.3,.4,1)' });
+            });
+          });
         });
       });
     });

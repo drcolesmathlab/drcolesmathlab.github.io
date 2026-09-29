@@ -49,7 +49,9 @@
     },
     /* [ASSUMPTION — provisional until Dr. Cole designs these modes] The zero and
        negative exponent properties exist to remove that exponent, so typing it
-       back (7⁰ for 7⁰) must not pass. The default above can't see that. */
+       back (7⁰ for 7⁰) must not pass. The default above can't see that.
+       Mode 5's levels don't use `zero`: they grade in zero.js, by the design's
+       own rules (Mode 5 design §6, §7). It stays for the sandbox. */
     zero: {
       id: 'zero',
       issues: ['REPEATED_BASE', 'ZERO_EXPONENT'],

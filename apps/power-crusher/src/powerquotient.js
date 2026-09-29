@@ -154,7 +154,9 @@
       constant: consts.length ? consts.map(function (f) { return { form: 'power', value: f[0], exp: f[1] * m }; }) : null,
       policy: POLICY,
       question: 'Simplify the expression.',   // design §5: Levels 2 to 4
-      plan: { type: 'outer', lit: 'answer' },
+      // Reduced motion lights the problem, holds, then swaps, as in Modes 2
+      // and 3 (Mode 5 design §9.5, replacing this design's swap-then-light).
+      plan: { type: 'outer' },
     };
   }
 

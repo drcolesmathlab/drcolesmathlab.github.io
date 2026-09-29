@@ -546,6 +546,8 @@ kbd {
 }
 /* Mode 2 Level 1: the canceling pairs light up before they crush. */
 .stage .is-lit { color: var(--accent); text-shadow: 0 0 16px rgba(0, 229, 255, .6); }
+/* Mode 5, reduced motion: the whole problem lights, its fraction bar too. */
+.stage .m-den.is-lit { border-top-color: var(--accent); }
 /* Right: the crushed power glows gold, and a ring bursts out behind it. */
 .stage.is-crushed { border-color: rgba(255, 61, 240, .55); }
 .stage.is-crushed .m-pow { text-shadow: 0 0 22px rgba(255, 61, 240, .45); }

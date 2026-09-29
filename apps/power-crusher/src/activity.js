@@ -3,14 +3,18 @@
  * feedback, the in-mode history panel, and statistics (Mode 1 design §3, §5, §6).
  *
  * Product of Powers (src/product.js), Quotient of Powers (src/quotient.js),
- * Power of a Power (src/power.js) and Power of a Quotient (src/powerquotient.js)
- * have levels so far. A level's `input` says what it takes: 'count' (one whole
+ * Power of a Power (src/power.js), Power of a Quotient (src/powerquotient.js)
+ * and Zero Exponent (src/zero.js) have levels so far. A level's `input` says what it takes: 'count' (one whole
  * number), 'counts' (two, top and bottom: Mode 4 Level 1) or 'math' (the
  * Phase 0 math answer box and keypad). The flow for one problem:
  *   right → crush runs, reward sound, input and Crush it! lock, history entry,
  *           the student chooses Next (no auto-advance, so they can study it)
  *   wrong → no crush, red flash and shake, buzz; they may edit and resubmit,
  *           or choose Next to skip. Not added to history; counted in stats.
+ * A problem with `steps` (Mode 5 Level 4) is answered in parts, one after the
+ * other. Each part is graded and counted on its own (Dr. Cole, 2026-09-28);
+ * a right part crushes, then the box clears for the next part. Only the last
+ * part locks the form and adds the problem to the history.
  */
 (function (PC) {
   'use strict';
@@ -28,7 +32,8 @@
   };
 
   /* Each mode with levels: its module (problems, grading, history entries). */
-  var LIBS = { product: 'Product', quotient: 'Quotient', 'power-of-power': 'Power', 'power-of-quotient': 'PowerQuotient' };
+  var LIBS = { product: 'Product', quotient: 'Quotient', 'power-of-power': 'Power', 'power-of-quotient': 'PowerQuotient',
+    zero: 'Zero' };
   function lib(modeId) { return LIBS[modeId] ? PC[LIBS[modeId]] : null; }
 
   /* The levels built for a mode so far, or null while it is still being designed. */
@@ -112,6 +117,7 @@
   Activity.prototype.next = function (focus) {
     this.seq++;
     this.problem = this.level.make(this.rng, this.problem);
+    this.stepAt = 0;
     this.locked = false;
     var kind = this.level.input, math = kind === 'math';
     this.fields().forEach(function (f) { f.value = ''; f.readOnly = false; });
@@ -125,7 +131,7 @@
     $('crushBtn').disabled = false;
     $('nextProblemBtn').classList.remove('primary');
     if (kind === 'counts') this.countBases();
-    $('question').textContent = this.problem.question;
+    $('question').textContent = this.part().question;
     PC.Crush.show($('stage'), this.problem.shown);
     this.say('', '');
     $('announce').textContent = '';
@@ -142,6 +148,11 @@
     });
   };
 
+  /* The part being answered: the problem itself, or one of its steps. */
+  Activity.prototype.part = function () {
+    return this.problem.steps ? this.problem.steps[this.stepAt] : this.problem;
+  };
+
   /* The whole-number fields of this level: one, or two for 'counts'. */
   Activity.prototype.fields = function () {
     return this.level && this.level.input === 'counts' ? [$('topCount'), $('bottomCount')] : [$('countInput')];
@@ -152,7 +163,8 @@
     var kind = this.level.input, math = kind === 'math', fields = this.fields();
     var input = math ? $('playAnswer') : fields[0];
     var L = lib(this.modeId);
-    var r = math ? L.gradeMath(this.problem, this.box.model.root)
+    var part = this.part();
+    var r = math ? L.gradeMath(part, this.box.model.root)
       : kind === 'counts' ? L.grade(this.problem, fields.map(function (f) { return f.value; }))
       : L.grade(this.problem, input.value);
     if (r.status === 'empty' || r.status === 'invalid') {
@@ -169,7 +181,27 @@
     var right = r.status === 'correct';
     this.store.record(this.modeId, this.level.n, right);
 
-    if (right) {
+    var more = right && p.steps && this.stepAt < p.steps.length - 1;
+    if (more) {
+      // A part before the last: it crushes, then the box clears for the next.
+      this.locked = true;
+      this.lockBox(true);
+      $('crushBtn').disabled = true;
+      if (set.sound) PC.Sound.play('reward');
+      var seqP = this.seq, me = this;
+      this.stepAt++;
+      PC.Crush.crush(stage, part.answer, { reduce: this.reduce(), plan: part.plan }).then(function () {
+        if (seqP !== me.seq) return;
+        me.locked = false;
+        me.box.clear();
+        me.lockBox(false);
+        $('crushBtn').disabled = false;
+        $('question').textContent = me.part().question;
+        me.say('✓ ' + MESSAGES.correct, 'good');
+        $('playAnswer').focus();
+      });
+      this.announce(MESSAGES.correct + ' ' + PC.Render.speak(part.answer) + '. ' + p.steps[this.stepAt].question);
+    } else if (right) {
       this.locked = true;
       if (math) this.lockBox(true); else fields.forEach(function (f) { f.readOnly = true; });
       $('crushBtn').disabled = true;
@@ -181,12 +213,12 @@
       if (set.sound) PC.Sound.play('reward');
       var seq = this.seq, self = this;
       // Mode 1 Level 4 groups then crushes; Modes 2 and 3 carry their own plan.
-      var plan = p.plan || (p.groups ? { order: p.order, groups: p.groups } : null);
-      PC.Crush.crush(stage, p.answer, { reduce: this.reduce(), plan: plan }).then(function () {
+      var plan = part.plan || (p.groups ? { order: p.order, groups: p.groups } : null);
+      PC.Crush.crush(stage, part.answer, { reduce: this.reduce(), plan: plan }).then(function () {
         if (seq !== self.seq) return;
         self.say('✓ ' + MESSAGES.correct, 'good');
       });
-      this.announce(MESSAGES.correct + ' ' + PC.Render.speak(p.answer) + '.');
+      this.announce(MESSAGES.correct + ' ' + PC.Render.speak(part.answer) + '.');
     } else {
       PC.Crush.mismatch(stage);
       if (set.sound) PC.Sound.play('buzz');
@@ -277,10 +309,21 @@
       tail.appendChild(eq);
       lhs.classList.add('hist-lhs');
       vis.appendChild(lhs);
+      // Mode 5 Level 4 keeps its middle step: 3⁴/3⁴ = 3⁰ = 1.
+      if (e.via) {
+        var mid = document.createElement('span');
+        mid.className = 'hist-tail';
+        mid.appendChild(R.draw(e.via));
+        var eq2 = document.createElement('span');
+        eq2.className = 'hist-eq';
+        eq2.textContent = '=';
+        mid.appendChild(eq2);
+        vis.appendChild(mid);
+      }
       vis.appendChild(R.draw(e.to));
       var sr = document.createElement('span');
       sr.className = 'sr-only';
-      sr.textContent = R.speak(e.from) + ', equals ' + R.speak(e.to);
+      sr.textContent = R.speak(e.from) + (e.via ? ', equals ' + R.speak(e.via) : '') + ', equals ' + R.speak(e.to);
       li.appendChild(vis);
       li.appendChild(sr);
       return li;

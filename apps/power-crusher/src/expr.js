@@ -127,9 +127,12 @@
      the final answer: (2x)¹⁰ breaks it even if something later divides it back
      down. A result exponent has no limit (Mode 3 design §3): (x¹⁰)¹⁰ = x¹⁰⁰.
      `opts.constCap: false` lifts the 1000 cap, which applies only to fully
-     simplified answers, not to Explore problems (Mode 1 design §9). */
+     simplified answers, not to Explore problems (Mode 1 design §9).
+     `opts.plainMax` lets a plain number, one that is not a power's base, go up
+     to that value: Mode 5 Level 1's 12/12 (Mode 5 design §4: 2 to 1000). */
   function checkLimits(tree, opts) {
     var constCap = !(opts && opts.constCap === false);
+    var plainMax = (opts && opts.plainMax) || LIMITS.constBaseMax;
     var errors = [];
     function add(msg) { if (errors.indexOf(msg) < 0) errors.push(msg); }
 
@@ -142,12 +145,13 @@
       }
     }
 
-    function walk(node, loneNumerator) {
+    function walk(node, loneNumerator, isBase) {
       switch (node.t) {
         case 'num':
+          var max = isBase ? LIMITS.constBaseMax : plainMax;
           if (!(loneNumerator && node.v === 1) &&
-              (node.v < LIMITS.constBaseMin || node.v > LIMITS.constBaseMax)) {
-            add('constant base ' + node.v + ' outside ' + LIMITS.constBaseMin + '..' + LIMITS.constBaseMax);
+              (node.v < LIMITS.constBaseMin || node.v > max)) {
+            add('constant base ' + node.v + ' outside ' + LIMITS.constBaseMin + '..' + max);
           }
           return;
         case 'var':
@@ -157,7 +161,7 @@
           if (node.exp < LIMITS.givenExpMin || node.exp > LIMITS.givenExpMax) {
             add('given exponent ' + node.exp + ' outside ' + LIMITS.givenExpMin + '..' + LIMITS.givenExpMax);
           }
-          walk(node.base, false); checkResult(node); return;
+          walk(node.base, false, true); checkResult(node); return;
         case 'mul': node.factors.forEach(function (f) { walk(f, false); }); checkResult(node); return;
         case 'div': walk(node.num, true); walk(node.den, false); checkResult(node); return;
         case 'group': walk(node.inner, false); return;
