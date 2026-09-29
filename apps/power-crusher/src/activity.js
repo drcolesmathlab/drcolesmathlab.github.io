@@ -5,16 +5,16 @@
  * Product of Powers (src/product.js), Quotient of Powers (src/quotient.js),
  * Power of a Power (src/power.js), Power of a Quotient (src/powerquotient.js)
  * and Zero Exponent (src/zero.js) have levels so far. A level's `input` says what it takes: 'count' (one whole
- * number), 'counts' (two, top and bottom: Mode 4 Level 1) or 'math' (the
- * Phase 0 math answer box and keypad). The flow for one problem:
+ * number), 'counts' (two, top and bottom: Mode 4 Level 1), 'math' (the
+ * Phase 0 math answer box and keypad) or 'parts' (an answer box per part of
+ * the problem, each under its own prompt: Mode 5 Level 4). The flow for one problem:
  *   right → crush runs, reward sound, input and Crush it! lock, history entry,
  *           the student chooses Next (no auto-advance, so they can study it)
  *   wrong → no crush, red flash and shake, buzz; they may edit and resubmit,
  *           or choose Next to skip. Not added to history; counted in stats.
- * A problem with `steps` (Mode 5 Level 4) is answered in parts, one after the
- * other. Each part is graded and counted on its own (Dr. Cole, 2026-09-28);
- * a right part crushes, then the box clears for the next part. Only the last
- * part locks the form and adds the problem to the history.
+ * 'parts' boxes are all sent by one Crush it! and count as one attempt (Dr.
+ * Cole, 2026-09-29). Each box is marked ✓ or ✗, so a wrong answer says which
+ * box to fix. Enter in a box before the last moves to the next one.
  */
 (function (PC) {
   'use strict';
@@ -29,6 +29,7 @@
     empty: 'Type a whole number, then Crush it!',
     emptyCounts: 'Type a number in each box, then Crush it!',   // Mode 4 design §4
     emptyMath: 'Type your answer, then Crush it!',   // Levels 3+ (spec §3)
+    emptyParts: 'Type an answer in each box, then Crush it!',   // Mode 5 Level 4 [my wording]
   };
 
   /* Each mode with levels: its module (problems, grading, history entries). */
@@ -77,7 +78,27 @@
       onSubmit: function () { self.submit(); },
       onChange: function () { if (!self.locked) { PC.Crush.reset($('stage')); self.say('', ''); } },
     });
-    PC.MathInput.bindKeypad($('playKeypad'), this.box);
+    // Mode 5 Level 4: a box per part. Enter moves on to the next box; the last
+    // one submits. The keypad types into whichever box was focused last.
+    this.parts = [1, 2].map(function (n, i) {
+      var box = new PC.MathInput.Widget($('part' + n + 'Box'), {
+        echo: $('playEcho'),
+        onSubmit: function () {
+          var next = self.problem && self.problem.parts && self.parts[i + 1];
+          if (next && i + 1 < self.problem.parts.length) next.el.focus(); else self.submit();
+        },
+        onChange: function () {
+          if (self.locked) return;
+          self.mark(i, null);
+          PC.Crush.reset($('stage'));
+          self.say('', '');
+        },
+      });
+      box.el.addEventListener('focus', function () { self.active = box; });
+      return box;
+    });
+    this.active = this.box;
+    PC.MathInput.bindKeypad($('playKeypad'), { run: function (cmd, arg) { return self.active.run(cmd, arg); } });
     $('levelNav').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-level]');
       if (b) self.pick(+b.dataset.level, true);
@@ -117,21 +138,26 @@
   Activity.prototype.next = function (focus) {
     this.seq++;
     this.problem = this.level.make(this.rng, this.problem);
-    this.stepAt = 0;
     this.locked = false;
-    var kind = this.level.input, math = kind === 'math';
+    var kind = this.level.input, math = kind === 'math', parts = kind === 'parts';
     this.fields().forEach(function (f) { f.value = ''; f.readOnly = false; });
     $('countInput').hidden = kind !== 'count';
     $('counts').hidden = kind !== 'counts';
     $('playAnswer').hidden = !math;
-    $('playKeys').hidden = !math;
+    $('parts').hidden = !parts;
+    $('playKeys').hidden = !math && !parts;
     this.box.clear();
+    this.showParts();
     this.lockBox(false);
-    var input = math ? $('playAnswer') : this.fields()[0];
+    var input = math ? $('playAnswer') : parts ? this.parts[0].el : this.fields()[0];
+    this.active = parts ? this.parts[0] : this.box;
     $('crushBtn').disabled = false;
     $('nextProblemBtn').classList.remove('primary');
     if (kind === 'counts') this.countBases();
-    $('question').textContent = this.part().question;
+    // With a prompt over each box, the heading would say them twice, so it is
+    // only for screen readers (Dr. Cole, 2026-09-29).
+    $('question').textContent = this.problem.question;
+    $('question').classList.toggle('sr-only', parts);
     PC.Crush.show($('stage'), this.problem.shown);
     this.say('', '');
     $('announce').textContent = '';
@@ -148,9 +174,35 @@
     });
   };
 
-  /* The part being answered: the problem itself, or one of its steps. */
-  Activity.prototype.part = function () {
-    return this.problem.steps ? this.problem.steps[this.stepAt] : this.problem;
+  /* Mode 5 Level 4: one box per part of the problem, each under its prompt,
+     cleared and unmarked. A box with no part (5x⁰ has one) is hidden. */
+  Activity.prototype.showParts = function () {
+    var ps = this.level.input === 'parts' ? this.problem.parts : [];
+    var self = this;
+    this.parts.forEach(function (box, i) {
+      var n = i + 1;
+      $('part' + n).hidden = !ps[i];
+      $('part' + n + 'Lbl').textContent = ps[i] ? ps[i].label : '';
+      box.clear();
+      self.mark(i, null);
+    });
+  };
+
+  /* A box's ✓ or ✗ (null clears it). The symbol is shown; the word is for
+     screen readers, which hear it with the box (aria-describedby). */
+  Activity.prototype.mark = function (i, status) {
+    var el = $('part' + (i + 1) + 'Mark');
+    el.className = 'part-mark' + (status === 'correct' ? ' good' : status === 'wrong' ? ' bad' : '');
+    el.replaceChildren();
+    if (!status) return;
+    var sym = document.createElement('span');
+    sym.setAttribute('aria-hidden', 'true');
+    sym.textContent = status === 'correct' ? '✓' : '✗';
+    var word = document.createElement('span');
+    word.className = 'sr-only';
+    word.textContent = status === 'correct' ? MESSAGES.correct : MESSAGES.wrong;
+    el.appendChild(sym);
+    el.appendChild(word);
   };
 
   /* The whole-number fields of this level: one, or two for 'counts'. */
@@ -160,50 +212,34 @@
 
   Activity.prototype.submit = function () {
     if (!this.problem || this.locked) return;
-    var kind = this.level.input, math = kind === 'math', fields = this.fields();
-    var input = math ? $('playAnswer') : fields[0];
+    var kind = this.level.input, math = kind === 'math', parts = kind === 'parts', fields = this.fields();
+    var input = math ? $('playAnswer') : parts ? this.parts[0].el : fields[0];
     var L = lib(this.modeId);
-    var part = this.part();
-    var r = math ? L.gradeMath(part, this.box.model.root)
-      : kind === 'counts' ? L.grade(this.problem, fields.map(function (f) { return f.value; }))
-      : L.grade(this.problem, input.value);
+    var p = this.problem, self = this;
+    var r = math ? L.gradeMath(p, this.box.model.root)
+      : parts ? L.gradeParts(p, p.parts.map(function (pt, i) { return self.parts[i].model.root; }))
+      : kind === 'counts' ? L.grade(p, fields.map(function (f) { return f.value; }))
+      : L.grade(p, input.value);
     if (r.status === 'empty' || r.status === 'invalid') {
       // Not a submission: nothing is graded or counted. An answer the box can't
       // read (an empty exponent box) gets the checker's placeholder hint.
       this.say(r.status === 'invalid' ? r.message : math ? MESSAGES.emptyMath
+        : parts ? (p.parts.length > 1 ? MESSAGES.emptyParts : MESSAGES.emptyMath)
         : kind === 'counts' ? MESSAGES.emptyCounts : MESSAGES.empty, '');
-      // Two fields: the first empty one.
+      // Two fields or boxes: the first empty (or unreadable) one.
       if (kind === 'counts') input = fields.filter(function (f) { return PC.Product.clean(f.value) === ''; })[0] || input;
+      if (parts) input = this.parts[r.at].el;
       input.focus();
       return;
     }
-    var set = this.settings(), p = this.problem, stage = $('stage');
+    var set = this.settings(), stage = $('stage');
     var right = r.status === 'correct';
     this.store.record(this.modeId, this.level.n, right);
+    if (parts) r.parts.forEach(function (st, i) { self.mark(i, st); });
 
-    var more = right && p.steps && this.stepAt < p.steps.length - 1;
-    if (more) {
-      // A part before the last: it crushes, then the box clears for the next.
+    if (right) {
       this.locked = true;
-      this.lockBox(true);
-      $('crushBtn').disabled = true;
-      if (set.sound) PC.Sound.play('reward');
-      var seqP = this.seq, me = this;
-      this.stepAt++;
-      PC.Crush.crush(stage, part.answer, { reduce: this.reduce(), plan: part.plan }).then(function () {
-        if (seqP !== me.seq) return;
-        me.locked = false;
-        me.box.clear();
-        me.lockBox(false);
-        $('crushBtn').disabled = false;
-        $('question').textContent = me.part().question;
-        me.say('✓ ' + MESSAGES.correct, 'good');
-        $('playAnswer').focus();
-      });
-      this.announce(MESSAGES.correct + ' ' + PC.Render.speak(part.answer) + '. ' + p.steps[this.stepAt].question);
-    } else if (right) {
-      this.locked = true;
-      if (math) this.lockBox(true); else fields.forEach(function (f) { f.readOnly = true; });
+      if (math || parts) this.lockBox(true); else fields.forEach(function (f) { f.readOnly = true; });
       $('crushBtn').disabled = true;
       var next = $('nextProblemBtn');
       next.classList.add('primary');
@@ -211,25 +247,36 @@
       this.store.addHistory(this.modeId, this.level.n, L.entry(p));
       this.renderHistory();
       if (set.sound) PC.Sound.play('reward');
-      var seq = this.seq, self = this;
+      var seq = this.seq;
       // Mode 1 Level 4 groups then crushes; Modes 2 and 3 carry their own plan.
-      var plan = part.plan || (p.groups ? { order: p.order, groups: p.groups } : null);
-      PC.Crush.crush(stage, part.answer, { reduce: this.reduce(), plan: plan }).then(function () {
+      var plan = p.plan || (p.groups ? { order: p.order, groups: p.groups } : null);
+      PC.Crush.crush(stage, p.answer, { reduce: this.reduce(), plan: plan }).then(function () {
         if (seq !== self.seq) return;
         self.say('✓ ' + MESSAGES.correct, 'good');
       });
-      this.announce(MESSAGES.correct + ' ' + PC.Render.speak(part.answer) + '.');
+      // Two parts are read as the history line: "3 to the power 0, equals 1".
+      var said = parts && p.parts.length > 1 ? PC.Render.speak(p.mid) + ', equals ' : '';
+      this.announce(MESSAGES.correct + ' ' + said + PC.Render.speak(p.answer) + '.');
     } else {
       PC.Crush.mismatch(stage);
       if (set.sound) PC.Sound.play('buzz');
       this.say('✗ ' + MESSAGES.wrong, 'bad');
-      this.announce(MESSAGES.wrong);
-      if (math) input.focus(); else input.select();
+      if (parts && p.parts.length > 1) {
+        // Which box is wrong, in words: "Incorrect. Apply the exponent property: correct. …"
+        this.announce(MESSAGES.wrong + ' ' + p.parts.map(function (pt, i) {
+          return pt.label.replace(/\.$/, '') + ': ' + (r.parts[i] === 'correct' ? 'correct.' : 'incorrect.');
+        }).join(' '));
+        this.parts[r.parts.indexOf('wrong')].el.focus();
+      } else {
+        this.announce(MESSAGES.wrong);
+        if (math || parts) input.focus(); else input.select();
+      }
     }
   };
 
   Activity.prototype.lockBox = function (on) {
     this.box.setLocked(on);
+    this.parts.forEach(function (b) { b.setLocked(on); });
     Array.prototype.forEach.call($('playKeypad').querySelectorAll('button'), function (b) { b.disabled = on; });
   };
 

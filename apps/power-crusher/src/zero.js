@@ -18,12 +18,14 @@
  * 2026-09-28, answering design §11). Right → as Level 2, landing as x⁰.
  *
  * Level 4 (Zero Means One): one of four forms (design §7): 3⁴/3⁴,
- * x²y³/(x²y³), (5x)⁰ or 5x⁰, answered in two parts, one after the other
- * (Dr. Cole, 2026-09-28), so the student ties the zero power to its value:
- *   1. Simplify: the zero powers, 3⁰, x⁰y⁰ or 5⁰x⁰. Right → a fraction
- *      crushes as at Level 3; (5x)⁰ gives its 0 to every factor, as in Mode 3.
- *   2. The value: 1. Right → each zero power becomes 1, and the 1s go.
- * 5x⁰ is already simplified, so it asks only for the value, 5.
+ * x²y³/(x²y³), (5x)⁰ or 5x⁰, answered in two boxes and one Crush it! (Dr.
+ * Cole, 2026-09-29), so the student ties the zero power to its value:
+ *   1. "Apply the exponent property.": the zero powers, 3⁰, x⁰y⁰ or 5⁰x⁰.
+ *   2. "Evaluate the expression.": the value, 1.
+ * 5x⁰ is already simplified, so it has only the second box, and its value is 5.
+ * Both right → the problem crushes to its zero powers (a fraction as at Level
+ * 3; (5x)⁰ gives its 0 to every factor, as in Mode 3), each zero power becomes
+ * 1, and the 1s go.
  *
  * Bases are never 0 (design §3). Levels 1 and 2 use constants only, with no
  * zero or negative exponents; Levels 3 and 4 use constants 2 to 10 or x, y, z,
@@ -134,8 +136,9 @@
   }
 
   /* ---- Level 4 --------------------------------------------------------------- */
-  var SIMPLIFY = 'Simplify the expression.';
-  var VALUE = 'What is the value of the expression?';   // design §7 [DECIDED, for now]
+  // Dr. Cole, 2026-09-29: two boxes, each with its own prompt, one Crush it!.
+  var APPLY = 'Apply the exponent property.';
+  var EVALUATE = 'Evaluate the expression.';
 
   /* One problem as data. `form` is design §7's (a) to (d):
        'one'   3⁴/3⁴          factors [[3, 4]]
@@ -145,9 +148,9 @@
      Tests build their own: { form: 'group', coef: 5, factors: [['x', 1]] }.
      `mid` is what the problem becomes before its zero powers turn into 1s:
      x⁰y⁰ for a fraction, 5⁰x⁰ for (5x)⁰; 5x⁰ is already there.
-     `steps` are the parts the student answers in turn, each with its own
-     question, answer and crush. activity.js runs them; a problem without
-     `steps` is one part. */
+     `parts` are the answer boxes, top to bottom, each with its prompt and
+     answer; activity.js grades them together (gradeParts). `question` is the
+     prompts in one line, for the page's (visually hidden) heading. */
   function problem4(d) {
     var given = d.factors.map(function (f) { return power(baseNode(f[0]), f[1]); });
     var zeros = d.factors.map(function (f) { return E.P(baseNode(f[0]), 0); });
@@ -165,21 +168,22 @@
       mid = shown;
       value = d.coef;
     }
-    var last = { question: VALUE, answer: E.N(value), plan: { type: 'zero', lit: 'problem', first: null, mid: mid } };
-    var steps = first ? [{ question: SIMPLIFY, answer: mid, anyOrder: true, plan: { type: first.type, lit: 'problem' } }, last] : [last];
+    var parts = [{ label: EVALUATE, answer: E.N(value) }];
+    if (first) parts.unshift({ label: APPLY, answer: mid, anyOrder: true });
     return {
       level: 4, form: d.form, coef: d.coef || null, factors: d.factors, value: value,
       shown: shown, mid: mid,
       answer: E.N(value),
-      question: steps[0].question,
-      steps: steps,
+      question: parts.map(function (pt) { return pt.label; }).join(' '),
+      parts: parts,
+      plan: { type: 'zero', lit: 'problem', first: first, mid: mid },
     };
   }
 
   /* The history keeps both parts: 3⁴/3⁴ = 3⁰ = 1. 5x⁰ = 5 has one. */
   function entry(problem) {
     var e = Pr.entry(problem);
-    if (problem.steps && problem.steps.length > 1) e.via = problem.mid;
+    if (problem.parts && problem.parts.length > 1) e.via = problem.mid;
     return e;
   }
 
@@ -221,12 +225,12 @@
      right (design §6, §7, and Dr. Cole, 2026-09-28):
        Level 3: b⁰. Not 1 (that is Level 4's task), not b⁰/1, not the problem
                 typed back, not another base or exponent.
-       Level 4, part 1: the zero powers, each base once, in any order
-                [my call]: x⁰y⁰ or y⁰x⁰, 5⁰x⁰. Not 1 (that is part 2), not x⁰
+       Level 4, box 1: the zero powers, each base once, in any order
+                [my call]: x⁰y⁰ or y⁰x⁰, 5⁰x⁰. Not 1 (that is box 2), not x⁰
                 alone, not the problem typed back.
-       Level 4, part 2: the value, one plain number. Not x⁰, 5⁰x⁰ or 5x⁰, not
+       Level 4, box 2: the value, one plain number. Not x⁰, 5⁰x⁰ or 5x⁰, not
                 the problem typed back, not 1/1.
-     `problem` is a problem, or one part of a Level 4 problem.
+     `problem` is a problem, or one part (box) of a Level 4 problem.
      'empty' and 'invalid' (an empty exponent box) are not submissions. */
   function factorTexts(t) { return (t.t === 'mul' ? t.factors : [t]).map(E.toText).sort(); }
 
@@ -240,6 +244,22 @@
     var right = problem.anyOrder ? factorTexts(p.tree).join() === factorTexts(problem.answer).join()
       : E.toText(p.tree) === E.toText(problem.answer);
     return { status: right ? 'correct' : 'wrong', tree: p.tree };
+  }
+
+  /* Level 4: every box at once, from one Crush it! (Dr. Cole, 2026-09-29).
+     `roots` are the boxes' models, in the order of problem.parts. An empty or
+     unreadable box makes the whole submission not count; `at` is that box.
+     Otherwise it is right only when every box is, and `parts` says which were
+     ('correct' or 'wrong'), so each box can be marked. */
+  function gradeParts(problem, roots) {
+    var rs = problem.parts.map(function (pt, i) { return gradeMath(pt, roots[i]); });
+    for (var i = 0; i < rs.length; i++) {
+      if (rs[i].status === 'empty' || rs[i].status === 'invalid') {
+        return { status: rs[i].status, message: rs[i].message, at: i, parts: rs.map(function (r) { return r.status; }) };
+      }
+    }
+    var all = rs.every(function (r) { return r.status === 'correct'; });
+    return { status: all ? 'correct' : 'wrong', parts: rs.map(function (r) { return r.status; }) };
   }
 
   /* ---- every level ----------------------------------------------------------- */
@@ -262,13 +282,13 @@
     { n: 1, title: 'Divide by Itself', make: maker(1, template1, { constCap: false, plainMax: LEVEL1.plainMax }), input: 'count' },   // names: design §2
     { n: 2, title: 'Cancel It All', make: maker(2, template2), input: 'count' },
     { n: 3, title: 'To the Zero', make: maker(3, template3), input: 'math' },
-    { n: 4, title: 'Zero Means One', make: maker(4, template4), input: 'math' },
+    { n: 4, title: 'Zero Means One', make: maker(4, template4), input: 'parts' },   // two boxes (Dr. Cole, 2026-09-29)
   ];
 
   PC.Zero = { LEVEL1: LEVEL1, LEVEL2: LEVEL2, LEVEL3: LEVEL3, LEVEL4: LEVEL4, LEVELS: LEVELS,
     level1: LEVELS[0].make, level2: LEVELS[1].make, level3: LEVELS[2].make, level4: LEVELS[3].make,
     problem1: problem1, problem2: problem2, problem3: problem3, problem4: problem4, draw4: draw4,
-    gradeMath: gradeMath, entry: entry,
+    gradeMath: gradeMath, gradeParts: gradeParts, entry: entry,
     // Whole-number grading is Mode 1's.
     clean: Pr.clean, grade: Pr.grade };
 })(typeof module === 'object' && module.exports

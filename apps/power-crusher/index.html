@@ -79,12 +79,40 @@
               <div class="mathbox play-box" id="playAnswer" tabindex="0" role="textbox" hidden
                    aria-roledescription="math input" aria-labelledby="question"
                    aria-describedby="playDesc playHelp"></div>
+              <!-- Mode 5 Level 4: one answer box per part, each under its own prompt,
+                   and one Crush it! for both (Dr. Cole, 2026-09-29). The prompts and
+                   how many boxes show come from the problem. -->
+              <div class="parts" id="parts" hidden>
+                <div class="part" id="part1">
+                  <span class="part-label" id="part1Lbl"></span>
+                  <div class="part-row">
+                    <div class="mathbox play-box" id="part1Box" tabindex="0" role="textbox"
+                         aria-roledescription="math input" aria-labelledby="part1Lbl"
+                         aria-describedby="part1Desc part1Mark partHelp"></div>
+                    <span class="part-mark" id="part1Mark"></span>
+                  </div>
+                  <span class="sr-only" id="part1Desc"></span>
+                </div>
+                <div class="part" id="part2">
+                  <span class="part-label" id="part2Lbl"></span>
+                  <div class="part-row">
+                    <div class="mathbox play-box" id="part2Box" tabindex="0" role="textbox"
+                         aria-roledescription="math input" aria-labelledby="part2Lbl"
+                         aria-describedby="part2Desc part2Mark partHelp"></div>
+                    <span class="part-mark" id="part2Mark"></span>
+                  </div>
+                  <span class="sr-only" id="part2Desc"></span>
+                </div>
+              </div>
               <button type="submit" class="btn primary" id="crushBtn">Crush it!</button>
               <button type="button" class="btn" id="nextProblemBtn">Next</button>
             </form>
             <span class="sr-only" id="playDesc"></span>
             <span class="sr-only" id="playHelp">Type digits and x, y, z. Caret key starts an exponent,
               slash starts a fraction, right arrow or Tab leaves it. Up and down arrows move between numerator and denominator. Enter crushes it.</span>
+            <span class="sr-only" id="partHelp">Type digits and x, y, z. Caret key starts an exponent,
+              slash starts a fraction, right arrow or Tab leaves it. Up and down arrows move between numerator and denominator.
+              Enter goes to the next box; in the last box, Enter crushes it.</span>
             <span class="sr-only" id="playEcho" aria-live="polite"></span>
             <p class="result" id="result"></p>
             <div class="play-keys" id="playKeys" hidden>
