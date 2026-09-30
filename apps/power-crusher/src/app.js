@@ -61,7 +61,7 @@
     cap.textContent = 'Statistics by mode and level';
     table.appendChild(cap);
     var head = table.createTHead().insertRow();
-    ['Mode', 'Level', 'Attempts', 'Correct', 'Accuracy', 'Streak', 'Best streak', 'Last played'].forEach(function (h) {
+    ['Mode', 'Level', 'Attempts', 'Correct', 'Accuracy', 'Skipped', 'Streak', 'Best streak', 'Last played'].forEach(function (h) {
       var th = document.createElement('th');
       th.scope = 'col';
       th.textContent = h;
@@ -72,13 +72,14 @@
       var levels = PC.Activity.levelsFor(m.id);
       if (!levels) return;
       levels.forEach(function (l) {
-        var s = (all[m.id] && all[m.id][l.n]) || { attempts: 0, correct: 0, streak: 0, bestStreak: 0, lastPlayed: null };
+        var s = (all[m.id] && all[m.id][l.n]) || PC.Store.blank();
         var tr = tb.insertRow();
         var th = document.createElement('th');
         th.scope = 'row';
         th.textContent = m.title;
         tr.appendChild(th);
-        [PC.Activity.levelLabel(l), s.attempts, s.correct, pct(s), s.streak, s.bestStreak, when(s.lastPlayed)]
+        // Only a level with the step workspace has anything to skip.
+        [PC.Activity.levelLabel(l), s.attempts, s.correct, pct(s), l.workspace ? s.skipped : '—', s.streak, s.bestStreak, when(s.lastPlayed)]
           .forEach(function (v) { tr.insertCell().textContent = String(v); });
       });
     });
@@ -86,7 +87,9 @@
     var note = document.createElement('p');
     note.className = 'hint';
     note.textContent = 'Other modes appear here once their levels are ready. ' +
-      'Streak counts correct answers in a row; a wrong answer resets it.';
+      'Streak counts correct answers in a row; a wrong answer resets it. ' +
+      'Skipped counts problems where you used Step or Solution: they are not attempts, ' +
+      'and they reset the streak.';
     body.appendChild(note);
   }
 

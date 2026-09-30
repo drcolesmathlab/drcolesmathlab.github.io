@@ -43,7 +43,7 @@
         var s = all[mode][lvl];
         if (!isMap(s)) return;
         var c = {
-          attempts: count(s.attempts), correct: count(s.correct),
+          attempts: count(s.attempts), correct: count(s.correct), skipped: count(s.skipped),
           streak: count(s.streak), bestStreak: count(s.bestStreak),
           lastPlayed: typeof s.lastPlayed === 'number' && isFinite(s.lastPlayed) ? s.lastPlayed : null,
         };
@@ -69,6 +69,10 @@
     });
     return out;
   }
+
+  /* A level's stats before anything is recorded. `skipped` is Mixed Practice's count of
+     problems where Step or Solution was used (Mode 7 design §12). */
+  function blank() { return { attempts: 0, correct: 0, skipped: 0, streak: 0, bestStreak: 0, lastPlayed: null }; }
 
   function browserStorage() {
     try { return typeof window !== 'undefined' ? window.localStorage : null; } catch (e) { return null; }
@@ -126,7 +130,7 @@
   Store.prototype.record = function (modeId, level, correct, now) {
     var p = this.load('progress');
     var m = p.stats[modeId] = p.stats[modeId] || {};
-    var s = m[level] = m[level] || { attempts: 0, correct: 0, streak: 0, bestStreak: 0, lastPlayed: null };
+    var s = m[level] = m[level] || blank();
     s.attempts++;
     if (correct) {
       s.correct++;
@@ -146,8 +150,22 @@
   Store.prototype.recordAttempt = function (modeId, level, now) {
     var p = this.load('progress');
     var m = p.stats[modeId] = p.stats[modeId] || {};
-    var s = m[level] = m[level] || { attempts: 0, correct: 0, streak: 0, bestStreak: 0, lastPlayed: null };
+    var s = m[level] = m[level] || blank();
     s.attempts++;
+    s.lastPlayed = now === undefined ? Date.now() : now;
+    this.save('progress', p);
+    return s;
+  };
+
+  /* A problem where the student used Step or Solution (Mode 7 phase 2, Dr. Cole,
+     2026-09-30): it is left out of attempts, correct and accuracy, and the streak resets.
+     The Stats table shows the count. */
+  Store.prototype.recordSkip = function (modeId, level, now) {
+    var p = this.load('progress');
+    var m = p.stats[modeId] = p.stats[modeId] || {};
+    var s = m[level] = m[level] || blank();
+    s.skipped = (s.skipped || 0) + 1;
+    s.streak = 0;
     s.lastPlayed = now === undefined ? Date.now() : now;
     this.save('progress', p);
     return s;
@@ -169,7 +187,7 @@
     return s;
   };
 
-  PC.Store = { Store: Store, KEYS: KEYS, HISTORY_MAX: HISTORY_MAX };
+  PC.Store = { Store: Store, KEYS: KEYS, HISTORY_MAX: HISTORY_MAX, blank: blank };
 })(typeof module === 'object' && module.exports
   ? (module.exports = globalThis.PowerCrusher = globalThis.PowerCrusher || {})
   : (window.PowerCrusher = window.PowerCrusher || {}));

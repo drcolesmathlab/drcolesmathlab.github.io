@@ -613,7 +613,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             <span class="mono">(x/y)&sup3;&nbsp;&middot;&nbsp;y&#8309;&nbsp;=&nbsp;x&sup3;y&sup2;</span>, up to
             <span class="mono">(2x&sup3;y&#8315;&sup2;)&sup3;&nbsp;/&nbsp;(4x&sup2;)&nbsp;=&nbsp;2x&#8311;/y&#8310;</span>.
             Every level asks for only positive exponents, with every number worked out, and a
-            right answer crushes in one go, straight to the result.</li>
+            right answer crushes in one go, straight to the result. It also has a step
+            workspace, described below.</li>
         </ul>
 
         <h3>Checking an answer</h3>
@@ -636,9 +637,33 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             <span class="mono">1x&sup3;</span> or <span class="mono">x&sup1;</span>, counts as
             correct and shows a yellow note; the box stays open so you can finish it. A
             negative exponent left in, a power of a number
-            (<span class="mono">2&sup3;</span> for 8) or a letter written twice is wrong. A
+            (<span class="mono">2&sup3;</span> for 8), a letter written twice or parentheses
+            left in (<span class="mono">(x&sup2;)&sup3;</span> for
+            <span class="mono">x&#8310;</span>) is wrong. A
             coefficient can go outside the fraction: <span class="mono">(1/8)x</span> and
             <span class="mono">x/8</span> are both fine.</li>
+        </ul>
+
+        <h3>Steps in Mixed Practice</h3>
+        <p>
+          Under each Mixed Practice problem is a list of steps. You can work through the
+          problem there, or just type the answer, as in the other modes.
+        </p>
+        <ul>
+          <li><strong>Enter Step</strong> (or <kbd>Shift</kbd>+<kbd>Enter</kbd>) adds the step
+            you typed to the list if it is equal to the problem, and clears the box. Nothing is
+            counted, and it never finishes the problem: <strong>Crush it!</strong> does that.</li>
+          <li><strong>Hint</strong> lights the parts of your latest step that the next property
+            applies to. It changes nothing in Stats.</li>
+          <li><strong>Step</strong> shows the app&rsquo;s next step, carrying on from your latest
+            one, and <strong>Solution</strong> shows all the rest, ending on the answer. Each
+            step is labelled with the property it used, in this order: Power of a Power, Power of
+            a Quotient, Product of Powers, Quotient of Powers, Zero Exponent, Negative Exponent, and
+            last Simplest form, which works out the numbers.</li>
+          <li><strong>Using Step or Solution means the problem does not count</strong>, unless it
+            had already counted as correct. It is left out of attempts, correct answers and
+            accuracy, your streak goes back to 0, and Stats adds it to a Skipped count. You can
+            still type the answer and see it crush.</li>
         </ul>
 
         <h3>The answer box</h3>
@@ -648,14 +673,17 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
           <li><kbd>&rarr;</kbd> or <kbd>Tab</kbd> leaves an exponent or moves to the
             denominator; <kbd>&uarr;</kbd> and <kbd>&darr;</kbd> move between numerator and
             denominator.</li>
+          <li>In Mixed Practice, <kbd>(</kbd> starts a group and <kbd>)</kbd> leaves it, ready
+            for its exponent, so <span class="mono">(x/y)&sup3;</span> can be typed.</li>
           <li>The on-screen keypad does the same things with buttons, for touch screens and
             for students who prefer it.</li>
         </ul>
 
         <h3>Stats and Settings</h3>
         <p>
-          <strong>Stats</strong> shows attempts, accuracy, current and best streak, and when
-          each level was last played. <strong>Settings</strong> turns sound and screen-reader
+          <strong>Stats</strong> shows attempts, accuracy, current and best streak, when
+          each level was last played and, in Mixed Practice, how many problems were skipped
+          with Step or Solution. <strong>Settings</strong> turns sound and screen-reader
           announcements on or off, and reduced motion, which follows your system until you
           change it.
         </p>
@@ -721,17 +749,20 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
       <div class="prose">
         <h3>What it doesn&rsquo;t cover yet</h3>
         <ul>
-          <li><strong>Mixed Practice has no step-by-step workspace yet.</strong> You type the
-            final answer. A way to enter and check your own steps, with hints, is still to
-            come.</li>
+          <li><strong>Steps are checked for being equal, not for being valid moves.</strong>
+            Enter Step accepts any step that equals the problem, even one that skips ahead or
+            does not follow one of the properties. Checking each step as a proper move is still
+            to come.</li>
           <li><strong>Feedback is right or wrong, not why.</strong> A wrong answer is marked
             wrong without saying which step went astray. Feedback that explains the mistake is
             still to be written.</li>
           <li><strong>A small, fixed range.</strong> Variables are x, y and z only, and the
             exponents in a problem run from &minus;10 to 10.</li>
-          <li><strong>No parentheses in answers.</strong> The answer box has no parentheses,
-            no exponent inside an exponent and no fraction inside a fraction. Every answer the
-            app asks for can still be typed.</li>
+          <li><strong>Parentheses only in Mixed Practice.</strong> Its answer box takes one
+            level of parentheses, with a fraction inside and an exponent after the closing one.
+            No other mode has parentheses, and no answer box takes an exponent inside an exponent
+            or a fraction inside a fraction. Every answer the app asks for can still be
+            typed.</li>
           <li><strong>Progress lives in one browser.</strong> There are no accounts and no
             teacher view. Stats and history stay on the device where they were earned.</li>
           <li><strong>The sounds are simple tones.</strong> They are placeholders until the

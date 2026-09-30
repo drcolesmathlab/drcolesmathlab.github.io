@@ -59,6 +59,13 @@
           <section class="panel play" aria-labelledby="question">
             <h2 class="sub question" id="question"></h2>
             <div class="stage" id="stage"></div>
+            <!-- Mixed Practice's step workspace (Mode 7 phase 2): the steps so far, yours
+                 and the app's. Every step equals the problem. -->
+            <section class="step-panel" id="workspace" aria-labelledby="stepsH" hidden>
+              <h3 class="steps-h" id="stepsH">Steps</h3>
+              <ol class="step-list" id="stepList"></ol>
+              <p class="hint tight" id="stepsEmpty">Type a step in the box, then Enter Step. Every step must equal the problem.</p>
+            </section>
             <form class="crush-form" id="crushForm" novalidate autocomplete="off">
               <input class="count" id="countInput" type="text" inputmode="numeric" pattern="[0-9]*"
                      maxlength="3" spellcheck="false" aria-labelledby="question">
@@ -126,8 +133,17 @@
                   <span class="sr-only" id="part2Desc"></span>
                 </div>
               </div>
+              <button type="button" class="btn" id="stepBtn" hidden>Enter Step</button>
               <button type="submit" class="btn primary" id="crushBtn">Crush it!</button>
               <button type="button" class="btn" id="nextProblemBtn">Next</button>
+              <div class="help-row" id="helpRow" role="group" aria-label="Help" hidden>
+                <span class="help-label" aria-hidden="true">Need a hand?</span>
+                <button type="button" class="btn ghost" id="hintBtn" aria-describedby="helpNote">Hint</button>
+                <button type="button" class="btn ghost" id="showStepBtn" aria-describedby="helpNote">Step</button>
+                <button type="button" class="btn ghost" id="solutionBtn" aria-describedby="helpNote">Solution</button>
+                <span class="help-note" id="helpNote">Hint lights up where to look next. Step and Solution show the work,
+                  and then the problem doesn&rsquo;t count.</span>
+              </div>
             </form>
             <span class="sr-only" id="playDesc"></span>
             <span class="sr-only" id="playHelp">Type digits and x, y, z. Caret key starts an exponent,
@@ -142,6 +158,8 @@
               <p class="hint"><kbd>^</kbd> exponent &nbsp; <kbd>/</kbd> fraction &nbsp;
                 <kbd>&rarr;</kbd> or <kbd>Tab</kbd> out of a box &nbsp;
                 <kbd>&uarr;</kbd> <kbd>&darr;</kbd> numerator, denominator &nbsp; <kbd>Enter</kbd> Crush it!</p>
+              <p class="hint" id="groupHint" hidden><kbd>(</kbd> <kbd>)</kbd> group, then <kbd>^</kbd> for its exponent &nbsp;
+                <kbd>Shift</kbd>+<kbd>Enter</kbd> Enter Step</p>
             </div>
             <p class="sr-only" id="announce" aria-live="polite"></p>
           </section>
@@ -201,6 +219,7 @@
 <script src="src/zero.js"></script>
 <script src="src/negative.js"></script>
 <script src="src/mixed.js"></script>
+<script src="src/solver.js"></script>
 <script src="src/sound.js"></script>
 <script src="src/crush.js"></script>
 <script src="src/activity.js"></script>

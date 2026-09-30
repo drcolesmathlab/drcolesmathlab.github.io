@@ -7,6 +7,9 @@
  *   item = { k: 'ch', c: '3' | 'x' | '-' }
  *        | { k: 'sup',  row: row }                  exponent box
  *        | { k: 'frac', num: row, den: row }        fraction box (top level only)
+ *        | { k: 'group', row: row }                  parentheses (Mixed Practice's workspace):
+ *                                                    one level; a fraction may sit inside one
+ *                                                    that is on the main line
  *
  * A row reads as a product. A run of digits is one number, each letter is one
  * variable, and an exponent box attaches to the number or letter before it.
@@ -29,6 +32,7 @@
     var topKinds = [];      // kinds of top-level factors, in order
     var negative = false;
     var oneFactor = false;  // a plain 1 multiplied by something else in one row: 1x³
+    var groupLeft = false;  // parentheses left in the answer: (x²)³
 
     function err(code) { if (errors.indexOf(code) < 0) errors.push(code); }
 
@@ -45,9 +49,11 @@
       return n === 0 ? 0 : n;   // no -0
     }
 
-    /* Returns an array of factor nodes for the row. */
-    function readRow(row, level) {
+    /* Returns an array of factor nodes for the row. `inGroup` marks the row inside
+       parentheses: what is in there isn't a top-level factor of the answer. */
+    function readRow(row, level, inGroup) {
       var out = [], items = row.items, i = 0, plainOne = false;
+      var atTop = level === 'top' && !inGroup;
       while (i < items.length) {
         var it = items[i], rec = null, node = null;
         if (it.k === 'ch' && DIGIT.test(it.c)) {
@@ -80,7 +86,22 @@
           var denF = readRow(it.den, 'den');
           fracs.push({ numRecs: records.slice(before, mid), denRecs: records.slice(mid) });
           out.push(E.D(product(numF), product(denF)));
-          topKinds.push('frac');
+          if (atTop) topKinds.push('frac');
+          continue;
+        } else if (it.k === 'group') {
+          i++;
+          groupLeft = true;
+          if (inGroup) { err('NESTED_GROUP'); continue; }
+          if (!it.row.items.length) err('EMPTY_BOX');
+          node = E.G(product(readRow(it.row, level, true)));
+          // An exponent box directly after the ")" belongs to the whole group.
+          if (i < items.length && items[i].k === 'sup') {
+            var ge = readExponent(items[i].row);
+            i++;
+            if (ge !== null) node = E.P(node, ge);
+          }
+          out.push(node);
+          if (atTop) topKinds.push('group');
           continue;
         } else {
           i++;
@@ -96,7 +117,7 @@
         if (rec.kind === 'num' && rec.value === 1 && rec.exp === null) plainOne = true;
         records.push(rec);
         out.push(node);
-        if (level === 'top') topKinds.push(rec.kind);
+        if (atTop) topKinds.push(rec.kind);
       }
       // A lone 1 is a whole answer or a numerator (1/x²); a 1 beside anything else is
       // multiplication by 1 (Mode 7 design §6).
@@ -118,7 +139,9 @@
       tree = product(top);
       if (negative) tree = { t: 'neg', inner: tree };
     }
-    return { tree: tree, errors: errors, facts: facts(records, fracs, topKinds, negative, oneFactor) };
+    var f = facts(records, fracs, topKinds, negative, oneFactor);
+    f.groupLeft = groupLeft;
+    return { tree: tree, errors: errors, facts: f };
   }
 
   /* ---- structural facts ------------------------------------------------------ */

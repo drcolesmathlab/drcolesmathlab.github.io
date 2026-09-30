@@ -15,6 +15,7 @@
 
   // fact name (parse.js) → issue code, in the order feedback should mention them.
   var RULES = [
+    ['groupLeft',             'GROUP_LEFT'],
     ['constantPower',         'CONSTANT_POWER'],
     ['negativeExponent',      'NEGATIVE_EXPONENT'],
     ['zeroExponent',          'ZERO_EXPONENT'],
@@ -36,10 +37,12 @@
        not in lowest terms, a denominator of 1, multiplication by 1, an exponent of
        1). A coefficient fraction outside the variables, (1/8)x, is fine
        (FACTOR_OUTSIDE_FRACTION is in neither list), and so is any order of the
-       bases. This overrides handoff §4, where 1x³ and x¹ were plain correct. */
+       bases. This overrides handoff §4, where 1x³ and x¹ were plain correct.
+       Parentheses left in the answer, (x²)³ for x⁶, are red (Dr. Cole, 2026-09-30,
+       phase 2): the problem typed back is not an answer. */
     mixed: {
       id: 'mixed',
-      issues: ['CONSTANT_POWER', 'NEGATIVE_EXPONENT', 'ZERO_EXPONENT', 'REPEATED_BASE',
+      issues: ['GROUP_LEFT', 'CONSTANT_POWER', 'NEGATIVE_EXPONENT', 'ZERO_EXPONENT', 'REPEATED_BASE',
                'UNCOMBINED_CONSTANTS'],
       notes: ['NOT_LOWEST_TERMS', 'DENOMINATOR_ONE', 'ONE_FACTOR', 'EXPONENT_ONE'],
     },
@@ -79,9 +82,11 @@
     EXPONENT_WITHOUT_BASE: 'An exponent needs a number or letter in front of it.',
     MISPLACED_MINUS: 'That minus sign is in a place it can’t go.',
     NESTED_FRACTION: 'A fraction can’t go inside a fraction here.',
+    NESTED_GROUP: 'Only one level of parentheses is used here.',
     NUMBER_TOO_LONG: 'That number is too long.',
     UNKNOWN_SYMBOL: 'Your answer has a symbol that can’t be used here.',
     NOT_EQUIVALENT: 'Not quite — that isn’t equal to the expression.',
+    GROUP_LEFT: 'The parentheses are still there: apply the exponent to everything inside them.',   // placeholder
     CONSTANT_POWER: 'Evaluate powers of numbers, like 2³ = 8.',
     NEGATIVE_EXPONENT: 'The final answer should have no negative exponents.',
     ZERO_EXPONENT: 'The final answer should have no zero exponents.',
