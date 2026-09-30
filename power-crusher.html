@@ -651,8 +651,14 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
         </p>
         <ul>
           <li><strong>Enter Step</strong> (or <kbd>Shift</kbd>+<kbd>Enter</kbd>) adds the step
-            you typed to the list if it is equal to the problem, and clears the box. Nothing is
-            counted, and it never finishes the problem: <strong>Crush it!</strong> does that.</li>
+            you typed to the list if it is equal to the problem <em>and</em> a valid move from
+            the step above it, and clears the box. A valid move uses an exponent property, in
+            any order, or works out a number (<span class="mono">2&sup3;</span> to 8, or
+            <span class="mono">3 &middot; 4</span> to 12), and it can skip ahead, all the way
+            to the answer if you can see it. A step that is not a valid move is turned away
+            with a buzz, and stays in the box so you can edit it and try again. No step is
+            counted, and Enter Step never finishes the problem: <strong>Crush it!</strong> does
+            that.</li>
           <li><strong>Hint</strong> lights the parts of your latest step that the next property
             applies to. It changes nothing in Stats.</li>
           <li><strong>Step</strong> shows the app&rsquo;s next step, carrying on from your latest
@@ -673,8 +679,9 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
           <li><kbd>&rarr;</kbd> or <kbd>Tab</kbd> leaves an exponent or moves to the
             denominator; <kbd>&uarr;</kbd> and <kbd>&darr;</kbd> move between numerator and
             denominator.</li>
-          <li>In Mixed Practice, <kbd>(</kbd> starts a group and <kbd>)</kbd> leaves it, ready
-            for its exponent, so <span class="mono">(x/y)&sup3;</span> can be typed.</li>
+          <li>In Mixed Practice, the <kbd>( )</kbd> button (or <kbd>(</kbd> on a keyboard) starts
+            a group, and <kbd>&rarr;</kbd> or <kbd>)</kbd> leaves it, ready for its exponent, so
+            <span class="mono">(x/y)&sup3;</span> can be typed.</li>
           <li>The on-screen keypad does the same things with buttons, for touch screens and
             for students who prefer it.</li>
         </ul>
@@ -749,10 +756,12 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
       <div class="prose">
         <h3>What it doesn&rsquo;t cover yet</h3>
         <ul>
-          <li><strong>Steps are checked for being equal, not for being valid moves.</strong>
-            Enter Step accepts any step that equals the problem, even one that skips ahead or
-            does not follow one of the properties. Checking each step as a proper move is still
-            to come.</li>
+          <li><strong>A step has to simplify, and a refused step does not say why.</strong>
+            Enter Step accepts only moves that get closer to the answer, so a step that writes a
+            number as a power or splits a power apart, such as <span class="mono">4</span> as
+            <span class="mono">2&sup2;</span>, is turned away even though it is equal. It says the
+            step is not a valid move, not which property to use; <strong>Hint</strong> points to
+            where to look.</li>
           <li><strong>Feedback is right or wrong, not why.</strong> A wrong answer is marked
             wrong without saying which step went astray. Feedback that explains the mistake is
             still to be written.</li>
