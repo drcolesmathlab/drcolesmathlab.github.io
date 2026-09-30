@@ -574,13 +574,15 @@
     }[id];
   });
 
-  /* Mixed Practice's workspace adds a row: ( starts a group, ) steps out of it. */
+  /* Mixed Practice's workspace adds one key, drawn as an empty pair of parentheses. It starts a
+     group with the cursor inside; ▶ (or the ) key on a keyboard) leaves it, ready for the group's
+     exponent. There is no separate ) key on the pad (Dr. Cole, 2026-09-30). */
   var GROUP_KEYS = [
-    { cmd: 'group', key: '(', label: '(', name: 'Open parenthesis', cls: 'k-op' },
-    { cmd: 'close', key: ')', label: ')', name: 'Close parenthesis', cls: 'k-op' },
+    { cmd: 'group', key: '(', html: '<span class="k-paren" aria-hidden="true"><span>(</span><span>)</span></span>',
+      name: 'Parentheses', cls: 'k-op' },
   ];
 
-  var KEY_HINT = { '^': '^', '/': '/', ArrowLeft: '←', ArrowRight: '→ or Tab', Backspace: 'Backspace', '(': '(', ')': ')' };
+  var KEY_HINT = { '^': '^', '/': '/', ArrowLeft: '←', ArrowRight: '→ or Tab', Backspace: 'Backspace', '(': '( and )' };
 
   function buildKeypad(pad, opts) {
     pad.replaceChildren();

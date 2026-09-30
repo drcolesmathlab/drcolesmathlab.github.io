@@ -22,8 +22,9 @@
  * per problem), the box stays open, and a note says what to improve; no crush yet.
  * Any later try on that problem is an attempt only, and never breaks the streak.
  * Mixed Practice's levels also have a step workspace (Mode 7 phase 2, design §12): the
- * student enters steps (each must equal the problem), asks for a Hint, or has the app
- * show the next Step or the whole Solution (solver.js). Step and Solution leave the
+ * student enters steps (each must equal the problem and be a valid move from the step
+ * before it, phase 3), asks for a Hint, or has the app show the next Step or the whole
+ * Solution (solver.js). Step and Solution leave the
  * problem "skipped": nothing about it is recorded but a Skipped count, and the streak
  * resets. Enter Step is not an attempt, and a step can't finish the problem: only
  * Crush it! does (Dr. Cole, 2026-09-30).
@@ -51,6 +52,7 @@
     emptyStep: 'Type a step, then Enter Step.',
     stepNotEqual: 'That step isn’t equal to the problem.',
     stepSame: 'That is the same as your last step, so it wasn’t added.',
+    stepInvalid: 'That isn’t a valid move from the step above. Edit it and try again.',   // phase 3
     nothingLeft: 'Nothing more to simplify. Type your answer, then Crush it!',
     lookHere: 'Hint: look at the lit parts.',
     lookNumbers: 'Hint: write it in its simplest form.',
@@ -449,10 +451,13 @@
     return this.steps.length ? this.steps[this.steps.length - 1].tree : this.problem.shown;
   };
 
-  /* Enter Step: any step equal to the problem is added, and the box clears. It is not an
-     attempt and never finishes the problem, even when it is the answer; Crush it! does.
-     An empty or unreadable box is not counted (like Crush it!), a step that isn't equal
-     is turned away, and one equal to the step before it isn't added. */
+  /* Enter Step: a step equal to the problem, and a valid move from the step before it (one
+     or more properties, or numbers worked out, in any order; it may skip ahead), is added,
+     and the box clears. It is not an attempt and never finishes the problem, even when it
+     is the answer; Crush it! does. An empty or unreadable box is not counted (like Crush
+     it!). A step that isn't equal, or is equal but not a valid move, is turned away with
+     the buzz, is not recorded anywhere, and stays in the box to be edited (Dr. Cole,
+     2026-09-30). One equal to the step before it isn't added. */
   Activity.prototype.enterStep = function () {
     if (!this.problem || this.locked || !this.level.workspace) return;
     this.clearHint();
@@ -474,6 +479,13 @@
     if (E.toText(parsed.tree) === E.toText(this.latest())) {
       this.say(MESSAGES.stepSame, '');
       this.announce(MESSAGES.stepSame);
+      box.focus();
+      return;
+    }
+    if (!PC.Solver.isMove(this.latest(), parsed.tree)) {
+      if (this.settings().sound) PC.Sound.play('buzz');
+      this.say('✗ ' + MESSAGES.stepInvalid, 'bad');
+      this.announce(MESSAGES.stepInvalid);
       box.focus();
       return;
     }

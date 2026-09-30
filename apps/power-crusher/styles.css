@@ -387,6 +387,7 @@ kbd {
 .key[data-cmd="clear"] { font: 800 14px/1 var(--sans); }
 .k-base { font: italic 700 22px/1 var(--math); color: var(--ink); }
 .k-sup { font: 700 14px/1 var(--mono); vertical-align: 10px; margin-left: 1px; }
+.k-paren { display: inline-flex; gap: 5px; font: 400 26px/1 var(--mono); }
 .k-frac { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
 .k-frac span { display: block; width: 16px; height: 11px; border: 2px solid currentColor; border-radius: 2px; }
 .k-frac span:first-child { position: relative; }

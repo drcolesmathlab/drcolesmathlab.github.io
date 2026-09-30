@@ -13,6 +13,10 @@
  * form" (E), multiplies and evaluates the numbers and writes the letters in order, so the
  * last step is exactly the app's answer (`Expr.simplest`).
  *
+ * Phase 3 (Dr. Cole, 2026-09-30): `isMove(before, after)` says whether a step the student typed
+ * is a valid move from the step above it: any property, in any order, numbers worked out, and it
+ * may skip ahead (section 5).
+ *
  * Everything here is tree to tree. `step(tree)` reads the tree it is given, so it works on
  * the problem and on any tree the student typed. A tree it can't read (`neg`, a group
  * inside a group, a zero) comes back `{ unreadable: true }`; activity.js then falls back to
@@ -334,9 +338,176 @@
     })(tree);
   }
 
+  /* ---- 5. Is a step a valid move? (phase 3, design §13) ---------------------------- */
+  /* Dr. Cole, 2026-09-30: a valid step is any property, in any order, that produces a valid
+     result; evaluating a number (2³ = 8) and combining coefficients (3 · 4 = 12) count; a step
+     may skip ahead (the whole answer in one step). So `isMove(before, after)` asks whether
+     `after` can be reached from `before` by a run of single moves. A single move is one
+     property applied to one place:
+       PP/PQ  a group's exponent goes to everything inside it (one group at a time);
+       P      two of a base on one side: add the exponents;
+       Q      a base above and below: subtract, landing on top (as in the app's answers);
+       Z      b⁰ goes, N a negative exponent crosses the bar, and both work on a group too;
+       number a power of a number is worked out, two numbers on one side are multiplied, and
+              a number above and below the bar is divided by a common factor.
+     A number counts as its own first power, so 2 · 2³ can be 2⁴ (P), as 2x² · 2x⁵ = 2²x⁷ is
+     graded correct. Moves only ever simplify; nothing writes 4 as 2² or splits a power, so a
+     step that undoes the one before is not reachable. Two forms of one state (y²x³ and x³y²)
+     are the same place, so a reordering is accepted. */
+  var NUM_MAX = 1e15;              // the parser's own limit on a typed number
+  var SEARCH_MAX = 30000;          // states looked at before giving up (never reached in the tests)
+
+  function keyItem(it) {
+    if (it.k === 'n') return 'n' + it.v;
+    if (it.k === 'p') return 'p' + it.b + '^' + it.e;
+    return 'g(' + keySide(it.inner) + ')^' + it.e;
+  }
+  function keyList(items) { return items.map(keyItem).sort().join(','); }
+  function keySide(st) { return keyList(st.top) + '/' + keyList(st.bot); }
+
+  /* What an exponent sits on, for P and Q: a letter or a number's power, a plain number as its
+     own first power, or a whole group. `base` is comparable, `e` its exponent, `make` rebuilds. */
+  function baseOf(it) {
+    if (it.k === 'n') return { base: 'p' + it.v, e: 1, make: function (e) { return power(it.v, e); } };
+    if (it.k === 'p') return { base: 'p' + it.b, e: it.e, make: function (e) { return power(it.b, e); } };
+    return { base: 'g(' + keySide(it.inner) + ')', e: it.e, make: function (e) { return { k: 'g', inner: it.inner, e: e, ref: null }; } };
+  }
+
+  function without(items, drop) { return items.filter(function (_, i) { return drop.indexOf(i) < 0; }); }
+  function state(top, bot) { return { top: top, bot: bot }; }
+  function push(list, it) { if (it) list.push(it); }
+
+  function gcd(a, b) { while (b) { var t = a % b; a = b; b = t; } return a; }
+  function primeFactors(n) {
+    var out = [];
+    for (var d = 2; d * d <= n; d++) {
+      if (n % d === 0) { out.push(d); while (n % d === 0) n /= d; }
+    }
+    if (n > 1) out.push(n);
+    return out;
+  }
+  function intPower(b, e) {
+    var v = 1;
+    for (var i = 0; i < e; i++) { v *= b; if (v > NUM_MAX) return null; }
+    return v;
+  }
+
+  /* Every state one move away from `st`. */
+  function moves(st) {
+    var out = [], sides = ['top', 'bot'];
+    sides.forEach(function (s) {
+      var o = s === 'top' ? 'bot' : 'top', items = st[s];
+      items.forEach(function (it, i) {
+        var rest = without(items, [i]), next;
+        // PP / PQ: the group's exponent goes to everything inside it.
+        if (it.k === 'g') {
+          var mine = rest.slice(), theirs = st[o].slice();
+          it.inner.top.forEach(function (x) { push(mine, raise(x, it.e)); });
+          it.inner.bot.forEach(function (x) { push(theirs, raise(x, it.e)); });
+          out.push(s === 'top' ? state(mine, theirs) : state(theirs, mine));
+          // Z and N on a whole group
+          if (it.e === 0) out.push(s === 'top' ? state(rest, st.bot) : state(st.top, rest));
+          if (it.e < 0) {
+            var flipped = { k: 'g', inner: it.inner, e: -it.e, ref: null };
+            out.push(s === 'top' ? state(rest, st.bot.concat([flipped])) : state(st.top.concat([flipped]), rest));
+          }
+        }
+        if (it.k === 'p') {
+          if (it.e === 0) out.push(s === 'top' ? state(rest, st.bot) : state(st.top, rest));       // Z
+          if (it.e < 0) {                                                                            // N
+            var cross = power(it.b, -it.e);
+            out.push(s === 'top' ? state(rest, st.bot.concat([cross])) : state(st.top.concat([cross]), rest));
+          }
+          if (typeof it.b === 'number' && it.e > 1) {                                                // a number's power, worked out
+            var v = intPower(it.b, it.e);
+            if (v !== null) {
+              next = rest.concat([{ k: 'n', v: v, ref: null }]);
+              out.push(s === 'top' ? state(next, st.bot) : state(st.top, next));
+            }
+          }
+        }
+        // P: another of the same base on this side.
+        var bi = baseOf(it);
+        for (var j = i + 1; j < items.length; j++) {
+          var bj = baseOf(items[j]);
+          if (bi.base !== bj.base) {
+            if (it.k === 'n' && items[j].k === 'n' && it.v * items[j].v <= NUM_MAX) {               // 3 · 4 = 12
+              next = without(items, [i, j]).concat([{ k: 'n', v: it.v * items[j].v, ref: null }]);
+              out.push(s === 'top' ? state(next, st.bot) : state(st.top, next));
+            }
+            continue;
+          }
+          var merged = bi.make(bi.e + bj.e);
+          next = without(items, [i, j]);
+          push(next, merged);
+          out.push(s === 'top' ? state(next, st.bot) : state(st.top, next));
+          if (it.k === 'n' && items[j].k === 'n' && it.v * items[j].v <= NUM_MAX) {                  // 2 · 2 = 4 as well
+            next = without(items, [i, j]).concat([{ k: 'n', v: it.v * items[j].v, ref: null }]);
+            out.push(s === 'top' ? state(next, st.bot) : state(st.top, next));
+          }
+        }
+        if (s === 'top') {
+          st.bot.forEach(function (below, j) {
+            var bb = baseOf(below);
+            if (bi.base === bb.base) {                                                                // Q
+              var quotient = bi.make(bi.e - bb.e), t = without(st.top, [i]);
+              push(t, quotient);
+              out.push(state(t, without(st.bot, [j])));
+            }
+            if (it.k === 'n' && below.k === 'n') {                                                    // 8/4 = 2
+              primeFactors(gcd(it.v, below.v)).forEach(function (d) {
+                var t2 = without(st.top, [i]), b2 = without(st.bot, [j]);
+                if (it.v / d !== 1) t2.push({ k: 'n', v: it.v / d, ref: null });
+                if (below.v / d !== 1) b2.push({ k: 'n', v: below.v / d, ref: null });
+                out.push(state(t2, b2));
+              });
+            }
+          });
+        }
+      });
+    });
+    return out;
+  }
+
+  /* Breadth-first over single moves from `from`: true if `targetKey` is reached, false if the
+     whole reachable set was seen without it, null if the search gave up. */
+  function reaches(from, targetKey) {
+    var seen = {}, queue = [from], head = 0;
+    seen[keySide(from)] = true;
+    while (head < queue.length) {
+      var next = moves(queue[head++]);
+      for (var i = 0; i < next.length; i++) {
+        var k = keySide(next[i]);
+        if (seen[k]) continue;
+        if (k === targetKey) return true;
+        seen[k] = true;
+        queue.push(next[i]);
+        if (queue.length > SEARCH_MAX) return null;
+      }
+    }
+    return false;
+  }
+
+  /* Is `after` a valid next step from `before`? A tree that can't be read is not a step. When
+     `before` can't be read, or the search gives up, the step is let through (it is equal to the
+     problem; Enter Step has checked that). */
+  function isMove(before, after) {
+    var b = read(after);
+    if (!b) return false;
+    var a = read(before);
+    if (!a) return true;
+    var target = keySide(b);
+    if (keySide(a) === target) return true;
+    return reaches(a, target) !== false;
+  }
+
   PC.Solver = {
-    read: read, step: step, all: all, hint: hint, mark: mark, clearMarks: clearMarks,
+    read: read, step: step, all: all, hint: hint, mark: mark, clearMarks: clearMarks, isMove: isMove,
     NAMES: STAGES.concat([SIMPLEST]).map(function (s) { return s.name; }),
+    // for the tests: the place a tree is (order and 1s don't matter), and whether a search gave up
+    _key: function (tree) { var st = read(tree); return st ? keySide(st) : null; },
+    _moves: function (tree) { var st = read(tree); return st ? moves(st).map(sideTree) : []; },
+    _reaches: function (before, after) { return reaches(read(before), keySide(read(after))); },
   };
 })(typeof module === 'object' && module.exports
   ? (module.exports = globalThis.PowerCrusher = globalThis.PowerCrusher || {})
