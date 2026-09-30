@@ -59,6 +59,7 @@
   --on-accent:   #001a1f;
   --power:       #ff3df0;   /* neon magenta: every exponent, everywhere */
   --good:        #00ff7f;   /* brand --rc */
+  --warn:        #f4ff3d;   /* neon lemon: Mixed Practice's "correct, but not fully simplified" (Dr. Cole, 2026-09-30) */
   --bad:         #ff5570;   /* brand --dc lifted: #ff3355 is 5.08:1 on --panel-2, this clears it with room */
 
   --radius: 10px;
@@ -679,6 +680,7 @@ kbd {
 }
 .result.good { color: var(--good); }
 .result.bad { color: var(--bad); }
+.result.warn { color: var(--warn); }
 
 /* ---- history panel --------------------------------------------------------- */
 .hint.tight { margin: 0 0 6px; }

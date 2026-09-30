@@ -28,6 +28,7 @@
     var fracs = [];         // { numRecs, denRecs }
     var topKinds = [];      // kinds of top-level factors, in order
     var negative = false;
+    var oneFactor = false;  // a plain 1 multiplied by something else in one row: 1x³
 
     function err(code) { if (errors.indexOf(code) < 0) errors.push(code); }
 
@@ -46,7 +47,7 @@
 
     /* Returns an array of factor nodes for the row. */
     function readRow(row, level) {
-      var out = [], items = row.items, i = 0;
+      var out = [], items = row.items, i = 0, plainOne = false;
       while (i < items.length) {
         var it = items[i], rec = null, node = null;
         if (it.k === 'ch' && DIGIT.test(it.c)) {
@@ -92,10 +93,14 @@
           i++;
           if (e !== null) { node = E.P(node, e); rec.exp = e; }
         }
+        if (rec.kind === 'num' && rec.value === 1 && rec.exp === null) plainOne = true;
         records.push(rec);
         out.push(node);
         if (level === 'top') topKinds.push(rec.kind);
       }
+      // A lone 1 is a whole answer or a numerator (1/x²); a 1 beside anything else is
+      // multiplication by 1 (Mode 7 design §6).
+      if (plainOne && out.length > 1) oneFactor = true;
       return out;
     }
 
@@ -113,7 +118,7 @@
       tree = product(top);
       if (negative) tree = { t: 'neg', inner: tree };
     }
-    return { tree: tree, errors: errors, facts: facts(records, fracs, topKinds, negative) };
+    return { tree: tree, errors: errors, facts: facts(records, fracs, topKinds, negative, oneFactor) };
   }
 
   /* ---- structural facts ------------------------------------------------------ */
@@ -130,7 +135,7 @@
     return v;
   }
 
-  function facts(records, fracs, topKinds, negative) {
+  function facts(records, fracs, topKinds, negative, oneFactor) {
     var f = {
       negativeSign: negative,
       constantPower: false,     // 2³ left unevaluated (exponent other than 1)
@@ -142,6 +147,7 @@
       factorOutsideFraction: false, // (1/8)x³, or two fractions side by side
       notLowestTerms: false,    // 2x/4
       denominatorOne: false,    // x/1
+      oneFactor: !!oneFactor,   // 1x³ (a plain 1 multiplied by something)
       variableOrder: true,      // alphabetical within every level
     };
     var varSeen = {}, numPow = {}, numPlain = {}, perLevel = {};

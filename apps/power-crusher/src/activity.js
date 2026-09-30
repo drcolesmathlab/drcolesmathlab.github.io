@@ -4,8 +4,8 @@
  *
  * Product of Powers (src/product.js), Quotient of Powers (src/quotient.js),
  * Power of a Power (src/power.js), Power of a Quotient (src/powerquotient.js),
- * Zero Exponent (src/zero.js) and Negative Exponent (src/negative.js) have levels
- * so far. A level's `input` says what it takes: 'count' (one whole
+ * Zero Exponent (src/zero.js), Negative Exponent (src/negative.js) and Mixed
+ * Practice (src/mixed.js) have levels. A level's `input` says what it takes: 'count' (one whole
  * number), 'counts' (two, top and bottom: Mode 4 Level 1), 'math' (the
  * Phase 0 math answer box and keypad), 'parts' (an answer box per part of
  * the problem, each under its own prompt: Mode 5 Level 4) or 'choices' (two
@@ -17,6 +17,10 @@
  * 'parts' boxes are all sent by one Crush it! and count as one attempt (Dr.
  * Cole, 2026-09-29). Each box is marked ✓ or ✗, so a wrong answer says which
  * box to fix. Enter in a box before the last moves to the next one.
+ * Mixed Practice adds a third result to 'math' (Mode 7 design §6): yellow, an answer
+ * that is equal to the problem but not fully simplified. It counts as correct (once
+ * per problem), the box stays open, and a note says what to improve; no crush yet.
+ * Any later try on that problem is an attempt only, and never breaks the streak.
  * 'choices' are also sent by one Crush it! and count as one attempt, but a wrong
  * answer marks nothing per dropdown: the whole statement flashes red and shakes
  * (Mode 6 design §4), so it is never a hint.
@@ -36,11 +40,12 @@
     emptyMath: 'Type your answer, then Crush it!',   // Levels 3+ (spec §3)
     emptyParts: 'Type an answer in each box, then Crush it!',   // Mode 5 Level 4 [my wording]
     emptyChoices: 'Choose both answers, then Crush it!',   // Mode 6 design §4
+    almost: 'Correct, but not fully simplified.',   // Mode 7 design §6 (wording is a placeholder)
   };
 
   /* Each mode with levels: its module (problems, grading, history entries). */
   var LIBS = { product: 'Product', quotient: 'Quotient', 'power-of-power': 'Power', 'power-of-quotient': 'PowerQuotient',
-    zero: 'Zero', negative: 'Negative' };
+    zero: 'Zero', negative: 'Negative', mixed: 'Mixed' };
   function lib(modeId) { return LIBS[modeId] ? PC[LIBS[modeId]] : null; }
 
   /* The levels built for a mode so far, or null while it is still being designed. */
@@ -48,6 +53,9 @@
     var m = lib(modeId);
     return m ? m.LEVELS : null;
   }
+
+  /* "Level 2 · Two Powers", or "Level 2" for a level with no title (Mixed Practice). */
+  function levelLabel(l) { return 'Level ' + l.n + (l.title ? ' · ' + l.title : ''); }
 
   function Activity(opts) {
     this.store = opts.store;
@@ -58,6 +66,7 @@
     this.level = null;
     this.problem = null;
     this.locked = false;
+    this.credited = false;               // this problem already counted as correct (a yellow)
     this.seq = 0;                        // stops a slow crush finishing on a newer problem
     this.rng = PC.Generate.rng((Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0);
     this.openGroups = {};                // history groups the student collapsed stay collapsed
@@ -142,7 +151,7 @@
       b.type = 'button';
       b.className = 'level-btn';
       b.dataset.level = l.n;
-      b.textContent = 'Level ' + l.n + ' · ' + l.title;
+      b.textContent = levelLabel(l);
       nav.appendChild(b);
     });
     this.pick(levels[0].n, false);
@@ -163,6 +172,7 @@
     this.seq++;
     this.problem = this.level.make(this.rng, this.problem);
     this.locked = false;
+    this.credited = false;
     var kind = this.level.input, math = kind === 'math', parts = kind === 'parts';
     this.fields().forEach(function (f) { f.value = ''; f.readOnly = false; f.disabled = false; });
     $('countInput').hidden = kind !== 'count';
@@ -290,9 +300,25 @@
       return;
     }
     var set = this.settings(), stage = $('stage');
-    var right = r.status === 'correct';
-    this.store.record(this.modeId, this.level.n, right);
+    // Mixed Practice: 'yellow' is equal but not fully simplified. It counts as correct
+    // once per problem; a later try is an attempt only (Mode 7 design §6).
+    var yellow = r.status === 'yellow';
+    var right = r.status === 'correct' || yellow;
+    var again = this.credited;
+    if (again) this.store.recordAttempt(this.modeId, this.level.n);
+    else this.store.record(this.modeId, this.level.n, right);
     if (parts) r.parts.forEach(function (st, i) { self.mark(i, st); });
+
+    if (yellow) {
+      if (!again) this.addHistory(L, p);
+      this.credited = true;
+      var note = r.hints.join(' ');
+      if (set.sound) PC.Sound.play('almost');
+      this.say('✓ ' + MESSAGES.almost + ' ' + note, 'warn');
+      this.announce(MESSAGES.almost + ' ' + note);
+      input.focus();
+      return;
+    }
 
     if (right) {
       this.locked = true;
@@ -301,8 +327,7 @@
       var next = $('nextProblemBtn');
       next.classList.add('primary');
       next.focus();
-      this.store.addHistory(this.modeId, this.level.n, L.entry(p));
-      this.renderHistory();
+      if (!again) this.addHistory(L, p);
       if (set.sound) PC.Sound.play('reward');
       var seq = this.seq;
       // Mode 1 Level 4 groups then crushes; Modes 2 and 3 carry their own plan.
@@ -330,6 +355,12 @@
         if (choices) fields[0].focus(); else if (math || parts) input.focus(); else input.select();
       }
     }
+  };
+
+  /* The problem goes in the history panel the first time it counts as correct. */
+  Activity.prototype.addHistory = function (L, p) {
+    this.store.addHistory(this.modeId, this.level.n, L.entry(p));
+    this.renderHistory();
   };
 
   /* Mode 6 Level 1: the whole statement flashes red and shakes, restarted on
@@ -376,7 +407,7 @@
       d.open = self.openGroups[key] !== false;
       d.addEventListener('toggle', function () { self.openGroups[key] = d.open; });
       var s = document.createElement('summary');
-      s.textContent = 'Level ' + l.n + ' · ' + l.title;
+      s.textContent = levelLabel(l);
       d.appendChild(s);
       var items = (all[l.n] || []).map(historyItem).filter(Boolean);
       if (items.length) {
@@ -447,7 +478,7 @@
     }
   }
 
-  PC.Activity = { Activity: Activity, MESSAGES: MESSAGES, levelsFor: levelsFor };
+  PC.Activity = { Activity: Activity, MESSAGES: MESSAGES, levelsFor: levelsFor, levelLabel: levelLabel };
 })(typeof module === 'object' && module.exports
   ? (module.exports = globalThis.PowerCrusher = globalThis.PowerCrusher || {})
   : (window.PowerCrusher = window.PowerCrusher || {}));

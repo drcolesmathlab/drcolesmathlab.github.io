@@ -140,6 +140,19 @@
     return s;
   };
 
+  /* Another try on a problem that already counted as correct (a Mixed Practice
+     yellow, Mode 7 design §6): it is an attempt, but not a second correct, and it
+     leaves the streak alone, right or wrong (Dr. Cole, 2026-09-30). */
+  Store.prototype.recordAttempt = function (modeId, level, now) {
+    var p = this.load('progress');
+    var m = p.stats[modeId] = p.stats[modeId] || {};
+    var s = m[level] = m[level] || { attempts: 0, correct: 0, streak: 0, bestStreak: 0, lastPlayed: null };
+    s.attempts++;
+    s.lastPlayed = now === undefined ? Date.now() : now;
+    this.save('progress', p);
+    return s;
+  };
+
   /* A correct problem for the history panel: newest first, last 5 per level. */
   Store.prototype.addHistory = function (modeId, level, item) {
     var p = this.load('progress');

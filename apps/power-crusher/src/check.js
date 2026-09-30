@@ -23,19 +23,25 @@
     ['factorOutsideFraction', 'FACTOR_OUTSIDE_FRACTION'],
     ['notLowestTerms',        'NOT_LOWEST_TERMS'],
     ['denominatorOne',        'DENOMINATOR_ONE'],
+    ['oneFactor',             'ONE_FACTOR'],
     ['exponentOne',           'EXPONENT_ONE'],
   ];
 
   var POLICIES = {
-    /* Mixed Practice: full simplification (handoff §4). x¹ is still correct but
-       gets a note. Variable order is never graded; it is reported as an info note
-       so the UI can decide later whether to show it ([TBD] in the handoff). */
+    /* Mixed Practice (Mode 7 design §6): the answer must be equal and fully
+       simplified. An `issues` code is red (wrong): a negative or zero exponent
+       left, a constant left as a power (2³ for 8), a base written twice, constants
+       not combined (3 · 4x). A `notes` code is yellow: the answer is right but not
+       fully simplified, so it counts as correct and the box stays open (a fraction
+       not in lowest terms, a denominator of 1, multiplication by 1, an exponent of
+       1). A coefficient fraction outside the variables, (1/8)x, is fine
+       (FACTOR_OUTSIDE_FRACTION is in neither list), and so is any order of the
+       bases. This overrides handoff §4, where 1x³ and x¹ were plain correct. */
     mixed: {
       id: 'mixed',
       issues: ['CONSTANT_POWER', 'NEGATIVE_EXPONENT', 'ZERO_EXPONENT', 'REPEATED_BASE',
-               'UNCOMBINED_CONSTANTS', 'FACTOR_OUTSIDE_FRACTION', 'NOT_LOWEST_TERMS',
-               'DENOMINATOR_ONE'],
-      notes: ['EXPONENT_ONE', 'VARIABLE_ORDER'],
+               'UNCOMBINED_CONSTANTS'],
+      notes: ['NOT_LOWEST_TERMS', 'DENOMINATOR_ONE', 'ONE_FACTOR', 'EXPONENT_ONE'],
     },
     /* Property modes 1–4: the student applies the property; anything equivalent
        and simplified further is fine (x³/x⁵ → x⁻² or 1/x²), x¹ is fine. The one
@@ -84,7 +90,8 @@
     FACTOR_OUTSIDE_FRACTION: 'Write the whole answer as one fraction.',
     NOT_LOWEST_TERMS: 'The fraction can be reduced.',
     DENOMINATOR_ONE: 'A denominator of 1 can be left out.',
-    EXPONENT_ONE: 'Correct. Exponents of 1 are left out of final answers: write x, not x¹.',
+    ONE_FACTOR: 'Multiplying by 1 can be left out: write x³, not 1x³.',   // placeholder (Mode 7 design §6)
+    EXPONENT_ONE: 'Exponents of 1 are left out of final answers: write x, not x¹.',
     VARIABLE_ORDER: 'Correct. Letters are usually written in alphabetical order.',
     CORRECT: 'Correct.',
   };
@@ -116,15 +123,25 @@
   }
 
   /* One sentence for the live region. Variable order is held back from the text
-     until the handoff's [TBD] on it is settled; it stays in result.notes. */
+     until the handoff's [TBD] on it is settled; it stays in result.notes. A correct
+     answer with a note says what to improve (a Mixed Practice yellow). */
   function message(result) {
     if (result.status === 'invalid') return MESSAGES[result.errors[0]] || MESSAGES.UNKNOWN_SYMBOL;
     if (!result.correct) return MESSAGES[result.issues[0]];
-    if (result.notes.indexOf('EXPONENT_ONE') >= 0) return MESSAGES.EXPONENT_ONE;
+    var hints = improvements(result);
+    if (hints.length) return 'Correct. ' + hints.join(' ');
     return MESSAGES.CORRECT;
   }
 
-  PC.Check = { check: check, message: message, POLICIES: POLICIES, MESSAGES: MESSAGES };
+  /* The sentences for the notes that mean "correct, but not fully simplified",
+     in the order of RULES. VARIABLE_ORDER is not one of them. */
+  function improvements(result) {
+    return RULES.map(function (r) { return r[1]; })
+      .filter(function (code) { return result.notes.indexOf(code) >= 0; })
+      .map(function (code) { return MESSAGES[code]; });
+  }
+
+  PC.Check = { check: check, message: message, improvements: improvements, POLICIES: POLICIES, MESSAGES: MESSAGES };
 })(typeof module === 'object' && module.exports
   ? (module.exports = globalThis.PowerCrusher = globalThis.PowerCrusher || {})
   : (window.PowerCrusher = window.PowerCrusher || {}));

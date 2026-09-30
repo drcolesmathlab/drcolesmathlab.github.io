@@ -53,7 +53,7 @@
       </div>
 
       <div class="work">
-        <!-- A mode's levels (Modes 1 to 6 so far). The problem comes
+        <!-- A mode's levels (all seven modes). The problem comes
              first in the page order; from 900px the history sits to its left. -->
         <div class="activity" id="activity" hidden>
           <section class="panel play" aria-labelledby="question">
@@ -151,35 +151,6 @@
             <div id="historyList"></div>
           </section>
         </div>
-
-        <section class="panel preview" id="preview" aria-labelledby="previewH">
-          <span class="preview-tag">Preview</span>
-          <h2 id="previewH" class="sub">Try the answer box</h2>
-          <p class="lede tight">A worked example from the design notes, so the answer
-            box and checker can be tried now. It is not this mode&rsquo;s activity.</p>
-
-          <span class="problem-label" id="problemLbl">Simplify</span>
-          <div class="problem" id="problem" aria-describedby="problemLbl"></div>
-
-          <span class="answer-label" id="answerLbl">Your answer</span>
-          <div class="mathbox" id="answer" tabindex="0" role="textbox"
-               aria-roledescription="math input" aria-labelledby="answerLbl"
-               aria-describedby="answerDesc answerHelp"></div>
-          <span class="sr-only" id="answerDesc"></span>
-          <span class="sr-only" id="answerHelp">Type digits and x, y, z. Caret key starts an exponent,
-            slash starts a fraction, right arrow or Tab leaves it. Up and down arrows move between numerator and denominator. Enter checks.</span>
-          <span class="sr-only" id="answerEcho" aria-live="polite"></span>
-          <div class="keypad" id="keypad" role="group" aria-label="Keypad"></div>
-
-          <div class="actions">
-            <button type="button" class="btn primary" id="submitBtn">Check</button>
-            <button type="button" class="btn" id="nextBtn">Another example</button>
-          </div>
-          <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
-          <p class="hint"><kbd>^</kbd> exponent &nbsp; <kbd>/</kbd> fraction &nbsp;
-            <kbd>&rarr;</kbd> or <kbd>Tab</kbd> out of a box &nbsp;
-                <kbd>&uarr;</kbd> <kbd>&darr;</kbd> numerator, denominator &nbsp; <kbd>Enter</kbd> check</p>
-        </section>
       </div>
     </section>
 
@@ -229,6 +200,7 @@
 <script src="src/powerquotient.js"></script>
 <script src="src/zero.js"></script>
 <script src="src/negative.js"></script>
+<script src="src/mixed.js"></script>
 <script src="src/sound.js"></script>
 <script src="src/crush.js"></script>
 <script src="src/activity.js"></script>

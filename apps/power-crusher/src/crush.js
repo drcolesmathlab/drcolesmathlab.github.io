@@ -14,7 +14,9 @@
  *                             (plan.type 'zero'), or Mode 6's Level 2 unfold
  *                             and cancel (plan.type 'expand') and Levels 3
  *                             and 4's powers crossing the bar (plan.type
- *                             'cross')
+ *                             'cross'), or Mode 7's one crush from any
+ *                             mixed problem straight to its answer
+ *                             (plan.type 'all')
  *   mismatch(host)            the factors flash red and shake; nothing crushes
  *   reset(host)               clear the red highlight (after the student edits)
  *
@@ -28,7 +30,7 @@
  * lights the whole problem, holds, then swaps (Mode 5 design §3). Mode 6
  * does too (plan.lit 'cross' lights the flipped exponents after the swap for
  * another HOLD_MS; 'expanded' shows the unfolded fraction with its canceling
- * pairs lit).
+ * pairs lit). Mode 7 (plan.lit 'problem') does what Mode 5 does.
  * The stage's spoken label always matches what is drawn.
  */
 (function (PC) {
@@ -97,9 +99,13 @@
     var reduce = opts && opts.reduce, plan = opts && opts.plan;
     var top = host.firstElementChild, can = !!top && typeof top.animate === 'function';
     if (reduce && plan && plan.lit === 'answer') return litAnswer(host, tree);
-    if (reduce && plan && plan.lit === 'problem') return litProblem(host, tree);
+    if (reduce && plan && plan.lit === 'problem') {
+      if (plan.type === 'all') holdHeight(host);
+      return litProblem(host, tree);
+    }
     if (reduce && plan && plan.lit === 'cross') return litCross(host, tree, plan);
     if (reduce && plan && plan.lit === 'expanded') return litExpanded(host, tree, plan);
+    if (plan && plan.type === 'all' && can) return all(host, tree);
     if (plan && plan.type === 'cross' && can) return cross(host, tree, plan);
     if (plan && plan.type === 'expand' && can) return expand(host, tree, plan);
     if (plan && plan.type === 'zero' && can) return zero(host, tree, plan);
@@ -1048,6 +1054,51 @@
       return done(lit.map(function (el) {
         return el.animate([{ transform: 'scale(1.7)' }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,1.6,.4,1)' });
       }));
+    });
+  }
+
+  /* ---- Mode 7 (Mode 7 design §7) -------------------------------------------- */
+  /* Any mixed problem: (2x³y⁻²)³/(4x²), (x/y)³ · y⁵, 3² · 3⁻⁴. One crush from the
+     problem straight to the answer, with no steps between (design §7):
+       1. Every part slides to the middle of the problem and shrinks, as in Mode 1's
+          crush. The dots and parentheses fade, and the fraction bars with them.
+       2. The answer is drawn, and each part of it pops in, its exponents springing up.
+     The stage keeps its height, so a fraction becoming a line doesn't move the page
+     (Mode 6's lesson); it is let go at the next problem, in show(). Reduced motion:
+     the problem lights, holds HOLD_MS, then the answer swaps in (litProblem). */
+  function holdHeight(host) { host.style.minHeight = host.offsetHeight + 'px'; }
+
+  function all(host, tree) {
+    var token = host[TOKEN], top = host.firstElementChild;
+    host.classList.remove('is-wrong');
+    host.classList.add('is-crushing');
+    holdHeight(host);
+    var mid = centre(top.getBoundingClientRect()), anims = [];
+    Array.prototype.forEach.call(host.querySelectorAll('.m-ch, .m-var, .m-exp, .m-op, .m-paren'), function (el) {
+      // An exponent moves whole; its own digits go with it.
+      if (!el.classList.contains('m-exp') && el.closest('.m-exp')) return;
+      if (isOp(el) || el.classList.contains('m-paren')) { anims.push(fade(el)); return; }
+      var at = centre(el.getBoundingClientRect()), dx = mid.x - at.x, dy = mid.y - at.y;
+      // Fully opaque until the last fifth, so a part is never half-faded while it is still travelling.
+      anims.push(el.animate([
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(.92)', opacity: 1, offset: 0.8 },
+        { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(.55)', opacity: 0 },
+      ], { duration: CRUSH_MS, easing: 'cubic-bezier(.55,0,.8,.2)', fill: 'forwards' }));
+    });
+    Array.prototype.forEach.call(host.querySelectorAll('.m-den'), function (den) { anims.push(fadeBar(den, CRUSH_MS * 0.6)); });
+    return done(anims).then(function () {
+      if (host[TOKEN] !== token) return;
+      swap(host, tree);
+      fit(host);
+      drawnParts(host.firstElementChild).forEach(function (el) {
+        el.animate([{ transform: 'scale(1.5)', opacity: 0.2 }, { transform: 'scale(1)', opacity: 1 }],
+          { duration: 340, easing: 'cubic-bezier(.2,1.5,.4,1)' });
+      });
+      Array.prototype.forEach.call(host.querySelectorAll('.m-exp'), function (el) {
+        el.animate([{ transform: 'translateY(.5em) scale(.4)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+          { duration: 380, delay: 90, easing: 'cubic-bezier(.2,1.6,.4,1)', fill: 'backwards' });
+      });
     });
   }
 

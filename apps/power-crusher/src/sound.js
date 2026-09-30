@@ -1,5 +1,6 @@
 /*
- * sound.js — the reward chime and the mismatch buzz (Mode 1 design §7).
+ * sound.js — the reward chime, the mismatch buzz (Mode 1 design §7) and Mixed Practice's
+ * two-note "almost".
  *
  * Synthesised with the Web Audio API: no audio files, nothing to fetch or
  * license, and it works from file://. These stand in until Dr. Cole's generated
@@ -43,6 +44,12 @@
     reward: function (c, out) {
       [1046.5, 1318.5, 1568, 2093].forEach(function (f, i) {
         note(c, out, { type: 'triangle', f: f, at: i * 0.07, dur: 0.22 + (i === 3 ? 0.14 : 0), vol: 0.22 });
+      });
+    },
+    // Two soft notes, A5 then C6: right, but not finished (Mixed Practice's yellow).
+    almost: function (c, out) {
+      [880, 1046.5].forEach(function (f, i) {
+        note(c, out, { type: 'triangle', f: f, at: i * 0.09, dur: 0.18, vol: 0.14 });
       });
     },
     // Low falling buzz, softened by a low-pass filter so it isn't harsh.
