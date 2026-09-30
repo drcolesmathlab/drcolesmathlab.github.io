@@ -61,7 +61,15 @@
     return false;
   }
 
+  /* A node with `hl` set is drawn lit: Hint marks the parts of a step it points at
+     (solver.js). The class goes on the node's own element. */
   function draw(node) {
+    var el = drawNode(node);
+    if (node.hl) el.classList.add('m-hl');
+    return el;
+  }
+
+  function drawNode(node) {
     switch (node.t) {
       case 'num': return span('m-ch', String(node.v));
       case 'var': return span('m-var', node.name);

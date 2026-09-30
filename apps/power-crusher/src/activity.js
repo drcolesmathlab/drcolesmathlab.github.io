@@ -21,6 +21,12 @@
  * that is equal to the problem but not fully simplified. It counts as correct (once
  * per problem), the box stays open, and a note says what to improve; no crush yet.
  * Any later try on that problem is an attempt only, and never breaks the streak.
+ * Mixed Practice's levels also have a step workspace (Mode 7 phase 2, design §12): the
+ * student enters steps (each must equal the problem), asks for a Hint, or has the app
+ * show the next Step or the whole Solution (solver.js). Step and Solution leave the
+ * problem "skipped": nothing about it is recorded but a Skipped count, and the streak
+ * resets. Enter Step is not an attempt, and a step can't finish the problem: only
+ * Crush it! does (Dr. Cole, 2026-09-30).
  * 'choices' are also sent by one Crush it! and count as one attempt, but a wrong
  * answer marks nothing per dropdown: the whole statement flashes red and shakes
  * (Mode 6 design §4), so it is never a hint.
@@ -41,7 +47,23 @@
     emptyParts: 'Type an answer in each box, then Crush it!',   // Mode 5 Level 4 [my wording]
     emptyChoices: 'Choose both answers, then Crush it!',   // Mode 6 design §4
     almost: 'Correct, but not fully simplified.',   // Mode 7 design §6 (wording is a placeholder)
+    // The step workspace (Mode 7 phase 2). All placeholders in my words; Dr. Cole writes the real ones.
+    emptyStep: 'Type a step, then Enter Step.',
+    stepNotEqual: 'That step isn’t equal to the problem.',
+    stepSame: 'That is the same as your last step, so it wasn’t added.',
+    nothingLeft: 'Nothing more to simplify. Type your answer, then Crush it!',
+    lookHere: 'Hint: look at the lit parts.',
+    lookNumbers: 'Hint: write it in its simplest form.',
+    replaced: 'I couldn’t read your last step, so I replaced it.',
+    wontCount: 'This problem won’t count, because you used Step or Solution.',
+    uncounted: 'Not counted, because you used Step or Solution.',
+    unreadable: 'I can’t read that step.',
   };
+
+  /* The answer box's spoken help, plain and with the workspace's parentheses and Shift+Enter. */
+  var HELP_WORKSPACE = 'Type digits and x, y, z. Caret key starts an exponent, slash starts a fraction, ' +
+    'open parenthesis starts a group, and close parenthesis or right arrow leaves it, ready for its exponent. ' +
+    'Up and down arrows move between numerator and denominator. Enter crushes it. Shift and Enter enters a step.';
 
   /* Each mode with levels: its module (problems, grading, history entries). */
   var LIBS = { product: 'Product', quotient: 'Quotient', 'power-of-power': 'Power', 'power-of-quotient': 'PowerQuotient',
@@ -106,9 +128,12 @@
     // Levels 3+: the Phase 0 math answer box and keypad. Editing clears the red
     // highlight of a wrong answer, as typing in the count field does.
     PC.MathInput.buildKeypad($('playKeypad'));
+    this.padGroups = false;              // the keypad's parenthesis row, on for Mixed Practice
+    this.helpPlain = $('playHelp').textContent;
     this.box = new PC.MathInput.Widget($('playAnswer'), {
       echo: $('playEcho'),
       onSubmit: function () { self.submit(); },
+      onStep: function () { self.enterStep(); },
       onChange: function () { if (!self.locked) { PC.Crush.reset($('stage')); self.say('', ''); } },
     });
     // Mode 5 Level 4: a box per part. Enter moves on to the next box; the last
@@ -132,6 +157,10 @@
     });
     this.active = this.box;
     PC.MathInput.bindKeypad($('playKeypad'), { run: function (cmd, arg) { return self.active.run(cmd, arg); } });
+    $('stepBtn').addEventListener('click', function () { self.enterStep(); });
+    $('hintBtn').addEventListener('click', function () { self.hintNow(); });
+    $('showStepBtn').addEventListener('click', function () { self.showStep(); });
+    $('solutionBtn').addEventListener('click', function () { self.showSolution(); });
     $('levelNav').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-level]');
       if (b) self.pick(+b.dataset.level, true);
@@ -173,6 +202,18 @@
     this.problem = this.level.make(this.rng, this.problem);
     this.locked = false;
     this.credited = false;
+    this.steps = [];                     // the workspace's steps: { tree, by: 'you' | 'app', name }
+    this.skipped = false;                // Step or Solution was used on this problem
+    this.lit = null;                     // the tree Hint has marked, if any
+    var ws = !!this.level.workspace;
+    ['workspace', 'stepBtn', 'helpRow', 'groupHint'].forEach(function (id) { $(id).hidden = !ws; });
+    this.box.setFeatures({ groups: !!this.level.groups, step: ws });
+    if (this.padGroups !== !!this.level.groups) {
+      this.padGroups = !!this.level.groups;
+      PC.MathInput.buildKeypad($('playKeypad'), { groups: this.padGroups });
+    }
+    $('playHelp').textContent = ws ? HELP_WORKSPACE : this.helpPlain;
+    this.renderSteps();
     var kind = this.level.input, math = kind === 'math', parts = kind === 'parts';
     this.fields().forEach(function (f) { f.value = ''; f.readOnly = false; f.disabled = false; });
     $('countInput').hidden = kind !== 'count';
@@ -276,6 +317,7 @@
 
   Activity.prototype.submit = function () {
     if (!this.problem || this.locked) return;
+    this.clearHint();
     var kind = this.level.input, math = kind === 'math', parts = kind === 'parts', fields = this.fields();
     var choices = kind === 'choices';
     var input = math ? $('playAnswer') : parts ? this.parts[0].el : fields[0];
@@ -305,13 +347,17 @@
     var yellow = r.status === 'yellow';
     var right = r.status === 'correct' || yellow;
     var again = this.credited;
-    if (again) this.store.recordAttempt(this.modeId, this.level.n);
+    // Step or Solution was used: the problem is left out of attempts, correct, accuracy and
+    // History (Dr. Cole, 2026-09-30). It still gets its feedback and its crush.
+    var uncounted = this.skipped && !again;
+    if (uncounted) { /* nothing is recorded */ }
+    else if (again) this.store.recordAttempt(this.modeId, this.level.n);
     else this.store.record(this.modeId, this.level.n, right);
     if (parts) r.parts.forEach(function (st, i) { self.mark(i, st); });
 
     if (yellow) {
-      if (!again) this.addHistory(L, p);
-      this.credited = true;
+      if (!again && !uncounted) this.addHistory(L, p);
+      if (!uncounted) this.credited = true;
       var note = r.hints.join(' ');
       if (set.sound) PC.Sound.play('almost');
       this.say('✓ ' + MESSAGES.almost + ' ' + note, 'warn');
@@ -327,14 +373,14 @@
       var next = $('nextProblemBtn');
       next.classList.add('primary');
       next.focus();
-      if (!again) this.addHistory(L, p);
+      if (!again && !uncounted) this.addHistory(L, p);
       if (set.sound) PC.Sound.play('reward');
       var seq = this.seq;
       // Mode 1 Level 4 groups then crushes; Modes 2 and 3 carry their own plan.
       var plan = p.plan || (p.groups ? { order: p.order, groups: p.groups } : null);
       PC.Crush.crush(stage, p.answer, { reduce: this.reduce(), plan: plan }).then(function () {
         if (seq !== self.seq) return;
-        self.say('✓ ' + MESSAGES.correct, 'good');
+        self.say('✓ ' + MESSAGES.correct + (uncounted ? ' ' + MESSAGES.uncounted : ''), 'good');
       });
       // Two parts are read as the history line: "3 to the power 0, equals 1".
       var said = parts && p.parts.length > 1 ? PC.Render.speak(p.mid) + ', equals ' : '';
@@ -377,6 +423,7 @@
     this.box.setLocked(on);
     this.parts.forEach(function (b) { b.setLocked(on); });
     Array.prototype.forEach.call($('playKeypad').querySelectorAll('button'), function (b) { b.disabled = on; });
+    ['stepBtn', 'hintBtn', 'showStepBtn', 'solutionBtn'].forEach(function (id) { $(id).disabled = on; });
   };
 
   /* Visible result line. The icon is text, so colour never carries it alone. */
@@ -394,6 +441,182 @@
     if (!this.settings().announce) return;
     setTimeout(function () { el.textContent = text; }, 60);
   };
+
+  /* ---- the step workspace (Mode 7 phase 2, design §12) ------------------------------ */
+
+  /* The tree the next step, Hint and Solution work from: the newest step, else the problem. */
+  Activity.prototype.latest = function () {
+    return this.steps.length ? this.steps[this.steps.length - 1].tree : this.problem.shown;
+  };
+
+  /* Enter Step: any step equal to the problem is added, and the box clears. It is not an
+     attempt and never finishes the problem, even when it is the answer; Crush it! does.
+     An empty or unreadable box is not counted (like Crush it!), a step that isn't equal
+     is turned away, and one equal to the step before it isn't added. */
+  Activity.prototype.enterStep = function () {
+    if (!this.problem || this.locked || !this.level.workspace) return;
+    this.clearHint();
+    var box = $('playAnswer'), E = PC.Expr, self = this;
+    var parsed = PC.Parse.parse(this.box.model.root);
+    if (parsed.errors.length) {
+      this.say(parsed.errors[0] === 'EMPTY' ? MESSAGES.emptyStep
+        : PC.Check.message({ status: 'invalid', errors: parsed.errors }), '');
+      box.focus();
+      return;
+    }
+    if (!E.equivalent(parsed.tree, this.problem.shown)) {
+      if (this.settings().sound) PC.Sound.play('buzz');
+      this.say('✗ ' + MESSAGES.stepNotEqual, 'bad');
+      this.announce(MESSAGES.stepNotEqual);
+      box.focus();
+      return;
+    }
+    if (E.toText(parsed.tree) === E.toText(this.latest())) {
+      this.say(MESSAGES.stepSame, '');
+      this.announce(MESSAGES.stepSame);
+      box.focus();
+      return;
+    }
+    this.steps.push({ tree: parsed.tree, by: 'you' });
+    this.box.clear();
+    PC.Crush.reset($('stage'));
+    this.renderSteps();
+    this.say('', '');
+    this.announce('Step ' + self.steps.length + ' added: ' + PC.Render.speak(parsed.tree) + '.');
+    box.focus();
+  };
+
+  /* Step and Solution leave the problem skipped, once. A problem that already counted
+     as correct (a yellow) stays counted. Returns true the first time. */
+  Activity.prototype.skip = function () {
+    if (this.skipped || this.credited) return false;
+    this.skipped = true;
+    this.store.recordSkip(this.modeId, this.level.n);
+    return true;
+  };
+
+  /* A step the solver can't read is taken off, back to the last one it can (Dr. Cole,
+     2026-09-30). Returns how many were taken. */
+  Activity.prototype.dropUnreadable = function () {
+    var n = 0;
+    while (this.steps.length && !PC.Solver.read(this.steps[this.steps.length - 1].tree)) { this.steps.pop(); n++; }
+    return n;
+  };
+
+  Activity.prototype.showStep = function () {
+    if (!this.problem || this.locked || !this.level.workspace) return;
+    this.clearHint();
+    var dropped = this.dropUnreadable();
+    var s = PC.Solver.step(this.latest());
+    if (s.unreadable || s.done) {
+      this.renderSteps();
+      this.say(s.done ? MESSAGES.nothingLeft : MESSAGES.unreadable, '');
+      this.announce(s.done ? MESSAGES.nothingLeft : MESSAGES.unreadable);
+      return;
+    }
+    var first = this.skip();
+    this.steps.push({ tree: s.tree, by: 'app', name: s.name });
+    this.renderSteps();
+    var msg = 'Step added: ' + s.name + '.' + (dropped ? ' ' + MESSAGES.replaced : '') + (first ? ' ' + MESSAGES.wontCount : '');
+    this.say(msg, '');
+    this.announce(msg + ' ' + PC.Render.speak(s.tree) + '.');
+  };
+
+  Activity.prototype.showSolution = function () {
+    if (!this.problem || this.locked || !this.level.workspace) return;
+    this.clearHint();
+    var dropped = this.dropUnreadable();
+    var r = PC.Solver.all(this.latest());
+    if (!r.steps.length) {
+      this.renderSteps();
+      this.say(r.unreadable ? MESSAGES.unreadable : MESSAGES.nothingLeft, '');
+      this.announce(r.unreadable ? MESSAGES.unreadable : MESSAGES.nothingLeft);
+      return;
+    }
+    var first = this.skip();
+    r.steps.forEach(function (s) { this.steps.push({ tree: s.tree, by: 'app', name: s.name }); }, this);
+    this.renderSteps();
+    var msg = 'Solution shown: ' + r.steps.length + (r.steps.length === 1 ? ' step.' : ' steps.') +
+      (dropped ? ' ' + MESSAGES.replaced : '') + (first ? ' ' + MESSAGES.wontCount : '');
+    this.say(msg, '');
+    this.announce(msg + ' ' + r.steps.map(function (s) { return s.name; }).join(', ') + '.');
+  };
+
+  /* Hint lights the parts of the latest step the next property applies to: the newest
+     row entry, or the problem in the stage while the row is empty. It changes no stats. */
+  Activity.prototype.hintNow = function () {
+    if (!this.problem || this.locked || !this.level.workspace) return;
+    this.clearHint();
+    var i = this.steps.length - 1;
+    while (i >= 0 && !PC.Solver.read(this.steps[i].tree)) i--;      // defensive: the last step it can read
+    var tree = i < 0 ? this.problem.shown : this.steps[i].tree;
+    var h = PC.Solver.hint(tree);
+    if (h.unreadable || h.done) {
+      this.say(h.done ? MESSAGES.nothingLeft : MESSAGES.unreadable, '');
+      this.announce(h.done ? MESSAGES.nothingLeft : MESSAGES.unreadable);
+      return;
+    }
+    if (h.marks.length) {
+      PC.Solver.mark(h.marks);
+      this.lit = tree;
+      if (i < 0) PC.Crush.show($('stage'), this.problem.shown); else this.renderSteps();
+    }
+    var words = h.marks.map(function (n) { return PC.Render.speak(n); });
+    this.say(h.marks.length ? MESSAGES.lookHere : MESSAGES.lookNumbers, '');
+    this.announce(h.marks.length ? 'Hint: look at ' + words.join('; and ') + '.' : MESSAGES.lookNumbers);
+  };
+
+  Activity.prototype.clearHint = function () {
+    if (!this.lit) return;
+    var tree = this.lit;
+    PC.Solver.clearMarks(tree);
+    this.lit = null;
+    if (tree === this.problem.shown) PC.Crush.show($('stage'), this.problem.shown); else this.renderSteps();
+  };
+
+  Activity.prototype.renderSteps = function () {
+    var list = $('stepList');
+    list.replaceChildren();
+    (this.steps || []).forEach(function (s, i) { list.appendChild(stepItem(s, i)); });
+    $('stepsEmpty').hidden = !!(this.steps && this.steps.length);
+  };
+
+  /* One step: its number, "=", the expression, and for the app's steps the property it
+     applied. Drawn for the eye, spoken for the ear. */
+  function stepItem(s, i) {
+    var R = PC.Render;
+    var li = document.createElement('li');
+    li.className = 'step-item ' + (s.by === 'app' ? 'step-app' : 'step-you');
+    var num = document.createElement('span');
+    num.className = 'step-num';
+    num.setAttribute('aria-hidden', 'true');
+    num.textContent = String(i + 1);
+    var row = document.createElement('span');
+    row.className = 'step-row';
+    row.setAttribute('aria-hidden', 'true');
+    var eq = document.createElement('span');
+    eq.className = 'step-eq';
+    eq.textContent = '=';
+    var math = document.createElement('span');
+    math.className = 'step-math';
+    math.appendChild(R.draw(s.tree));
+    row.appendChild(eq);
+    row.appendChild(math);
+    li.appendChild(num);
+    li.appendChild(row);
+    if (s.name) {
+      var tag = document.createElement('span');
+      tag.className = 'step-tag';
+      tag.setAttribute('aria-hidden', 'true');
+      tag.textContent = s.name;
+      li.appendChild(tag);
+    }
+    var sr = document.createElement('span');
+    sr.className = 'sr-only';
+    sr.textContent = 'Step ' + (i + 1) + ', ' + (s.by === 'app' ? 'shown by the app, ' + s.name : 'yours') + ': ' + R.speak(s.tree);
+    li.appendChild(sr);
+    return li;
+  }
 
   Activity.prototype.renderHistory = function () {
     var self = this;

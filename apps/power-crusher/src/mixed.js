@@ -448,7 +448,9 @@
 
   var LEVELS = [1, 2, 3, 4].map(function (n) {
     // Button names are "Level 1" to "Level 4", with no titles (design §1).
-    return { n: n, title: '', make: make(n), input: 'math' };
+    // `workspace`: the step row, Enter Step, Hint, Step and Solution (phase 2, design §12);
+    // `groups`: parentheses in the answer box.
+    return { n: n, title: '', make: make(n), input: 'math', workspace: true, groups: true };
   });
 
   PC.Mixed = {

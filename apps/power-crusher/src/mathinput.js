@@ -12,9 +12,15 @@
  *   MathInput    the DOM widget: renders the model with a visible caret, handles
  *                keys and keypad, and keeps a spoken description current.
  *
- * Deliberate limits: no parentheses, no exponent inside an exponent, no fraction
- * inside a fraction, and only digits and − inside an exponent. Every answer form
- * the handoff grades — including the wrong ones like (1/8)x⁻³ — fits in that.
+ * Deliberate limits: no exponent inside an exponent, no fraction inside a
+ * fraction, and only digits and − inside an exponent. Every answer form the
+ * handoff grades — including the wrong ones like (1/8)x⁻³ — fits in that.
+ *
+ * Parentheses are off by default and on only in Mixed Practice's workspace (Mode 7
+ * design §12, phase 2): one level, with a fraction allowed inside, and an exponent
+ * after the ")". A group is an item { k: 'group', row } beside 'ch', 'sup' and 'frac'.
+ * A fraction still can't go inside a fraction, so it can't go in a group that is
+ * itself in a numerator or denominator.
  */
 (function (PC) {
   'use strict';
@@ -25,7 +31,7 @@
   function row() { return { items: [] }; }
 
   /* ======================================================================== */
-  function InputModel() { this.clear(); }
+  function InputModel(opts) { this.groups = !!(opts && opts.groups); this.clear(); }
 
   InputModel.prototype.clear = function () {
     this.root = row();
@@ -42,8 +48,8 @@
     function walk(r) {
       for (var i = 0; i < r.items.length; i++) {
         var it = r.items[i], hit;
-        if (it.k === 'sup') {
-          if (it.row === target) return { row: r, idx: i, item: it, slot: 'sup' };
+        if (it.k === 'sup' || it.k === 'group') {
+          if (it.row === target) return { row: r, idx: i, item: it, slot: it.k === 'sup' ? 'sup' : 'grp' };
           if ((hit = walk(it.row))) return hit;
         } else if (it.k === 'frac') {
           if (it.num === target) return { row: r, idx: i, item: it, slot: 'num' };
@@ -56,10 +62,27 @@
     return target === this.root ? null : walk(this.root);
   };
 
-  /* 'sup' | 'num' | 'den' | null */
+  /* 'sup' | 'num' | 'den' | 'grp' | null */
   InputModel.prototype.box = function () {
     var p = this.parentOf(this.cur.row);
     return p ? p.slot : null;
+  };
+
+  /* Where a row sits once exponents and parentheses are looked through: a
+     numerator or denominator, or null for the main line. */
+  InputModel.prototype.frame = function (r) {
+    var p = this.parentOf(r);
+    while (p && (p.slot === 'sup' || p.slot === 'grp')) p = this.parentOf(p.row);
+    return p;
+  };
+
+  InputModel.prototype.inGroup = function () {
+    var p = this.parentOf(this.cur.row);
+    while (p) {
+      if (p.slot === 'grp') return true;
+      p = this.parentOf(p.row);
+    }
+    return false;
   };
 
   InputModel.prototype.count = function () {
@@ -67,7 +90,7 @@
     (function walk(r) {
       r.items.forEach(function (it) {
         n++;
-        if (it.k === 'sup') walk(it.row);
+        if (it.k === 'sup' || it.k === 'group') walk(it.row);
         if (it.k === 'frac') { walk(it.num); walk(it.den); }
       });
     })(this.root);
@@ -106,8 +129,9 @@
     // Cursor sitting between a base and its exponent: step into the existing one.
     if (r.items[i] && r.items[i].k === 'sup') { this.cur = { row: r.items[i].row, i: 0 }; return ok(); }
     var prev = r.items[i - 1];
-    if (!prev || prev.k !== 'ch' || prev.c === '-') {
-      return no('Type a number or letter first, then its exponent.');
+    if (!prev || (prev.k !== 'group' && (prev.k !== 'ch' || prev.c === '-'))) {
+      return no(this.groups ? 'Type a number, a letter or a group first, then its exponent.'
+        : 'Type a number or letter first, then its exponent.');
     }
     if (this.count() >= MAX_ITEMS) return no('The answer box is full.');
     var s = { k: 'sup', row: row() };
@@ -116,12 +140,37 @@
     return ok();
   };
 
+  /* ( starts an empty group and goes into it. One level only; not in an exponent. */
+  InputModel.prototype.cmd_group = function () {
+    if (!this.groups) return no('Parentheses aren’t used here.');
+    if (this.box() === 'sup') return no('Parentheses can’t go inside an exponent.');
+    if (this.inGroup()) return no('Only one level of parentheses is used here.');
+    if (this.count() >= MAX_ITEMS) return no('The answer box is full.');
+    var g = { k: 'group', row: row() };
+    this.cur.row.items.splice(this.cur.i, 0, g);
+    this.cur = { row: g.row, i: 0 };
+    return ok();
+  };
+
+  /* ) steps out of the nearest open group, from anywhere inside it (an exponent
+     in it too), to just after it, ready for its exponent. */
+  InputModel.prototype.cmd_close = function () {
+    var r = this.cur.row, p = this.parentOf(r);
+    while (p) {
+      if (p.slot === 'grp') { this.cur = { row: p.row, i: p.idx + 1 }; return ok(); }
+      p = this.parentOf(p.row);
+    }
+    return no('There is no open parenthesis.');
+  };
+
   /* Whatever is already typed before the cursor becomes the numerator, so typing
      x ^ 3 → / 8 gives x³ over 8. At the very start, the numerator starts empty. */
   InputModel.prototype.cmd_frac = function () {
     var b = this.box();
     if (b === 'sup') return no('A fraction can’t go inside an exponent.');
-    if (b) return no('A fraction can’t go inside a fraction here.');
+    if (b === 'num' || b === 'den' || (b === 'grp' && this.frame(this.cur.row))) {
+      return no('A fraction can’t go inside a fraction here.');
+    }
     if (this.count() >= MAX_ITEMS) return no('The answer box is full.');
     var r = this.cur.row, i = this.cur.i;
     var f = { k: 'frac', num: row(), den: row() };
@@ -139,7 +188,7 @@
   InputModel.prototype.cmd_right = function () {
     var r = this.cur.row, i = this.cur.i, it = r.items[i];
     if (it) {
-      if (it.k === 'sup') this.cur = { row: it.row, i: 0 };
+      if (it.k === 'sup' || it.k === 'group') this.cur = { row: it.row, i: 0 };
       else if (it.k === 'frac') this.cur = { row: it.num, i: 0 };
       else this.cur.i++;
       return ok();
@@ -150,7 +199,7 @@
   InputModel.prototype.cmd_left = function () {
     var r = this.cur.row, i = this.cur.i, it = r.items[i - 1];
     if (it) {
-      if (it.k === 'sup') this.cur = { row: it.row, i: it.row.items.length };
+      if (it.k === 'sup' || it.k === 'group') this.cur = { row: it.row, i: it.row.items.length };
       else if (it.k === 'frac') this.cur = { row: it.den, i: it.den.items.length };
       else this.cur.i--;
       return ok();
@@ -180,6 +229,13 @@
     var p = this.parentOf(this.cur.row);
     if (p && p.slot === 'sup') p = this.parentOf(p.row);
     if (p && p.slot === 'den') return this.enter(p.item.num);
+    // Inside parentheses: a fraction beside the cursor, else the box the group is in.
+    if (p && p.slot === 'grp') {
+      var g = this.besideFrac();
+      if (g) return this.enter(g.num);
+      var q = this.frame(this.cur.row);
+      return q && q.slot === 'den' ? this.enter(q.item.num) : no('');
+    }
     var f = !p && this.besideFrac();
     return f ? this.enter(f.num) : no('');
   };
@@ -188,6 +244,12 @@
     var p = this.parentOf(this.cur.row);
     if (p && p.slot === 'sup') { this.cur = { row: p.row, i: p.idx + 1 }; return ok(); }
     if (p && p.slot === 'num') return this.enter(p.item.den);
+    if (p && p.slot === 'grp') {
+      var g = this.besideFrac();
+      if (g) return this.enter(g.den);
+      var q = this.frame(this.cur.row);
+      return q && q.slot === 'num' ? this.enter(q.item.den) : no('');
+    }
     var f = !p && this.besideFrac();
     return f ? this.enter(f.den) : no('');
   };
@@ -216,7 +278,7 @@
     var r = this.cur.row, i = this.cur.i, prev = r.items[i - 1];
     if (prev) {
       if (prev.k === 'ch') { r.items.splice(i - 1, 1); this.cur.i--; return ok(); }
-      if (prev.k === 'sup') {
+      if (prev.k === 'sup' || prev.k === 'group') {
         if (!prev.row.items.length) { r.items.splice(i - 1, 1); this.cur.i--; return ok(); }
         this.cur = { row: prev.row, i: prev.row.items.length };
         return this.cmd_back();
@@ -230,8 +292,12 @@
     }
     var p = this.parentOf(r);
     if (!p) return no('Nothing to delete.');
-    if (p.slot === 'sup') {
-      if (!r.items.length) p.row.items.splice(p.idx, 1);
+    if (p.slot === 'sup' || p.slot === 'grp') {
+      if (!r.items.length) {
+        p.row.items.splice(p.idx, 1);
+        // An emptied group takes the exponent that followed it along.
+        if (p.slot === 'grp' && p.row.items[p.idx] && p.row.items[p.idx].k === 'sup') p.row.items.splice(p.idx, 1);
+      }
       this.cur = { row: p.row, i: p.idx };
       return ok();
     }
@@ -258,6 +324,7 @@
       return r.items.map(function (it) {
         if (it.k === 'ch') return it.c;
         if (it.k === 'sup') return '^{' + s(it.row) + '}';
+        if (it.k === 'group') return '(' + s(it.row) + ')';
         return '{' + s(it.num) + '}/{' + s(it.den) + '}';
       }).join('');
     }
@@ -267,9 +334,13 @@
   /* ---- keyboard map ---------------------------------------------------------- */
   /* Returns [cmd, arg] or null (null = let the browser handle the key, so Tab at
      the top level still moves focus and there is no keyboard trap). */
-  function keyCommand(e, box) {
+  /* `ctx` says what this box has: { groups } for parentheses, { step } for
+     Shift+Enter (Enter Step). Without them those keys are left to the browser. */
+  function keyCommand(e, box, ctx) {
     if (e.ctrlKey || e.metaKey || e.altKey) return null;
     var k = e.key;
+    if (k === '(') return ctx && ctx.groups ? ['group'] : null;
+    if (k === ')') return ctx && ctx.groups ? ['close'] : null;
     if (k === '^') return ['sup'];
     if (k === '/') return ['frac'];
     if (k === 'ArrowRight') return ['right'];
@@ -280,7 +351,7 @@
     if (k === 'Backspace') return ['back'];
     if (k === 'Home') return ['home'];
     if (k === 'End') return ['end'];
-    if (k === 'Enter') return ['submit'];
+    if (k === 'Enter') return e.shiftKey && ctx && ctx.step ? ['step'] : ['submit'];
     if (k === 'Escape') return null;
     if (k === '-' || k === '−') return ['char', '-'];
     if (k.length === 1 && /[0-9a-zA-Z]/.test(k)) return ['char', k];
@@ -302,13 +373,14 @@
       if (it.k === 'ch' && it.c === '-') words.push(inSup && i === 0 ? 'negative' : 'minus');
       else if (it.k === 'ch') words.push(it.c);
       else if (it.k === 'sup') words.push('to the power ' + speakRow(it.row, true) + ',');
+      else if (it.k === 'group') words.push('the group ' + speakRow(it.row) + ', end group,');
       else words.push('fraction, ' + speakRow(it.num) + ', over ' + speakRow(it.den) + ', end fraction,');
       i++;
     }
     return words.join(' ').replace(/,$/, '');
   }
 
-  var BOX_WORDS = { sup: 'in exponent', num: 'in numerator', den: 'in denominator' };
+  var BOX_WORDS = { sup: 'in exponent', num: 'in numerator', den: 'in denominator', grp: 'in parentheses' };
 
   function describe(model) {
     if (model.isEmpty()) return 'empty';
@@ -322,7 +394,7 @@
   function MathInput(el, opts) {
     this.el = el;
     this.opts = opts || {};
-    this.model = new InputModel();
+    this.model = new InputModel({ groups: !!this.opts.groups });
     // The first id in aria-describedby is the live description of the content.
     this.desc = document.getElementById((el.getAttribute('aria-describedby') || '').split(/\s+/)[0]);
     this.echo = opts.echo || null;     // polite live region for edits
@@ -348,8 +420,15 @@
     this.render();
   }
 
+  /* Parentheses and Shift+Enter (Enter Step) belong to Mixed Practice's workspace,
+     so the screen turns them on per level. */
+  MathInput.prototype.setFeatures = function (f) {
+    this.model.groups = !!(f && f.groups);
+    this.stepKey = !!(f && f.step);
+  };
+
   MathInput.prototype.onKey = function (e) {
-    var c = keyCommand(e, this.model.box());
+    var c = keyCommand(e, this.model.box(), { groups: this.model.groups, step: this.stepKey });
     if (!c || this.locked) return;
     e.preventDefault();
     this.run(c[0], c[1]);
@@ -358,6 +437,7 @@
   /* Entry point for keys and keypad alike. */
   MathInput.prototype.run = function (cmd, arg) {
     if (cmd === 'submit') { if (this.opts.onSubmit) this.opts.onSubmit(); return { ok: true }; }
+    if (cmd === 'step') { if (this.opts.onStep) this.opts.onStep(); return { ok: true }; }
     if (this.locked) return no('The answer is locked.');
     var r = this.model.exec(cmd, arg);
     this.render();
@@ -370,7 +450,7 @@
      numerator or denominator, else the main line, which includes the box's own
      padding), then the gap between that row's items nearest the click. */
   MathInput.prototype.hit = function (target, x) {
-    var box = target && target.closest ? target.closest('.m-row, .m-exp, .m-num, .m-den') : null;
+    var box = target && target.closest ? target.closest('.m-row, .m-exp, .m-num, .m-den, .m-gin') : null;
     if (!box || !this.el.contains(box)) box = this.el.querySelector('.m-row');
     if (!box || !box.pcRow) return null;
     var els = box.pcItems, i = 0;
@@ -435,6 +515,20 @@
           s.textContent = it.c === '-' ? '−' : it.c;
         } else if (it.k === 'sup') {
           s = build(it.row, 'm-exp');
+        } else if (it.k === 'group') {
+          // Parentheses stand as tall as a fraction inside them (as in Mode 4's problems).
+          var tall = it.row.items.some(function (x) { return x.k === 'frac'; });
+          s = document.createElement('span');
+          s.className = tall ? 'm-group m-group-frac' : 'm-group';
+          var open = document.createElement('span');
+          open.className = 'm-paren';
+          open.textContent = '(';
+          var shut = document.createElement('span');
+          shut.className = 'm-paren';
+          shut.textContent = ')';
+          s.appendChild(open);
+          s.appendChild(build(it.row, 'm-gin'));
+          s.appendChild(shut);
         } else {
           s = document.createElement('span');
           s.className = 'm-frac';
@@ -480,11 +574,17 @@
     }[id];
   });
 
-  var KEY_HINT = { '^': '^', '/': '/', ArrowLeft: '←', ArrowRight: '→ or Tab', Backspace: 'Backspace' };
+  /* Mixed Practice's workspace adds a row: ( starts a group, ) steps out of it. */
+  var GROUP_KEYS = [
+    { cmd: 'group', key: '(', label: '(', name: 'Open parenthesis', cls: 'k-op' },
+    { cmd: 'close', key: ')', label: ')', name: 'Close parenthesis', cls: 'k-op' },
+  ];
 
-  function buildKeypad(pad) {
+  var KEY_HINT = { '^': '^', '/': '/', ArrowLeft: '←', ArrowRight: '→ or Tab', Backspace: 'Backspace', '(': '(', ')': ')' };
+
+  function buildKeypad(pad, opts) {
     pad.replaceChildren();
-    KEYPAD.forEach(function (k) {
+    KEYPAD.concat(opts && opts.groups ? GROUP_KEYS : []).forEach(function (k) {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'key ' + k.cls;
@@ -515,7 +615,7 @@
   PC.MathInput = {
     InputModel: InputModel, keyCommand: keyCommand, describe: describe,
     speakRow: speakRow, Widget: MathInput, bindKeypad: bindKeypad,
-    KEYPAD: KEYPAD, buildKeypad: buildKeypad,
+    KEYPAD: KEYPAD, GROUP_KEYS: GROUP_KEYS, buildKeypad: buildKeypad,
   };
 })(typeof module === 'object' && module.exports
   ? (module.exports = globalThis.PowerCrusher = globalThis.PowerCrusher || {})
