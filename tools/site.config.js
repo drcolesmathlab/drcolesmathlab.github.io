@@ -470,8 +470,8 @@ module.exports = {
 
       // Vendored, not built: tools/vendor-power-crusher.js copies upstream
       // drcolesmathlab/power-crusher byte for byte. All seven modes are built, and
-      // Mixed Practice has its step workspace; checking that each step is a valid move is still to
-      // come, so re-run the script after each phase.
+      // Mixed Practice has its step workspace, with Enter Step checking that each step is a
+      // valid move, so re-run the script after each phase.
       payload: 'apps/power-crusher/index.html',
       // The app scrolls inside its own document (home list, then a mode's problem,
       // answer box, keypad and history), so the frame needs height, not a fixed fit.
