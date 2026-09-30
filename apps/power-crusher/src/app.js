@@ -1,6 +1,7 @@
 /*
- * app.js — the shell: home, mode screens, routing, Stats and Settings, and the
- * Phase 0 answer-box preview (shown for modes that have no levels yet).
+ * app.js — the shell: home, mode screens, routing, Stats and Settings. Every mode has
+ * levels now; the Phase 0 answer-box preview that a mode without them used to show
+ * lives on in sandbox.html (Mode 7 design §9).
  *
  * Routes are URL hashes (#mode/quotient), so the browser's Back button works
  * and any mode can be linked to directly. Every mode is reachable from home
@@ -14,7 +15,7 @@
   var store = new PC.Store.Store();
   var MODES = PC.Modes.MODES;
 
-  var input, activity, current = null, exampleIdx = 0, firstRoute = true;
+  var activity, firstRoute = true;
 
   /* ---- settings (Mode 1 design §8) ------------------------------------------- */
   var osReduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
@@ -77,7 +78,7 @@
         th.scope = 'row';
         th.textContent = m.title;
         tr.appendChild(th);
-        ['Level ' + l.n + ' · ' + l.title, s.attempts, s.correct, pct(s), s.streak, s.bestStreak, when(s.lastPlayed)]
+        [PC.Activity.levelLabel(l), s.attempts, s.correct, pct(s), s.streak, s.bestStreak, when(s.lastPlayed)]
           .forEach(function (v) { tr.insertCell().textContent = String(v); });
       });
     });
@@ -154,8 +155,6 @@
 
   /* ---- mode screen ----------------------------------------------------------- */
   function renderMode(m) {
-    current = m;
-    exampleIdx = 0;
     $('modeEyebrow').textContent = m.id === 'mixed'
       ? 'Mode ' + m.number + ' · all properties' : 'Property ' + m.number + ' of ' + (MODES.length - 1);
     $('modeH').textContent = m.title;
@@ -163,37 +162,12 @@
     var live = activity.open(m);
     $('activity').hidden = !live;
     $('levelNav').hidden = !live;
-    $('preview').hidden = live;
-    // A mode with levels is finished (Modes 1–6 end at Level 4), so it has no status
+    // A mode with levels is finished (each ends at Level 4), so it has no status
     // line; the level buttons say what is there (Dr. Cole, 2026-09-28).
     $('statusNote').hidden = live;
     if (live) return;
     $('statusHead').textContent = 'This mode is still being designed.';
-    $('statusText').textContent = m.id === 'mixed'
-      ? 'Its practice sets arrive in a later update.'
-      : 'Its activities arrive in a later update.';
-    $('nextBtn').hidden = m.examples.length < 2;
-    showExample();
-  }
-
-  function showExample() {
-    var ex = current.examples[exampleIdx];
-    PC.Render.into($('problem'), ex);
-    input.clear();
-    var fb = $('feedback');
-    fb.textContent = '';
-    fb.className = 'feedback';
-  }
-
-  function submit() {
-    if (!current) return;
-    var ex = current.examples[exampleIdx];
-    var r = PC.Check.check(input.model.root, ex, current.policy);
-    var fb = $('feedback');
-    var msg = PC.Check.message(r);
-    fb.className = 'feedback ' + (r.correct ? 'good' : r.status === 'invalid' ? '' : 'bad');
-    // The icon is text, so right/wrong is never carried by colour alone.
-    fb.textContent = (r.correct ? '✓ ' : r.status === 'invalid' ? '' : '✗ ') + msg;
+    $('statusText').textContent = 'Its activities arrive in a later update.';
   }
 
   /* ---- routing --------------------------------------------------------------- */
@@ -204,7 +178,7 @@
     $('home').hidden = !!m;
     $('mode').hidden = !m;
     $('homeBtn').hidden = !m;
-    if (m) renderMode(m); else { current = null; renderHome(); }
+    if (m) renderMode(m); else renderHome();
     document.title = (m ? m.title + ' — ' : '') + 'Power Crusher — Dr. Cole’s Math Lab';
     // Don't steal focus on first load (the page may be embedded mid-scroll);
     // after that, every navigation lands on the new heading.
@@ -224,15 +198,6 @@
       else if (osReduce.addListener) osReduce.addListener(follow);
     }
     activity = new PC.Activity.Activity({ store: store, settings: settings, reduce: reduceMotion });
-    PC.MathInput.buildKeypad($('keypad'));
-    input = new PC.MathInput.Widget($('answer'), { echo: $('answerEcho'), onSubmit: submit });
-    PC.MathInput.bindKeypad($('keypad'), input);
-    $('submitBtn').addEventListener('click', submit);
-    $('nextBtn').addEventListener('click', function () {
-      exampleIdx = (exampleIdx + 1) % current.examples.length;
-      showExample();
-      $('answer').focus();
-    });
     $('homeBtn').addEventListener('click', function () { location.hash = ''; });
 
     bindDialog('statsDlg');

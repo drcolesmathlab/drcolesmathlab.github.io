@@ -385,6 +385,6 @@ Then, manually:
   as the first argument). The files it
   copies are exactly `index.html`, `styles.css` and the `<script src>` tags in that
   `index.html`, so upstream's developer test bench (`sandbox.html`), tests and design
-  notes never ship. It is published with six of its seven modes built; after each new
-  mode merges upstream, re-run the script and the generator, and update the page's
-  *Honest limits*.
+  notes never ship. All seven modes are built (Mixed Practice's step workspace is still
+  to come); after each new phase merges upstream, re-run the script and the generator, and
+  update the page's *Honest limits*.
