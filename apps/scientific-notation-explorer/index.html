@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scientific Notation Explorer — Dr. Cole's Math Lab</title>
+<meta name="description" content="Explore scientific notation, from what a power of 10 does to a number to choosing an appropriate scale.">
+<meta name="theme-color" content="#050610">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+
+  <header class="bar">
+    <div class="title">
+      <a class="wordmark" href="#"><b>Dr. Cole&rsquo;s</b> Math Lab</a>
+      <h1>Scientific Notation Explorer</h1>
+    </div>
+    <button type="button" class="btn" id="progressBtn" aria-haspopup="dialog">Progress</button>
+  </header>
+
+  <main id="main" tabindex="-1">
+
+    <!-- =============================== HOME =============================== -->
+    <section id="home" aria-labelledby="homeH">
+      <div class="panel">
+        <h2 id="homeH" tabindex="-1">Choose a level</h2>
+        <p class="lede">Every level is open. Start wherever you like, and move between them whenever you want.</p>
+      </div>
+      <ol class="levels" id="levelList"></ol>
+    </section>
+
+    <!-- =============================== LEVEL ============================== -->
+    <section id="level" hidden aria-labelledby="levelH">
+      <p class="crumbs"><a href="#">&larr; All levels</a></p>
+      <div class="panel">
+        <span class="eyebrow" id="levelEyebrow"></span>
+        <h2 id="levelH" tabindex="-1"></h2>
+        <p class="lede" id="levelSkill"></p>
+      </div>
+      <div class="types" id="levelBody"></div>
+    </section>
+
+    <!-- ============================= ACTIVITY ============================= -->
+    <section id="activity" hidden aria-labelledby="actH">
+      <p class="crumbs"><a id="actBack" href="#">&larr; Back</a></p>
+      <div class="panel">
+        <span class="eyebrow" id="actEyebrow"></span>
+        <h2 id="actH" tabindex="-1"></h2>
+        <div class="stage" id="actStage"></div>
+      </div>
+    </section>
+
+    <p class="sr-only" id="announce" aria-live="polite"></p>
+  </main>
+
+  <!-- ============================== DIALOGS ============================== -->
+  <dialog class="panel dlg" id="progressDlg" aria-labelledby="progressH">
+    <div class="dlg-head">
+      <h2 id="progressH">Progress</h2>
+      <button type="button" class="btn" data-close>Close</button>
+    </div>
+    <p class="lede tight">Every answer you check, counted for each level. It is saved in this browser only.</p>
+    <div class="table-wrap" id="progressBody" tabindex="0" role="region" aria-label="Progress table"></div>
+  </dialog>
+</div>
+
+<script src="src/store.js"></script>
+<script src="src/levels.js"></script>
+<script src="src/levels/level-1.js"></script>
+<script src="src/levels/level-2.js"></script>
+<script src="src/levels/level-3.js"></script>
+<script src="src/levels/level-4.js"></script>
+<script src="src/levels/level-5.js"></script>
+<script src="src/levels/level-6.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

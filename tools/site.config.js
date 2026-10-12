@@ -512,6 +512,63 @@ module.exports = {
         { id: 'limits',      label: 'Limits',       heading: 'Honest limits' },
       ],
     },
+
+    {
+      slug: 'scientific-notation-explorer',
+      title: 'Scientific Notation Explorer',
+      subtitle: 'From powers of 10 to choosing a scale',
+      blurb:
+        'Six open levels, from what a power of 10 does to a number through converting, ' +
+        'comparing, computing and choosing a scale. Start anywhere: nothing is locked.',
+      // Staged, not shipped: the shell and six level stubs exist, but no level is
+      // designed yet. Publishing needs a <slug>.html page and an OG card; see README.
+      published: false,
+
+      category: 'algebra',
+      // Set to the real date when it is published; "Newest first" sorts on it.
+      dateAdded: '2026-10-12',
+      // Audience is 8th grade (upstream design/00-overview.md). Standards codes are not
+      // cited anywhere until Dr. Cole verifies them against PA Core.
+      grade: 'Grade 8',
+      tags: ['Scientific notation', 'Powers of 10', 'Magnitude'],
+
+      // Vendored, not built: tools/vendor-scientific-notation-explorer.js copies
+      // upstream drcolesmathlab/scientific_notation_explorer byte for byte. Levels are
+      // added upstream as they are designed, so re-run the script after each one.
+      payload: 'apps/scientific-notation-explorer/index.html',
+      // Same reasoning as Power Crusher: the app scrolls inside its own document.
+      // Revisit once the first level's activities exist.
+      frame: { height: 'clamp(640px, 84vh, 960px)' },
+
+      storageKeys: ['mathlab.scientific-notation-explorer.progress'],
+      thirdParty: [],
+
+      // Written for the shell only. Rewrite when the first activities are built and tested.
+      a11y: {
+        keyboard: 'full',
+        liveRegion: true,
+        notes:
+          'the shell — level list, level pages and the Progress table — is plain links, ' +
+          'buttons and a native dialog, and works from the keyboard, with focus moved to ' +
+          'each new screen’s heading. No activities are built yet, so nothing that a ' +
+          'student actually answers has been tested.',
+      },
+
+      og: {
+        title: "Scientific Notation Explorer — Dr. Cole's Math Lab",
+        description:
+          'Explore scientific notation in six open levels, from powers of 10 to choosing ' +
+          'a scale. Runs in the browser, no sign-up.',
+      },
+
+      sections: [
+        { id: 'play',        label: 'Play',         heading: 'Try it here' },
+        { id: 'how-to-play', label: 'How it works', heading: 'How it works' },
+        { id: 'skills',      label: 'Skills',       heading: 'What it teaches' },
+        { id: 'tips',        label: 'Tips',         heading: 'Tips' },
+        { id: 'limits',      label: 'Limits',       heading: 'Honest limits' },
+      ],
+    },
   ],
 
   /*
