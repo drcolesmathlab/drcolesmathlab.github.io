@@ -35,25 +35,27 @@
 
 /* ============================================================================
    THEME TOKENS  —  dark only, as every Math Lab app is
-   PLACEHOLDER LOOK. No visual design has been decided for this app yet. Until it
-   is, these are the Math Lab site's own measured dark tokens (site repo
-   tools/site.config.js `tokens`; contrast table in its README), so every text
-   pair below already clears WCAG AA. Replace when Doc designs the look.
+   Matches Power Crusher's look at Doc's request (2026-10-12): true black and neutral
+   greys, neon cyan accent, neon magenta for exponents. Values are copied from Power
+   Crusher's styles.css. Shell variable names are kept, so no other rule changed.
    ========================================================================== */
 :root {
   color-scheme: dark;
 
-  --bg:     #050610;
-  --panel:  #0c0b1d;   /* site --sf */
-  --panel-2:#141328;   /* site --sf2 */
-  --ink:    #ffffff;   /* site --pre: headings, 18.20:1 on --panel-2 */
-  --text:   #eef2ff;   /* site --tx: body, 16.28:1 on --panel-2 */
-  --muted:  #7a83a8;   /* site --mu: 4.89:1 on --panel-2, the lowest it meets */
-  --line:   #26243f;   /* decorative dividers only */
-  --edge:   #7a83a8;   /* control boundaries: ≥3:1 on every surface (WCAG 1.4.11) */
-  --brand:  #00d4ff;   /* site --tc: wordmark, links, focus */
-  --accent: #ffcc00;   /* site --oc: the level number */
-  --on-brand: #04202b; /* site --on-tc */
+  --bg:     #000000;
+  --panel:  #0c0c0c;
+  --panel-2:#161616;
+  --hover:  #202020;
+  --ink:    #ffffff;   /* headings */
+  --text:   #ececec;   /* body (Power Crusher --ink-soft) */
+  --muted:  #8f8f8f;   /* Power Crusher --ink-faint */
+  --line:   #242424;   /* decorative dividers only */
+  --edge:   #6a6a6a;   /* control boundaries: >=3:1 on every surface (WCAG 1.4.11) */
+  --brand:  #00d4ff;   /* wordmark, links, focus */
+  --accent: #00e5ff;   /* neon cyan: the level number, the selected part */
+  --on-brand: #04202b;
+  --on-accent: #001a1f;
+  --power:  #ff3df0;   /* neon magenta: every exponent, everywhere */
 
   --radius: 10px;
   --tap: 36px;
@@ -109,7 +111,7 @@ a { color: var(--brand); }
   border: 1px solid var(--edge); border-radius: var(--radius);
   font: 700 .95rem var(--sans); cursor: pointer;
 }
-.btn:hover { background: var(--line); }
+.btn:hover { background: var(--hover); }
 
 /* ============================================================================
    PANELS AND SCREENS
@@ -161,6 +163,65 @@ a { color: var(--brand); }
 .stats th, .stats td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
 .stats .num { text-align: right; font-family: var(--mono); }
 .stats .sum th, .stats .sum td { font-weight: 800; color: var(--ink); border-bottom: 0; }
+
+/* ============================================================================
+   LEVEL 1  —  Powers of 10 (src/powers-of-ten.js)
+   Part pills copy Power Crusher's level pills (.level-nav / .level-btn).
+   ========================================================================== */
+.pot { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.pot > * { min-width: 0; }
+.part-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.part-btn {
+  appearance: none; min-height: var(--tap); padding: 2px 14px;
+  border-radius: 999px; border: 1px solid var(--edge);
+  background: var(--panel-2); color: var(--text);
+  font: 800 .9rem var(--sans); cursor: pointer;
+}
+.part-btn:hover { border-color: var(--accent); color: var(--ink); }
+.part-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+.pot-part { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.pot-part > * { min-width: 0; }
+.pot-window {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 92px; padding: 14px 16px;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.pot-standard {
+  font: 400 clamp(1rem, 4.4vw, 2rem) var(--mono);
+  color: var(--ink); text-align: center; white-space: nowrap;
+}
+.pot-exp-row { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.pot-exp {
+  font-size: clamp(2rem, 9vw, 4.2rem); font-weight: 900; line-height: 1;
+  color: var(--ink); white-space: nowrap; text-align: center;
+}
+.pot-sup {
+  font-size: .55em; vertical-align: baseline; position: relative; top: -.8em;
+  margin-left: .04em; color: var(--power);
+}
+.pot-coef { display: inline-block; min-width: 1.1em; text-align: right; }
+.pot-exp .pot-dot { margin: 0 .18em; }
+
+.pot-stepper { display: flex; flex-direction: column; gap: 8px; }
+.pot-step {
+  width: 52px; min-height: var(--tap); border: 0; border-radius: var(--radius);
+  background: var(--accent); color: var(--on-accent);
+  font: 400 1.2rem/1 var(--sans); cursor: pointer;
+}
+.pot-step:hover:not(:disabled) { filter: brightness(1.15); }
+.pot-step:disabled { background: var(--panel); color: var(--muted); border: 1px solid var(--line); cursor: not-allowed; }
+
+.pot-expanded {
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: clamp(1.4rem, 6vw, 2.4rem); color: var(--ink);
+}
+.pot-factors { display: flex; flex-wrap: nowrap; justify-content: center; align-items: baseline; white-space: nowrap; }
+.pot-factor { white-space: nowrap; }
+.pot-dot { margin: 0 .3em; color: var(--text); }
+.pot-frac { display: inline-flex; flex-direction: column; align-items: center; }
+.pot-num { padding-bottom: .15em; }
+.pot-den { width: 100%; border-top: .07em solid currentColor; padding-top: .15em; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
