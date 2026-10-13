@@ -529,8 +529,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
     <section id="play" aria-labelledby="play-h">
       <h2 id="play-h">Explore it here</h2>
       <p class="play-lead">
-        Level 1, Powers of 10, is ready to explore. The other five levels are open too, and
-        each says it is still being designed. Everything works from the keyboard, and
+        Level 1, Powers of 10, and Level 2, Scientific Notation, are ready to explore. The
+        other four levels are open too, and each says it is still being designed. Everything works from the keyboard, and
         progress is saved in this browser.
       </p>
       <!-- PLAY:START -->
@@ -565,7 +565,7 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
           The home screen lists six levels, from what a power of 10 does to a number through
           converting, comparing, computing and choosing a scale. None is locked and none is
           a prerequisite, so you can start anywhere. Each level holds explorations,
-          challenges and games. Today only Level 1 has an activity.
+          challenges and games. Today Levels 1 and 2 each have one exploration.
         </p>
 
         <h3>Level 1 exploration: Powers of 10</h3>
@@ -590,8 +590,31 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             <span class="mono">4&nbsp;&middot;&nbsp;10&nbsp;&middot;&nbsp;10</span>. At
             exponent 0 the expanded form shows <span class="mono">4&nbsp;&middot;&nbsp;1</span>.</li>
         </ul>
+
+        <h3>Level 2 exploration: Scientific Notation</h3>
         <p>
-          An exploration has no right or wrong answers, so nothing is scored. The
+          A number in standard form, such as <span class="mono">&minus;3,000</span>, sits
+          next to a scientific-notation version of it,
+          <span class="mono">&minus;3&nbsp;&middot;&nbsp;10&#8304;</span>, with a
+          <span class="mono">&ne;</span> sign between them. Set the exponent with the up
+          and down buttons until the sign turns to <span class="mono">=</span>.
+        </p>
+        <ul>
+          <li><strong>The top window</strong> shows what your scientific notation equals
+            right now, in standard form, so you can compare it with the number you are
+            trying to match.</li>
+          <li><strong>The bottom window</strong> says <em>Warmer!</em> as the exponent gets
+            closer, <em>Colder!</em> as it moves away and <em>You found it!</em> when it is
+            right.</li>
+          <li><strong>Submit</strong> rings a bell and flashes green when the sign is
+            <span class="mono">=</span>, and buzzes when it is not, so you can try again.
+            Holding a key or clicking quickly will not repeat the sound.</li>
+          <li><strong>New problem</strong> moves on whenever you like, solved or not. The
+            exponent starts at 0 for every problem, so a few problems are solved before you
+            press anything. Ask yourself why.</li>
+        </ul>
+        <p>
+          Explorations are not scored. The
           <strong>Progress</strong> button keeps right and wrong totals for challenges,
           once they are built.
         </p>
@@ -615,6 +638,9 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             <span class="mono">10&#8315;&sup2;</span> is 1 over
             <span class="mono">10&nbsp;&middot;&nbsp;10</span>, which is
             <span class="mono">0.01</span>, still greater than zero.</li>
+          <li><strong>Converting to scientific notation is finding the exponent.</strong> In
+            Level 2 the number in front is given, and the exponent is how many places the
+            decimal point moves: positive for large numbers, negative for small ones.</li>
           <li><strong>The number in front scales the result.</strong> In Part 2 the same power
             of 10 multiplies 4, or &minus;7, and the sign of the result comes from that
             number, not from the exponent.</li>
@@ -633,6 +659,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             time and watch the expanded form turn from a row of tens into a fraction.</li>
           <li><strong>In Part 2, try a negative number in front with a negative
             exponent.</strong> Compare the sign of the result with the sign of each part.</li>
+          <li><strong>In Level 2, predict the exponent before you press.</strong> Count the
+            places, set your answer, and use Warmer and Colder to check it, not to find it.</li>
           <li><strong>Send a direct link.</strong> Choose <strong>Open full screen</strong>
             and go to a level or activity: its address in the browser&rsquo;s address bar
             opens straight to it, so a class can start in the same place.</li>
@@ -650,9 +678,16 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
       <div class="prose">
         <h3>What it doesn&rsquo;t cover yet</h3>
         <ul>
-          <li><strong>One activity so far.</strong> Level 1 has its exploration. Its
-            challenges and games, and every activity in Levels 2 to 6, are still being
-            designed. Those levels open to a page that says so.</li>
+          <li><strong>Two activities so far.</strong> Level 1 and Level 2 each have one
+            exploration, and Level 2 has only its Part 1. Their challenges and games, and
+            every activity in Levels 3 to 6, are still being designed. Those levels open to
+            a page that says so.</li>
+          <li><strong>Level 2 can be solved without thinking.</strong> Warmer and Colder
+            point the way, so pressing until the sign turns to
+            <span class="mono">=</span> always works. The exploration teaches only if you
+            compare the windows or predict first.</li>
+          <li><strong>Level 2 uses sound.</strong> A wrong Submit shows nothing on screen,
+            only a buzzer, and there is no mute control yet.</li>
           <li><strong>Whole numbers only.</strong> The exponent runs from &minus;12 to 12 and
             the number in front is a whole number from &minus;9 to 9, so
             <span class="mono">4.5&nbsp;&middot;&nbsp;10&sup3;</span> is not shown.</li>
@@ -669,7 +704,7 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
         <!-- A11Y:START -->
 <h3>Accessibility, honestly</h3>
 <p>The page around this app meets <strong>WCAG 2.1 AA</strong>: a skip link as the first focusable element, a "skip past the interactive app" link before the frame so keyboard users are never trapped inside it, verified colour contrast on every token pair, visible focus rings, 44&nbsp;px touch targets, and full <code>prefers-reduced-motion</code> support.</p>
-<p>The app itself is an existing project embedded here, and it does not meet that bar in full. Specifically: the level list, level pages and the Progress table are plain links, buttons and a native dialog, with focus moved to each new screen’s heading. In the Powers of 10 exploration every control is a real button with a spoken label (“Increase the exponent”), each change is announced through a live region (“4 times 10 to the power negative 2, which is 0.04”), a button at the end of its range is disabled, and nothing is timed or animated. Automated checks (axe) found no problems on desktop or phone widths, and the whole app was walked from the keyboard. The gap: it has not yet been tested with a real screen reader, so how NVDA, JAWS or VoiceOver read the stacked fractions and long decimals is unverified.</p>
+<p>The app itself is an existing project embedded here, and it does not meet that bar in full. Specifically: the level list, level pages and the Progress table are plain links, buttons and a native dialog, with focus moved to each new screen’s heading. In the Powers of 10 exploration every control is a real button with a spoken label (“Increase the exponent”), each change is announced through a live region (“4 times 10 to the power negative 2, which is 0.04”), a button at the end of its range is disabled, and nothing is timed or animated. The Level 2 Scientific Notation exploration works the same way, and it adds sound: Submit plays a bell when the answer is right and a buzzer when it is not. A right answer also flashes the problem green for about a second, which becomes a steady green border with reduced motion on, and both results are announced. A wrong answer has no visual signal, only the buzzer and the announcement, and there is no mute control. Automated checks (axe) found no problems on desktop or phone widths, and Level 1 was walked from the keyboard. The gap: it has not yet been tested with a real screen reader, so how NVDA, JAWS or VoiceOver read the stacked fractions and long decimals is unverified.</p>
 <p class="muted">This app saves progress in your browser's local storage (<code>mathlab.scientific-notation-explorer.progress</code>). Nothing is sent anywhere. Safari clears script-written storage after about a week without a visit, so saved scores can disappear there — that is a browser policy, not a bug I can fix.</p>
 <!-- A11Y:END -->
       </div>

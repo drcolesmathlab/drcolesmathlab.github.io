@@ -397,8 +397,10 @@ Then, manually:
   fills its FONTS block) from a sibling
   checkout at `../scientific_notation_explorer`. The file list comes from its
   `index.html`, so upstream's `design/` notes and tests never ship. Published on
-  2026-10-13 at Dr. Cole's direction with one activity, Level 1's *Powers of 10*
-  exploration; Levels 2 to 6 are open and say they are being designed. Levels are added
+  2026-10-13 at Dr. Cole's direction with Level 1's *Powers of 10* exploration. Level 2's
+  *Scientific Notation* exploration (Part 1) was added the same day; it plays a bell and a
+  buzzer made with Web Audio, so there are no sound files to vendor. Levels 3 to 6 are
+  open and say they are being designed. Levels are added
   upstream as Dr. Cole designs them: after each one merges, re-run the script and the
   generator, and update the page's *How it works* and *Honest limits*. Its OG card was
   rendered with Playwright's Chromium and the repo's own Nunito

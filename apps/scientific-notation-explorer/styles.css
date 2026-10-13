@@ -56,6 +56,7 @@
   --on-brand: #04202b;
   --on-accent: #001a1f;
   --power:  #ff3df0;   /* neon magenta: every exponent, everywhere */
+  --correct:#39ff6a;   /* neon green: the flash on a correct Submit (Level 2) */
 
   --radius: 10px;
   --tap: 36px;
@@ -222,6 +223,26 @@ a { color: var(--brand); }
 .pot-frac { display: inline-flex; flex-direction: column; align-items: center; }
 .pot-num { padding-bottom: .15em; }
 .pot-den { width: 100%; border-top: .07em solid currentColor; padding-top: .15em; }
+
+/* ============================================================================
+   LEVEL 2  —  Scientific Notation (src/scientific-notation.js)
+   Reuses Level 1's windows, exponent and stepper. The problem row wraps on a narrow
+   screen: the number and its sign, then c · 10^n with its arrows.
+   ========================================================================== */
+.sn-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 18px; }
+.sn-left, .sn-right { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.sn-sign { font: 900 clamp(2rem, 7vw, 3.4rem)/1 var(--sans); color: var(--ink); min-width: .7em; text-align: center; }
+.sn-exp { font-size: clamp(2rem, 7vw, 3.4rem); }
+.sn-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.sn-submit { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.sn-submit:hover { background: var(--accent); filter: brightness(1.15); }
+.sn-feedback { flex-direction: column; gap: 4px; text-align: center; }
+.sn-feedback p { margin: 0; }
+.sn-instruction { color: var(--text); }
+.sn-message { min-height: 1.5em; color: var(--ink); font-weight: 900; font-size: 1.4rem; }
+.sn-problem { transition: border-color .15s; }
+.sn-problem.is-correct { border-color: var(--correct); box-shadow: 0 0 0 2px var(--correct); animation: sn-flash .5s ease-in-out 2; }
+@keyframes sn-flash { 50% { border-color: var(--line); box-shadow: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

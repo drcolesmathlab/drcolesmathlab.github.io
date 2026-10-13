@@ -519,9 +519,10 @@ module.exports = {
       subtitle: 'From powers of 10 to choosing a scale',
       blurb:
         'See what a power of 10 does to a number: as a number, as an exponent and ' +
-        'written out as tens. Level 1 is ready now; five more levels are on the way.',
-      // Published 2026-10-13 at Dr. Cole's direction, with Level 1's one exploration as
-      // the only activity. Levels 2 to 6 are open and say they are being designed.
+        'written out as tens, then find the exponent that turns a number into scientific ' +
+        'notation. Levels 1 and 2 are ready now; four more levels are on the way.',
+      // Published 2026-10-13 at Dr. Cole's direction with Level 1's exploration. Level 2's
+      // exploration (Part 1) added the same day. Levels 3 to 6 say they are being designed.
       published: true,
 
       category: 'algebra',
@@ -543,6 +544,7 @@ module.exports = {
 
       // Tested 2026-10-13: axe (WCAG 2.1 A/AA + best practice) on home, a level, the
       // Powers of 10 exploration and an empty level, at 1280 and 375 px; keyboard-only walk.
+      // Level 2's Scientific Notation exploration: axe (WCAG 2.1 A/AA) at 1280 and 375 px.
       a11y: {
         keyboard: 'full',
         liveRegion: true,
@@ -552,11 +554,16 @@ module.exports = {
           'Powers of 10 exploration every control is a real button with a spoken label ' +
           '(“Increase the exponent”), each change is announced through a live region ' +
           '(“4 times 10 to the power negative 2, which is 0.04”), a button at the end of its ' +
-          'range is disabled, and nothing is timed or animated. Automated checks (axe) ' +
-          'found no problems on desktop or phone widths, and the whole app was walked ' +
-          'from the keyboard. The gap: it has not yet been tested with a real screen ' +
-          'reader, so how NVDA, JAWS or VoiceOver read the stacked fractions and long ' +
-          'decimals is unverified.',
+          'range is disabled, and nothing is timed or animated. The Level 2 Scientific ' +
+          'Notation exploration works the same way, and it adds sound: Submit plays a ' +
+          'bell when the answer is right and a buzzer when it is not. A right answer also ' +
+          'flashes the problem green for about a second, which becomes a steady green ' +
+          'border with reduced motion on, and both results are announced. A wrong answer ' +
+          'has no visual signal, only the buzzer and the announcement, and there is no ' +
+          'mute control. Automated checks (axe) found no problems on desktop or phone ' +
+          'widths, and Level 1 was walked from the keyboard. The gap: it has not yet been ' +
+          'tested with a real screen reader, so how NVDA, JAWS or VoiceOver read the ' +
+          'stacked fractions and long decimals is unverified.',
       },
 
       og: {
