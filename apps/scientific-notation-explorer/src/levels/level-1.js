@@ -3,9 +3,9 @@
  * Design: design/levels/level-1-powers-of-10.md
  *
  * The one exploration here, "Powers of 10", was built from Doc's spec in the build
- * session of 2026-10-12. That spec is not yet in the design file; Doc carries it back to
- * the Claude Project. Add further activities as the design is settled, and build only
- * what the design tags Decided. See src/levels.js for the activity contract.
+ * session of 2026-10-12, and recorded as Decided in the design file on 2026-10-13. Add
+ * further activities as the design is settled, and build only what the design tags
+ * Decided. See src/levels.js for the activity contract.
  */
 SNE.Levels.register({
   id: 'powers-of-10',

@@ -1,8 +1,8 @@
 /*
  * powers-of-ten.js — Level 1's exploration: a power of 10 shown three ways.
  *
- * Built from Doc's spec, given in the build session on 2026-10-12 (not yet in
- * design/levels/level-1-powers-of-10.md; Doc carries it back to the Claude Project).
+ * Built from Doc's spec, given in the build session on 2026-10-12, and recorded as
+ * Decided in design/levels/level-1-powers-of-10.md on 2026-10-13.
  *
  * Two parts, chosen with pill buttons the way Power Crusher chooses a level:
  *   Part 1  10^n, exponent n an integer from -12 to 12 (starts at 1)
@@ -15,8 +15,8 @@
  *   expanded    10^0 is 1, 10^1 is 10, 10^n is n tens joined by dots, and a negative
  *               exponent is a stacked fraction: 1 (or the coefficient) over |n| tens,
  *               with a horizontal bar and never a slash. Multiplication is always a dot.
- *               Part 2 with n = 0 shows the coefficient times 1 (an assumption, flagged
- *               to Doc), and a negative coefficient keeps its sign on the numerator.
+ *               Part 2 with n = 0 shows the coefficient times 1 (confirmed by Doc,
+ *               2026-10-13), and a negative coefficient keeps its sign on the numerator.
  *
  * An exploration has no right or wrong, so nothing is recorded (api.record is not called).
  * Pure functions are exported on SNE.PowersOfTen for the tests; mount() is the only
