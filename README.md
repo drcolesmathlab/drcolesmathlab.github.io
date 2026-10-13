@@ -42,7 +42,7 @@ tools/vendor-balancing-act.js vendors Balancing Act (copies six files BY NAME â€
 tools/build-real-number-monsters.js  builds Real Number Monsters (Vite â†’ one classic script)
 tools/vendor-squares-cubes.js vendors Squares & Cubes Explorer (lifts its inline <style> into styles.css)
 tools/vendor-power-crusher.js vendors Power Crusher (byte-for-byte; file list read from its index.html)
-tools/vendor-scientific-notation-explorer.js  vendors Scientific Notation Explorer (same pattern; unpublished)
+tools/vendor-scientific-notation-explorer.js  vendors Scientific Notation Explorer (same pattern)
 tools/check-external.js     the no-external-origins gate
 tools/og-cards.html         card templates
 tools/build-og-cards.js     screenshots them into assets/
@@ -389,18 +389,18 @@ Then, manually:
   notes never ship. All seven modes are built, and Mixed Practice has its step workspace (checking that
   each step is a valid property move is still to come); after each new phase merges upstream, re-run the script and the generator, and
   update the page's *Honest limits*.
-- **Scientific Notation Explorer is staged, not published.** Upstream
+- **Scientific Notation Explorer is vendored, not built, and is still growing.** Upstream
   (`drcolesmathlab/scientific_notation_explorer`) follows Power Crusher's pattern: classic
   scripts, an empty FONTS block, and one storage key,
   `mathlab.scientific-notation-explorer.progress`.
   `tools/vendor-scientific-notation-explorer.js` copies it unchanged (the generator then
   fills its FONTS block) from a sibling
   checkout at `../scientific_notation_explorer`. The file list comes from its
-  `index.html`, so upstream's `design/` notes and tests never ship. It is
-  `published: false`, so it has no `<slug>.html` page (the generator refuses a page for
-  an unpublished app) and no OG card yet. The payload is still public at
-  `apps/scientific-notation-explorer/index.html`, unlinked, like any file in this repo.
-  Upstream has the shell and six level stubs. Levels are added as Dr. Cole designs them;
-  re-run the script after each one. To publish: write the page from `power-crusher.html`,
-  render its OG card, set the real `dateAdded`, rewrite its `a11y` notes from testing,
-  and set `published: true`.
+  `index.html`, so upstream's `design/` notes and tests never ship. Published on
+  2026-10-13 at Dr. Cole's direction with one activity, Level 1's *Powers of 10*
+  exploration; Levels 2 to 6 are open and say they are being designed. Levels are added
+  upstream as Dr. Cole designs them: after each one merges, re-run the script and the
+  generator, and update the page's *How it works* and *Honest limits*. Its OG card was
+  rendered with Playwright's Chromium and the repo's own Nunito
+  (`assets/fonts/nunito-variable.woff2`) injected, because `tools/build-og-cards.js`
+  re-renders every card and a Linux box would put the others in a fallback font.

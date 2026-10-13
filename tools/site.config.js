@@ -518,15 +518,14 @@ module.exports = {
       title: 'Scientific Notation Explorer',
       subtitle: 'From powers of 10 to choosing a scale',
       blurb:
-        'Six open levels, from what a power of 10 does to a number through converting, ' +
-        'comparing, computing and choosing a scale. Start anywhere: nothing is locked.',
-      // Staged, not shipped: the shell and six level stubs exist, but no level is
-      // designed yet. Publishing needs a <slug>.html page and an OG card; see README.
-      published: false,
+        'See what a power of 10 does to a number: as a number, as an exponent and ' +
+        'written out as tens. Level 1 is ready now; five more levels are on the way.',
+      // Published 2026-10-13 at Dr. Cole's direction, with Level 1's one exploration as
+      // the only activity. Levels 2 to 6 are open and say they are being designed.
+      published: true,
 
       category: 'algebra',
-      // Set to the real date when it is published; "Newest first" sorts on it.
-      dateAdded: '2026-10-12',
+      dateAdded: '2026-10-13',
       // Audience is 8th grade (upstream design/00-overview.md). Standards codes are not
       // cited anywhere until Dr. Cole verifies them against PA Core.
       grade: 'Grade 8',
@@ -537,32 +536,38 @@ module.exports = {
       // added upstream as they are designed, so re-run the script after each one.
       payload: 'apps/scientific-notation-explorer/index.html',
       // Same reasoning as Power Crusher: the app scrolls inside its own document.
-      // Revisit once the first level's activities exist.
       frame: { height: 'clamp(640px, 84vh, 960px)' },
 
       storageKeys: ['mathlab.scientific-notation-explorer.progress'],
       thirdParty: [],
 
-      // Written for the shell only. Rewrite when the first activities are built and tested.
+      // Tested 2026-10-13: axe (WCAG 2.1 A/AA + best practice) on home, a level, the
+      // Powers of 10 exploration and an empty level, at 1280 and 375 px; keyboard-only walk.
       a11y: {
         keyboard: 'full',
         liveRegion: true,
         notes:
-          'the shell — level list, level pages and the Progress table — is plain links, ' +
-          'buttons and a native dialog, and works from the keyboard, with focus moved to ' +
-          'each new screen’s heading. No activities are built yet, so nothing that a ' +
-          'student actually answers has been tested.',
+          'the level list, level pages and the Progress table are plain links, buttons ' +
+          'and a native dialog, with focus moved to each new screen’s heading. In the ' +
+          'Powers of 10 exploration every control is a real button with a spoken label ' +
+          '(“Increase the exponent”), each change is announced through a live region ' +
+          '(“4 times 10 to the power negative 2, which is 0.04”), a button at the end of its ' +
+          'range is disabled, and nothing is timed or animated. Automated checks (axe) ' +
+          'found no problems on desktop or phone widths, and the whole app was walked ' +
+          'from the keyboard. The gap: it has not yet been tested with a real screen ' +
+          'reader, so how NVDA, JAWS or VoiceOver read the stacked fractions and long ' +
+          'decimals is unverified.',
       },
 
       og: {
         title: "Scientific Notation Explorer — Dr. Cole's Math Lab",
         description:
-          'Explore scientific notation in six open levels, from powers of 10 to choosing ' +
-          'a scale. Runs in the browser, no sign-up.',
+          'See what a power of 10 does to a number, as a number, an exponent and repeated ' +
+          'factors of 10. Runs in the browser, no sign-up.',
       },
 
       sections: [
-        { id: 'play',        label: 'Play',         heading: 'Try it here' },
+        { id: 'play',        label: 'Explore',      heading: 'Explore it here' },
         { id: 'how-to-play', label: 'How it works', heading: 'How it works' },
         { id: 'skills',      label: 'Skills',       heading: 'What it teaches' },
         { id: 'tips',        label: 'Tips',         heading: 'Tips' },
