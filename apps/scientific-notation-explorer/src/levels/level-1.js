@@ -1,9 +1,11 @@
 /*
  * Level 1: Effects of Powers of 10 on Products
- * Design: design/levels/level-1-powers-of-10.md  (status: not yet designed)
+ * Design: design/levels/level-1-powers-of-10.md
  *
- * Add activities to the arrays below as the design is settled. Build only what the
- * design file tags Decided. See src/levels.js for the activity contract.
+ * The one exploration here, "Powers of 10", was built from Doc's spec in the build
+ * session of 2026-10-12. That spec is not yet in the design file; Doc carries it back to
+ * the Claude Project. Add further activities as the design is settled, and build only
+ * what the design tags Decided. See src/levels.js for the activity contract.
  */
 SNE.Levels.register({
   id: 'powers-of-10',
@@ -12,7 +14,14 @@ SNE.Levels.register({
   skill: 'See what multiplying a number by different powers of 10 does to it.',
   design: 'design/levels/level-1-powers-of-10.md',
   activities: {
-    explorations: [],
+    explorations: [
+      {
+        id: 'powers-of-ten',
+        title: 'Powers of 10',
+        summary: 'See a power of 10 as a number, as an exponent and as repeated factors of 10. Part 2 adds a coefficient.',
+        mount: SNE.PowersOfTen.mount,
+      },
+    ],
     challenges: [],
     games: [],
   },
