@@ -27,6 +27,8 @@
  *   mount() builds the activity inside `el`. `api` gives it:
  *     api.record(right)   count one checked answer (true = right, false = wrong)
  *     api.announce(text)  read a message to screen readers (polite live region)
+ *     api.soundOn()       true unless the student turned sound off in Settings; ask at
+ *                         the moment a sound would play, so a change applies at once
  *     api.level           the level definition, read-only
  *   If mount returns a function, it is called when the student leaves the activity.
  *

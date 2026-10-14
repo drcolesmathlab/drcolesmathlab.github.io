@@ -57,6 +57,7 @@
   --on-accent: #001a1f;
   --power:  #ff3df0;   /* neon magenta: every exponent, everywhere */
   --correct:#39ff6a;   /* neon green: the flash on a correct Submit (Level 2) */
+  --wrong:  #ff3b4f;   /* neon red: the flash on a wrong Submit (Level 2) */
 
   --radius: 10px;
   --tap: 36px;
@@ -165,6 +166,12 @@ a { color: var(--brand); }
 .stats .num { text-align: right; font-family: var(--mono); }
 .stats .sum th, .stats .sum td { font-weight: 800; color: var(--ink); border-bottom: 0; }
 
+/* Settings: copied from Power Crusher's .toggles / .toggle / .hint. */
+.toggles { display: grid; gap: 4px; margin-top: 10px; }
+.toggle { display: flex; align-items: center; gap: 10px; min-height: var(--tap); font-weight: 800; color: var(--ink); cursor: pointer; }
+.toggle input { width: 22px; height: 22px; accent-color: var(--accent); }
+.hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+
 /* ============================================================================
    LEVEL 1  —  Powers of 10 (src/powers-of-ten.js)
    Part pills copy Power Crusher's level pills (.level-nav / .level-btn).
@@ -241,7 +248,9 @@ a { color: var(--brand); }
 .sn-instruction { color: var(--text); }
 .sn-message { min-height: 1.5em; color: var(--ink); font-weight: 900; font-size: 1.4rem; }
 .sn-problem { transition: border-color .15s; }
-.sn-problem.is-correct { border-color: var(--correct); box-shadow: 0 0 0 2px var(--correct); animation: sn-flash .5s ease-in-out 2; }
+.sn-problem.is-correct { --flash: var(--correct); }
+.sn-problem.is-wrong { --flash: var(--wrong); }
+.sn-problem.is-correct, .sn-problem.is-wrong { border-color: var(--flash); box-shadow: 0 0 0 2px var(--flash); animation: sn-flash .5s ease-in-out 2; }
 @keyframes sn-flash { 50% { border-color: var(--line); box-shadow: none; } }
 
 @media (prefers-reduced-motion: reduce) {

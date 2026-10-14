@@ -6,7 +6,7 @@
  * Upstream is drcolesmathlab/scientific_notation_explorer, built for this site the same
  * way as Power Crusher: classic <script> IIFEs (no ES modules, no build step), no CDN, no
  * fetch, an empty FONTS block for the generator to fill, and localStorage only under
- * mathlab.scientific-notation-explorer.progress. Nothing is patched; the copy is byte for
+ * mathlab.scientific-notation-explorer.progress and .settings. Nothing is patched; the copy is byte for
  * byte, and this script's job is to copy the right files and prove the rules still hold.
  *
  * ── WHY THE FILE LIST COMES FROM index.html ───────────────────────────────────
@@ -35,7 +35,7 @@ const OUT = path.join(REPO, 'apps', 'scientific-notation-explorer');
 const SRC = path.resolve(process.argv[2] || path.join(REPO, '..', 'scientific_notation_explorer'));
 
 // The only key the app may write (upstream src/store.js). Also listed in site.config.js.
-const STORAGE_KEYS = ['mathlab.scientific-notation-explorer.progress'];
+const STORAGE_KEYS = ['mathlab.scientific-notation-explorer.progress', 'mathlab.scientific-notation-explorer.settings'];
 
 let failures = 0;
 function must(cond, msg) {

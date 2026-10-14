@@ -12,10 +12,11 @@
  *             and down buttons on the exponent. n starts at 0 for every problem.
  *   feedback  the instruction, always shown, and under it "Warmer!", "Colder!" or
  *             "You found it!" after each click.
- * Submit rings a bell and flashes the problem window green when the sign is =, and
- * buzzes when it is ≠. One press makes one sound: a held key never repeats it, and
- * presses while a sound is still playing make no sound (they still flash and announce).
- * New problem moves on at any time.
+ * Submit and New problem sit under the feedback window. Submit rings a bell and flashes
+ * the problem window green when the sign is =, and buzzes and flashes it red when it is ≠.
+ * One press makes one sound: a held key never repeats it, and presses while a sound is
+ * still playing make no sound (they still flash and announce). Sound follows the
+ * Settings toggle (api.soundOn). New problem moves on at any time.
  *
  * An exploration records nothing (api.record is not called).
  * Pure functions are exported on SNE.SciNotation for the tests; mount() and the sounds
@@ -149,7 +150,7 @@
   }
 
   /* ---- Part 1 ------------------------------------------------------------------- */
-  function makePart(announce, next) {
+  function makePart(announce, soundOn, next) {
     var prob = next();
     var n = 0;
     var flashTimer = null;
@@ -201,8 +202,8 @@
 
     root.appendChild(top);
     root.appendChild(mid);
-    root.appendChild(actions);
     root.appendChild(bottom);
+    root.appendChild(actions);
 
     function render() {
       currentEl.textContent = P.standardForm(prob.c, n);
@@ -232,13 +233,13 @@
     function unflash() {
       clearTimeout(flashTimer);
       flashTimer = null;
-      mid.classList.remove('is-correct');
+      mid.classList.remove('is-correct', 'is-wrong');
     }
 
-    function flash() {
+    function flash(right) {
       unflash();
-      void mid.offsetWidth; // restart the animation on a second correct press
-      mid.classList.add('is-correct');
+      void mid.offsetWidth; // restart the animation on a second press
+      mid.classList.add(right ? 'is-correct' : 'is-wrong');
       flashTimer = setTimeout(unflash, FLASH_MS);
     }
 
@@ -250,11 +251,12 @@
     submit.addEventListener('keydown', function (e) { if (e.repeat) e.preventDefault(); });
     submit.addEventListener('click', function () {
       if (n === prob.k) {
-        if (allow('bell')) play('bell');
-        flash();
+        if (soundOn() && allow('bell')) play('bell');
+        flash(true);
         announce('Correct!');
       } else {
-        if (allow('buzz')) play('buzz');
+        if (soundOn() && allow('buzz')) play('buzz');
+        flash(false);
         announce('Not equal yet. Try again.');
       }
     });
@@ -287,7 +289,8 @@
 
     var next = makeDeck();
     var parts = PARTS.map(function (p) {
-      var made = makePart(api.announce, next);
+      var soundOn = typeof api.soundOn === 'function' ? api.soundOn : function () { return true; };
+      var made = makePart(api.announce, soundOn, next);
       var b = el('button', 'part-btn', p.label);
       b.type = 'button';
       b.setAttribute('aria-pressed', 'true');

@@ -391,15 +391,17 @@ Then, manually:
   update the page's *Honest limits*.
 - **Scientific Notation Explorer is vendored, not built, and is still growing.** Upstream
   (`drcolesmathlab/scientific_notation_explorer`) follows Power Crusher's pattern: classic
-  scripts, an empty FONTS block, and one storage key,
-  `mathlab.scientific-notation-explorer.progress`.
+  scripts, an empty FONTS block, and two storage keys,
+  `mathlab.scientific-notation-explorer.progress` and `.settings` (the sound on/off
+  choice, added 2026-10-14).
   `tools/vendor-scientific-notation-explorer.js` copies it unchanged (the generator then
   fills its FONTS block) from a sibling
   checkout at `../scientific_notation_explorer`. The file list comes from its
   `index.html`, so upstream's `design/` notes and tests never ship. Published on
   2026-10-13 at Dr. Cole's direction with Level 1's *Powers of 10* exploration. Level 2's
   *Scientific Notation* exploration (Part 1) was added the same day; it plays a bell and a
-  buzzer made with Web Audio, so there are no sound files to vendor. Levels 3 to 6 are
+  buzzer made with Web Audio, so there are no sound files to vendor. A wrong Submit also
+  flashes red, and Settings has a Sound toggle copied from Power Crusher's (2026-10-14). Levels 3 to 6 are
   open and say they are being designed. Levels are added
   upstream as Dr. Cole designs them: after each one merges, re-run the script and the
   generator, and update the page's *How it works* and *Honest limits*. Its OG card was

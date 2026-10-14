@@ -18,6 +18,7 @@
       <h1>Scientific Notation Explorer</h1>
     </div>
     <button type="button" class="btn" id="progressBtn" aria-haspopup="dialog">Progress</button>
+    <button type="button" class="btn" id="settingsBtn" aria-haspopup="dialog">Settings</button>
   </header>
 
   <main id="main" tabindex="-1">
@@ -63,6 +64,18 @@
     </div>
     <p class="lede tight">Every answer you check, counted for each level. It is saved in this browser only.</p>
     <div class="table-wrap" id="progressBody" tabindex="0" role="region" aria-label="Progress table"></div>
+  </dialog>
+
+  <!-- Matches Power Crusher's Settings dialog. Saved in this browser (src/store.js). -->
+  <dialog class="panel dlg" id="settingsDlg" aria-labelledby="settingsH">
+    <div class="dlg-head">
+      <h2 id="settingsH">Settings</h2>
+      <button type="button" class="btn" data-close>Close</button>
+    </div>
+    <div class="toggles">
+      <label class="toggle"><input type="checkbox" id="setSound"> <span>Sound</span></label>
+    </div>
+    <p class="hint">Results are always shown on screen too, so sound is never the only signal.</p>
   </dialog>
 </div>
 

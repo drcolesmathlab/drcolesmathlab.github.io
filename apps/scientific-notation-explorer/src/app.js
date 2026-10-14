@@ -104,6 +104,7 @@
       level: level,
       record: function (right) { return store.record(level.id, act.id, !!right); },
       announce: announce,
+      soundOn: function () { return store.settings().sound; },
     });
     var out = act.mount(stage, api);
     cleanup = typeof out === 'function' ? out : null;
@@ -190,6 +191,11 @@
       renderProgress();
       $('progressDlg').showModal();
     });
+    $('settingsBtn').addEventListener('click', function () {
+      $('setSound').checked = store.settings().sound;
+      $('settingsDlg').showModal();
+    });
+    $('setSound').addEventListener('change', function (e) { store.setting('sound', e.target.checked); });
     document.querySelectorAll('dialog [data-close]').forEach(function (b) {
       b.addEventListener('click', function () { b.closest('dialog').close(); });
     });
