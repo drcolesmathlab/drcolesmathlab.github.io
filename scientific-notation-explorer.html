@@ -607,8 +607,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             closer, <em>Colder!</em> as it moves away and <em>You found it!</em> when it is
             right.</li>
           <li><strong>Submit</strong> rings a bell and flashes green when the sign is
-            <span class="mono">=</span>, and buzzes when it is not, so you can try again.
-            Holding a key or clicking quickly will not repeat the sound.</li>
+            <span class="mono">=</span>, and buzzes and flashes red when it is not, so you
+            can try again. Holding a key or clicking quickly will not repeat the sound.</li>
           <li><strong>New problem</strong> moves on whenever you like, solved or not. The
             exponent starts at 0 for every problem, so a few problems are solved before you
             press anything. Ask yourself why.</li>
@@ -616,7 +616,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
         <p>
           Explorations are not scored. The
           <strong>Progress</strong> button keeps right and wrong totals for challenges,
-          once they are built.
+          once they are built. <strong>Settings</strong> turns sound on or off; the choice
+          is remembered in this browser.
         </p>
       </div>
     </section>
@@ -686,8 +687,6 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             point the way, so pressing until the sign turns to
             <span class="mono">=</span> always works. The exploration teaches only if you
             compare the windows or predict first.</li>
-          <li><strong>Level 2 uses sound.</strong> A wrong Submit shows nothing on screen,
-            only a buzzer, and there is no mute control yet.</li>
           <li><strong>Whole numbers only.</strong> The exponent runs from &minus;12 to 12 and
             the number in front is a whole number from &minus;9 to 9, so
             <span class="mono">4.5&nbsp;&middot;&nbsp;10&sup3;</span> is not shown.</li>
@@ -704,8 +703,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
         <!-- A11Y:START -->
 <h3>Accessibility, honestly</h3>
 <p>The page around this app meets <strong>WCAG 2.1 AA</strong>: a skip link as the first focusable element, a "skip past the interactive app" link before the frame so keyboard users are never trapped inside it, verified colour contrast on every token pair, visible focus rings, 44&nbsp;px touch targets, and full <code>prefers-reduced-motion</code> support.</p>
-<p>The app itself is an existing project embedded here, and it does not meet that bar in full. Specifically: the level list, level pages and the Progress table are plain links, buttons and a native dialog, with focus moved to each new screen’s heading. In the Powers of 10 exploration every control is a real button with a spoken label (“Increase the exponent”), each change is announced through a live region (“4 times 10 to the power negative 2, which is 0.04”), a button at the end of its range is disabled, and nothing is timed or animated. The Level 2 Scientific Notation exploration works the same way, and it adds sound: Submit plays a bell when the answer is right and a buzzer when it is not. A right answer also flashes the problem green for about a second, which becomes a steady green border with reduced motion on, and both results are announced. A wrong answer has no visual signal, only the buzzer and the announcement, and there is no mute control. Automated checks (axe) found no problems on desktop or phone widths, and Level 1 was walked from the keyboard. The gap: it has not yet been tested with a real screen reader, so how NVDA, JAWS or VoiceOver read the stacked fractions and long decimals is unverified.</p>
-<p class="muted">This app saves progress in your browser's local storage (<code>mathlab.scientific-notation-explorer.progress</code>). Nothing is sent anywhere. Safari clears script-written storage after about a week without a visit, so saved scores can disappear there — that is a browser policy, not a bug I can fix.</p>
+<p>The app itself is an existing project embedded here, and it does not meet that bar in full. Specifically: the level list, level pages and the Progress table are plain links, buttons and a native dialog, with focus moved to each new screen’s heading. In the Powers of 10 exploration every control is a real button with a spoken label (“Increase the exponent”), each change is announced through a live region (“4 times 10 to the power negative 2, which is 0.04”), a button at the end of its range is disabled, and nothing is timed or animated. The Level 2 Scientific Notation exploration works the same way, and it adds sound: Submit plays a bell when the answer is right and a buzzer when it is not. A right answer also flashes the problem green for about a second and a wrong one flashes it red, which becomes a steady border with reduced motion on, and both results are announced, so sound is never the only signal. Settings has a Sound toggle, on by default and remembered. Automated checks (axe) found no problems on desktop or phone widths, and Level 1 was walked from the keyboard. The gap: it has not yet been tested with a real screen reader, so how NVDA, JAWS or VoiceOver read the stacked fractions and long decimals is unverified.</p>
+<p class="muted">This app saves progress in your browser's local storage (<code>mathlab.scientific-notation-explorer.progress</code>, <code>mathlab.scientific-notation-explorer.settings</code>). Nothing is sent anywhere. Safari clears script-written storage after about a week without a visit, so saved scores can disappear there — that is a browser policy, not a bug I can fix.</p>
 <!-- A11Y:END -->
       </div>
     </section>

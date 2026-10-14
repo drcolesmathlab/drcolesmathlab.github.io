@@ -539,7 +539,7 @@ module.exports = {
       // Same reasoning as Power Crusher: the app scrolls inside its own document.
       frame: { height: 'clamp(640px, 84vh, 960px)' },
 
-      storageKeys: ['mathlab.scientific-notation-explorer.progress'],
+      storageKeys: ['mathlab.scientific-notation-explorer.progress', 'mathlab.scientific-notation-explorer.settings'],
       thirdParty: [],
 
       // Tested 2026-10-13: axe (WCAG 2.1 A/AA + best practice) on home, a level, the
@@ -557,10 +557,10 @@ module.exports = {
           'range is disabled, and nothing is timed or animated. The Level 2 Scientific ' +
           'Notation exploration works the same way, and it adds sound: Submit plays a ' +
           'bell when the answer is right and a buzzer when it is not. A right answer also ' +
-          'flashes the problem green for about a second, which becomes a steady green ' +
-          'border with reduced motion on, and both results are announced. A wrong answer ' +
-          'has no visual signal, only the buzzer and the announcement, and there is no ' +
-          'mute control. Automated checks (axe) found no problems on desktop or phone ' +
+          'flashes the problem green for about a second and a wrong one flashes it red, ' +
+          'which becomes a steady border with reduced motion on, and both results are ' +
+          'announced, so sound is never the only signal. Settings has a Sound toggle, on ' +
+          'by default and remembered. Automated checks (axe) found no problems on desktop or phone ' +
           'widths, and Level 1 was walked from the keyboard. The gap: it has not yet been ' +
           'tested with a real screen reader, so how NVDA, JAWS or VoiceOver read the ' +
           'stacked fractions and long decimals is unverified.',
