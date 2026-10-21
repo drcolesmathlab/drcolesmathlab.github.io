@@ -319,14 +319,14 @@ module.exports = {
           'of the apps here it comes closest. Every control is a real button with a spoken ' +
           'name, there is no timer, and each step is announced in words — what you did to which side, the ' +
           'new equation, and whether the beam is balanced or tipped, with the streak read ' +
-          'out at each new equation. The work log has a plain-text version for screen ' +
+          'out at each new equation. Struck-through cancellations are spoken too (“add 7, ' +
+          'cancelling negative 7”). The work log has a plain-text version for screen ' +
           'readers, the menu and WIPEOUT screens are proper dialogs that take focus, Enter ' +
           'presses whichever button you tabbed to, and the single-key shortcuts can be ' +
           'switched off from the menu. Faded text now meets AA contrast and the page ' +
           'scrolls instead of clipping at 200% zoom. The gaps: this was checked with ' +
           'automated tests and scripted browser runs, not yet with a screen reader in a ' +
-          'real lesson, so the wording may be wordier than it needs to be; the ' +
-          'struck-through cancellations in the work log are shown, not spoken; and the ' +
+          'real lesson, so the wording may be wordier than it needs to be; and the ' +
           'Show Property button’s tap area is about 37 px tall, short of 44.',
       },
 
