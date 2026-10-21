@@ -55,21 +55,44 @@
   function speakEq(cells) {
     return words(cells.slice().sort((a, b) => colOf(a) - colOf(b)).map(mathText).join(' '));
   }
-  function describeOp(cell) {
+  // A term as it stands on its own: "+ 3" is 3, "− 7" is negative 7.
+  function speakTerm(cell) {
+    return words(mathText(cell).trim().replace(/^\+\s*/, '').replace(/^−\s*/, '−'));
+  }
+  // What one side's operation did, including any strike-through game.js drew:
+  // an added term that wiped out its opposite (class "cancel" on the operation,
+  // and on that term in the row before), or a factor that cancelled a
+  // coefficient (struck digits inside the operation).
+  function describeOp(cell, before) {
     if (!cell || cell.classList.contains('dim')) return '';
     const t = cell.textContent.replace(/\s+/g, ' ').trim();
     if (t === '✎') return 'rewritten';
+    const side = cell.classList.contains('l') ? 'l' : 'r';
     let m = t.match(/^([+−]) ?\(?(−?)([\dx]+)\)?$/);
-    if (m) return (m[1] === '+' ? 'add ' : 'subtract ') + (m[2] ? 'negative ' : '') + m[3];
-    const f = cell.querySelector('.op > .frac > .fden');
-    if (f) return 'divide by ' + words(f.textContent.trim());
+    if (m) {
+      let d = (m[1] === '+' ? 'add ' : 'subtract ') + (m[2] ? 'negative ' : '') + m[3];
+      const gone = cell.classList.contains('cancel') &&
+        before.find(c => c.classList.contains('cancel') && c.classList.contains(side));
+      if (gone) d += ', cancelling ' + speakTerm(gone);
+      return d;
+    }
+    const struck = cell.querySelector('.cancel') ? ', cancelling the ' : '';
+    // A division is drawn as one fraction filling the whole operation; a
+    // multiplication "2(x/2)" can hold a fraction too, but inside its brackets.
+    const op = cell.querySelector('.op');
+    const whole = op && op.childNodes.length === 1 && op.firstChild.classList &&
+      op.firstChild.classList.contains('frac') ? op.firstChild : null;
+    if (whole) {
+      const k = whole.querySelector(':scope > .fden').textContent.trim();
+      return 'divide by ' + words(k) + (struck && struck + k.replace('−', ''));
+    }
     m = t.match(/^(−?\d+)\(/);
-    if (m) return 'multiply by ' + words(m[1]);
+    if (m) return 'multiply by ' + words(m[1]) + (struck && struck + m[1].replace('−', ''));
     return words(t);
   }
   function readLedger() {
     const model = { start: '', steps: [], current: '' };
-    let step = null;
+    let step = null, before = [];
     ledgerRows().forEach(cells => {
       if (cells[0].classList.contains('rulewrap')) {
         const lab = cells[0].querySelector('.proplabel');
@@ -80,11 +103,12 @@
         const eq = speakEq(cells);
         if (step) { step.result = eq; model.steps.push(step); step = null; } else model.start = eq;
         if (cells.some(c => c.classList.contains('current'))) model.current = eq;
+        before = cells;
         return;
       }
       step = {
-        left: describeOp(cells.find(c => c.classList.contains('l'))),
-        right: describeOp(cells.find(c => c.classList.contains('r'))),
+        left: describeOp(cells.find(c => c.classList.contains('l')), before),
+        right: describeOp(cells.find(c => c.classList.contains('r')), before),
         label: '', result: ''
       };
     });
@@ -171,7 +195,7 @@
     if (newRound) {
       newRound = false;
       const streak = +$('#streakVal').textContent;
-      announce((streak ? 'Streak ' + streak + '. ' : '') + 'New equation: ' + m.current + '.');
+      announce((streak ? 'Streak ' + streak + '. ' : '') + 'New equation: ' + m.start + '.');
       return;
     }
     if (snap.sig !== prev.sig) {
