@@ -309,20 +309,25 @@ module.exports = {
       // or you get a 560px column floating in a 1400px black box.
       frame: { width: 'min(560px, 100%)', height: 'clamp(600px, 84vh, 900px)', center: true },
 
-      storageKeys: ['eqBalanceBest', 'eqBalanceSound', 'eqBalanceShowProps'],
+      storageKeys: ['eqBalanceBest', 'eqBalanceSound', 'eqBalanceShowProps', 'mathlab.balancing-act.keys'],
       thirdParty: [],
 
       a11y: {
         keyboard: 'full',
         liveRegion: true,
         notes:
-          'this is the closest of the apps here to genuinely accessible. Every control is a ' +
-          'real button, the balance-beam graphic is labelled, there is no timer, and the ' +
-          'feedback line is a live region, so prompts and right/wrong results are ' +
-          'announced. Two gaps remain: the streak readout is not announced (it redraws ' +
-          'on every keypress, so announcing it would talk over you constantly), and the ' +
-          'beam itself carries information — tipped means unbalanced — that reaches you ' +
-          'only through the feedback text, not through the graphic.',
+          'of the apps here it comes closest. Every control is a real button with a spoken ' +
+          'name, there is no timer, and each step is announced in words — what you did to which side, the ' +
+          'new equation, and whether the beam is balanced or tipped, with the streak read ' +
+          'out at each new equation. The work log has a plain-text version for screen ' +
+          'readers, the menu and WIPEOUT screens are proper dialogs that take focus, Enter ' +
+          'presses whichever button you tabbed to, and the single-key shortcuts can be ' +
+          'switched off from the menu. Faded text now meets AA contrast and the page ' +
+          'scrolls instead of clipping at 200% zoom. The gaps: this was checked with ' +
+          'automated tests and scripted browser runs, not yet with a screen reader in a ' +
+          'real lesson, so the wording may be wordier than it needs to be; the ' +
+          'struck-through cancellations in the work log are shown, not spoken; and the ' +
+          'Show Property button’s tap area is about 37 px tall, short of 44.',
       },
 
       og: {

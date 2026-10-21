@@ -1,0 +1,49 @@
+/*
+ * a11y.css — accessibility fixes for Balancing Act, loaded after style.css.
+ *
+ * Not upstream: added for the Math Lab site. tools/vendor-balancing-act.js keeps
+ * this file and re-links it on every re-vendor. Contrast figures are WCAG ratios
+ * against the darkest and lightest points of the page background (#050610,
+ * #101024).
+ */
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Visible focus. Neon buttons are every colour, so the ring is the text colour. */
+.btn:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+#ledger:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
+
+/* Contrast. Earlier ledger rows stay visibly faded, but readable:
+   .4 opacity was 3.45:1, .55 is 5.65:1. */
+.cell.eq { opacity: .55; }
+.cell.dim { opacity: 1; }            /* was 2.59:1, now 5.03:1 */
+.barhint { opacity: 1; }             /* was 3.14:1, now 5.03:1 */
+.proplabel { font-size: .7rem; }     /* was .6rem */
+/* The glow behind small grey text washed it out to 3.2–3.9:1, and the "on"
+   tint behind it to 4.37:1. */
+.btn.c-dim { text-shadow: none; }
+.btn.c-dim.on { background: color-mix(in srgb, currentColor 8%, var(--panel)); }
+#propToggle, #soundToggle { font-size: .72rem; }   /* was .66rem, now matches MENU */
+/* Purple is the darkest neon; a full glow behind 2-STEP drops it to 3.73:1. */
+.modes .btn.c-mag { text-shadow: 0 0 2px currentColor; }
+
+/* Target size. The small buttons keep their size, so nothing else moves, but
+   get an invisible hit area 10 px taller above and below. */
+.btn.small { position: relative; }
+.btn.small::before { content: ''; position: absolute; inset: -10px 0; }
+#keysToggle { margin-top: 4px; }
+
+/* Zoom and short screens. The game is laid out to fill exactly one screen with
+   nothing scrolling; at 200% zoom that squeezed the work log to 16 px and cut
+   off the keypad. Below 480 px tall the page scrolls instead. */
+@media (max-height: 480px) {
+  /* align-self: body is a flex row and would otherwise stretch #app back to
+     exactly one screen, squashing the character into the work log */
+  #app { height: auto; min-height: 100dvh; overflow: visible; align-self: flex-start; }
+  #stage { flex-shrink: 0; }
+  html, body { height: auto; min-height: 100%; }   /* so the background glow does not tile */
+  #ledgerWrap { flex: 0 0 auto; height: 11rem; }
+}

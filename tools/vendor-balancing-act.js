@@ -15,6 +15,12 @@
  * `server.js` is also skipped — it is a local dev static server, and nothing in the app
  * makes a network request of any kind.
  *
+ * ── LOCAL FILES ───────────────────────────────────────────────────────────────
+ * `a11y.css` and `js/a11y.js` are not upstream. They hold the accessibility layer
+ * (screen-reader announcements, dialog focus, control names, contrast, target size,
+ * zoom reflow) and live only in this repository. A re-vendor leaves them alone and
+ * re-links them, so the upstream files stay untouched and nothing is lost.
+ *
  * Usage:  node tools/vendor-balancing-act.js
  */
 
@@ -43,6 +49,9 @@ const COPY = [
   'js/character.js',
   'js/game.js',
 ];
+
+// Ours, not upstream: kept across re-vendors and linked into index.html below.
+const LOCAL = ['a11y.css', 'js/a11y.js'];
 
 let failures = 0;
 function must(cond, msg) {
@@ -106,10 +115,12 @@ function main() {
       else copied.push(path.relative(OUT, abs));
     }
   })(OUT);
+  const known = COPY.concat(LOCAL);
   must(
-    copied.every((f) => COPY.includes(f)),
-    `unexpected files in apps/balancing-act/: ${copied.filter((f) => !COPY.includes(f)).join(', ')}`
+    copied.every((f) => known.includes(f)),
+    `unexpected files in apps/balancing-act/: ${copied.filter((f) => !known.includes(f)).join(', ')}`
   );
+  for (const rel of LOCAL) must(copied.includes(rel), `missing local file ${rel} — the accessibility layer would be lost`);
   must(
     !copied.some((f) => /tpt|thriveforge|\.mov$|\.pdf$/i.test(f)),
     'commercial TPT material must never be vendored into this public repository'
@@ -179,7 +190,8 @@ function main() {
    * those messages is announced, with no change to a line of JavaScript.
    *
    * The STREAK/BEST readout is deliberately NOT a live region: updateHud() runs on
-   * every keypad press, so announcing it would talk over the player constantly.
+   * every keypad press, so announcing it would talk over the player constantly. js/a11y.js
+   * says the streak once per new equation instead.
    */
   must(/<div id="message">/.test(html), 'expected the #message element');
   html = html.replace(
@@ -191,6 +203,19 @@ function main() {
     /<svg id="scene"[^>]*role="img"[^>]*aria-label=/.test(html),
     'expected the scene SVG to already carry role="img" and aria-label'
   );
+  // The accessibility layer: its stylesheet after the game's, its script after game.js
+  // (it wraps window.Character, so it must load after character.js).
+  must(html.includes('<link rel="stylesheet" href="style.css">'), 'expected the style.css link');
+  html = html.replace(
+    '<link rel="stylesheet" href="style.css">',
+    '<link rel="stylesheet" href="style.css">\n<link rel="stylesheet" href="a11y.css">'
+  );
+  must(html.includes('<script src="js/game.js"></script>'), 'expected the game.js script tag');
+  html = html.replace(
+    '<script src="js/game.js"></script>',
+    '<script src="js/game.js"></script>\n<script src="js/a11y.js"></script>'
+  );
+
   must(!/https?:\/\/(?!www\.w3\.org)/.test(html), 'an absolute URL survived in the HTML');
   fs.writeFileSync(htmlPath, html);
 
@@ -203,6 +228,7 @@ function main() {
   for (const rel of COPY) bytes += fs.statSync(path.join(OUT, rel)).size;
   console.log(`  ✓ ${COPY.length} files, ${(bytes / 1024).toFixed(0)} KB`);
   console.log('  ✓ palette, fonts, title, theme-color, live region, reduced motion');
+  console.log(`  ✓ kept and linked ${LOCAL.join(', ')}`);
   console.log('  ✓ verified no tpt-package material was copied');
   console.log('\nNow run: node tools/apply-site-chrome.js\n');
 }

@@ -366,6 +366,11 @@ Then, manually:
   ~69 MB of video plus another party's commercial branding and Terms-of-Use PDFs, and
   this repo is public. `tools/vendor-balancing-act.js` copies six files by name and then
   asserts nothing else came along — keep it that way if you ever re-vendor.
+- **Balancing Act's accessibility layer is ours, not upstream.** `apps/balancing-act/a11y.css`
+  and `js/a11y.js` add the screen-reader announcements, dialog focus, control names,
+  contrast, target size and zoom reflow without touching the game's own files. The vendor
+  script keeps them, re-links them, and fails if either is missing. Edit them here; never
+  copy them upstream by hand-merging into `game.js`.
 - **Real Number Monsters is built, not copied.** Upstream
   (`drstockinvesting/real-number-monsters`) is a Vite project of ES modules, and Vite's
   normal output is a `type="module"` script, which does not load from `file://`.
