@@ -277,6 +277,12 @@
     document.querySelectorAll('#keypad [data-k]').forEach(b => {
       if (KEY_NAMES[b.dataset.k]) b.setAttribute('aria-label', KEY_NAMES[b.dataset.k]);
     });
+    // × looked too much like the variable x on the key; the work log keeps ×
+    $('#keypad [data-k="*"]').textContent = '*';
+    // ⌫, SIMPLIFY and SUBMIT go last so tab order matches the landscape keypad,
+    // where they are the bottom row. Their grid areas are inline, so on phones
+    // they stay in the right-hand column and the order reads down it last.
+    ['back', 'simplify', 'submit'].forEach(k => $('#keypad').appendChild($('#keypad [data-k="' + k + '"]')));
     $('#applyL').setAttribute('aria-label', 'Apply to left side');
     $('#applyR').setAttribute('aria-label', 'Apply to right side');
     const syncPressed = () => TOGGLES.forEach(k => {

@@ -66,22 +66,22 @@
 }
 
 /* ── Landscape layout: laptops, desktops, projectors ──────────────────────────
-   Two columns: the beam, message and work log on the left, LEFT/RIGHT and the
-   keypad on the right. All text is at least 24px (18pt) at 100% zoom, and the
+   Two columns: the beam, message and work log on the left; the input box,
+   LEFT/RIGHT and the keypad on the right, with ⌫, SIMPLIFY and SUBMIT in a row
+   along the bottom. All text is at least 24px (18pt) at 100% zoom, and the
    glow is taken off text so letter edges stay sharp; borders, the beam and the
-   figure keep their neon. DOM order is unchanged, so tab and reading order are
-   still left column then right. Phones and portrait screens keep the single
-   column above. Under 480px tall the zoom rule above still applies, so the page
+   figure keep their neon. Tab order is left column then right: a11y.js moves
+   ⌫, SIMPLIFY and SUBMIT to the end of the keypad's DOM to match the bottom
+   row. Phones and portrait screens keep the single column above. Under 480px tall the zoom rule above still applies, so the page
    scrolls rather than squeezing. */
 @media (min-width: 900px) and (orientation: landscape) {
   #app {
     width: min(1280px, 100%);
     display: grid;
     grid-template-columns: minmax(0, 1fr) 26rem;
-    grid-template-rows: auto auto auto auto 1fr;
+    grid-template-rows: auto auto auto 1fr;
     grid-template-areas:
       "hud   hud"
-      "stage apply"
       "stage pad"
       "msg   pad"
       "work  pad";
@@ -92,15 +92,19 @@
   #stage { grid-area: stage; }
   #message { grid-area: msg; font-size: 1.5rem; }
   #ledgerWrap { grid-area: work; }
-  #applyRow { grid-area: apply; }
-  #keypad { grid-area: pad; }
+  /* The input row and the keypad share the right-hand area, the keypad pushed
+     below the input row by a margin of its fixed height, so the right column's
+     rows never stretch the beam's row on the left. */
+  #applyRow { grid-area: pad; align-self: start; }
+  #keypad { grid-area: pad; margin-top: calc(2 * 56px + 2 * 8px); }
 
   /* The scene's viewBox has ~60 units of empty sky above the figure (room for
      the jump) and some below the ground line. Crop it: 62/400 of the width off
      the top, 14/400 off the bottom, which still clears the jump, the fall and
-     the dazed stars. Width is capped so the beam leaves the work log room on
-     shorter screens. */
-  #stage { overflow: hidden; --w: min(100%, 85vh); }
+     the dazed stars. The cropped scene is .385 of its width tall, so capping
+     the width at 39vh keeps the figure to about 15% of the screen height (and
+     at least ~110px) and leaves the rest of the column to the work log. */
+  #stage { overflow: hidden; --w: min(100%, max(39vh, 286px)); }
   #scene {
     width: var(--w); max-height: none;
     margin: calc(var(--w) * -.155) auto calc(var(--w) * -.035);
@@ -112,14 +116,31 @@
   .cell.work { font-size: 1.5rem; }
   .proplabel { font-size: 1.5rem; white-space: normal; }
 
+  /* The input box sits above LEFT/RIGHT, so what was typed is read before
+     choosing a side. */
+  #applyRow {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 56px 56px;
+    grid-template-areas: "prev prev" "applyL applyR";
+  }
+  #applyL { grid-area: applyL; }
+  #applyR { grid-area: applyR; }
+  #preview { grid-area: prev; font-size: 1.75rem; }
   .apply { font-size: 1.5rem; letter-spacing: .02em; padding-inline: 4px; }
-  #preview { font-size: 1.75rem; min-height: 56px; }
 
-  /* Same key positions as the phone keypad; the last column is wider so
-     SIMPLIFY and SUBMIT fit at 24px. Keys grow to fill the column, up to a cap. */
+  /* Digits and operations in a 4 × 4 block, then ⌫, SIMPLIFY and SUBMIT in
+     equal thirds along the bottom: 12 tracks so both rows divide evenly. The
+     grid-area names are the ones index.html sets inline. Keys grow to fill the
+     column, up to a cap. */
   #keypad {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 2fr);
-    grid-template-rows: repeat(4, minmax(56px, 1fr));
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: repeat(5, minmax(56px, 1fr));
+    grid-template-areas:
+      "d7   d7   d7   d8   d8   d8   d9   d9   d9   oDiv oDiv oDiv"
+      "d4   d4   d4   d5   d5   d5   d6   d6   d6   oMul oMul oMul"
+      "d1   d1   d1   d2   d2   d2   d3   d3   d3   oSub oSub oSub"
+      "d0   d0   d0   pm   pm   pm   dx   dx   dx   oAdd oAdd oAdd"
+      "back back back back simp simp simp simp subm subm subm subm";
     max-height: 36rem;
   }
   #keypad .btn { font-size: 2rem; padding: 4px; }
