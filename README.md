@@ -368,7 +368,8 @@ Then, manually:
   asserts nothing else came along — keep it that way if you ever re-vendor.
 - **Balancing Act's accessibility layer is ours, not upstream.** `apps/balancing-act/a11y.css`
   and `js/a11y.js` add the screen-reader announcements, dialog focus, control names,
-  contrast, target size and zoom reflow without touching the game's own files. The vendor
+  contrast, target size, zoom reflow and the two-column landscape layout (24 px minimum
+  text, from 900 px wide) without touching the game's own files. The vendor
   script keeps them, re-links them, and fails if either is missing. Edit them here; never
   copy them upstream by hand-merging into `game.js`.
 - **Real Number Monsters is built, not copied.** Upstream

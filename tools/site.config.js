@@ -305,9 +305,10 @@ module.exports = {
       tags: ['Linear equations', 'Inverse operations', 'Properties of equality'],
 
       payload: 'apps/balancing-act/index.html',
-      // Phone-shaped: the app self-centres at min(560px,100%), so constrain the frame too
-      // or you get a 560px column floating in a 1400px black box.
-      frame: { width: 'min(560px, 100%)', height: 'clamp(600px, 84vh, 900px)', center: true },
+      // Full width: from 900px wide in landscape the app switches to two columns (beam
+      // and work log | keypad), so a 560px frame would only ever show the phone layout.
+      // Narrower than that, the app's own single column centres inside the frame.
+      frame: { height: 'clamp(600px, 84vh, 900px)' },
 
       storageKeys: ['eqBalanceBest', 'eqBalanceSound', 'eqBalanceShowProps', 'mathlab.balancing-act.keys'],
       thirdParty: [],
@@ -326,7 +327,9 @@ module.exports = {
           'switched off from the menu. Faded text now meets AA contrast, the game scrolls ' +
           'instead of clipping at 200% zoom, the menu screens scroll whenever they do not ' +
           'fit, and every small button has a 44 px tap ' +
-          'area. The gap: this was checked with automated tests and scripted browser ' +
+          'area. On a screen at least 900 px wide in landscape the game switches to two ' +
+          'columns with every piece of text at 24 px (18 pt) or larger and no glow behind ' +
+          'letters. The gap: this was checked with automated tests and scripted browser ' +
           'runs, not yet with a screen reader in a real lesson, so the wording may be ' +
           'wordier than it needs to be.',
       },
