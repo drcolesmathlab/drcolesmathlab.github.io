@@ -623,20 +623,24 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             <kbd>Backspace</kbd> with nothing typed takes the last step back instead.</li>
           <li><strong>Falling, then dazed</strong> — you took a new step while it was
             tipped, answered the other side with a different step, or submitted a wrong
-            answer. The run ends, and the WIPEOUT screen says which step broke it.</li>
+            answer. The run ends. A WIPEOUT panel over the work log says which step broke
+            it, with three ways back in: <strong>Last Valid Step</strong> (back to the last
+            point where it stood level), <strong>Retry</strong> (the same equation from the
+            start) or <strong>New Game</strong> (a fresh equation).</li>
         </ul>
         <p class="muted">
           The balance is checked against the actual arithmetic, not against a script of
           expected moves — so any valid route to the answer keeps the figure standing, not
-          just the one the author had in mind. The one strict spot is the second half of a
-          move: it has to repeat the first half exactly, so <span class="mono">− 2</span>
-          on one side is not matched by <span class="mono">+ (−2)</span> on the other.
+          just the one the author had in mind. What it insists on is that every step is
+          identical on both sides of the <span class="mono">=</span>: the same operation
+          and the same number, left and right.
         </p>
 
         <h3>Scoring</h3>
         <ul>
           <li>One point of streak per equation solved. A wrong submission, or a new step
-            while the figure is tipped, ends the run.</li>
+            while the figure is tipped, ends the run. Whichever way back in you choose,
+            the streak starts again from 0.</li>
           <li>Best streak is kept per mode and persists between visits.</li>
           <li>There is no timer. You can stare at a problem as long as you like.</li>
         </ul>
@@ -712,10 +716,11 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             intermediate steps. Real algebra is messier, and it never produces "no
             solution" or "infinitely many" — which are genuinely instructive cases.</li>
           <li><strong>One mistake ends the run</strong> — a wrong answer, or a new step
-            taken while the figure is tipped. That makes for a good game and a blunt
-            teaching tool. There is no partial credit and no hint. The WIPEOUT screen names
-            the step that broke it, and <kbd>Backspace</kbd> can take back a half-done move
-            before you go on, but not after.</li>
+            taken while the figure is tipped. The streak goes back to 0 every time. There
+            is no partial credit and no hint beyond naming the step that broke it, though
+            <strong>Last Valid Step</strong> lets you pick the same equation up from the
+            last level point, and <kbd>Backspace</kbd> can take back a half-done move
+            before it costs you.</li>
           <li><strong>It checks your answer, not your reasoning.</strong> Two students can
             reach <span class="mono">x = 4</span> with the same keystrokes, one
             understanding why and one pattern-matching. The app cannot tell them apart.</li>

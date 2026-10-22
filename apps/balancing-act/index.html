@@ -125,13 +125,16 @@
 </div>
 
 <div id="gameover" class="overlay hide">
-  <h1 class="title red">WIPEOUT!</h1>
-  <p id="goReason"></p>
-  <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>
-  <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>
-  <div class="row">
-    <button id="btnRetry" class="btn c-green">TRY AGAIN</button>
-    <button id="btnGoMenu" class="btn c-dim">MENU</button>
+  <div class="go-card">
+    <h1 class="title red">WIPEOUT!</h1>
+    <p id="goReason"></p>
+    <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>
+    <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>
+    <div class="row">
+      <button id="btnLastValid" class="btn c-yel">LAST VALID STEP</button>
+      <button id="btnRetry" class="btn c-green">RETRY</button>
+      <button id="btnNewGame" class="btn c-cyan">NEW GAME</button>
+    </div>
   </div>
 </div>
 

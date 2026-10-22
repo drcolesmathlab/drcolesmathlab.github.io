@@ -14,6 +14,7 @@
   let steps = [], openStep = null; // ledger step list
   let actSide = null;              // 'l'/'r': side that currently owns the imbalance
   let broken = false;              // a SIMPLIFY changed a side's value: tipped for the rest of the round
+  let start = null;                // {xStar, L, R}: the round's starting equation, for Retry
   let op = null, digits = '', varFlag = false, negFlag = false; // op-mode input
   let simplifyMode = false, sbuf = '';
   let undoStack = [];              // snapshots for ⌫ undo of applied steps
@@ -249,22 +250,22 @@
     } else if (step.op === '*' || step.op === '/') {
       // The applied factor digit is struck too, right alongside whichever
       // term's coefficient it cancels — "2·(x/2)" both 2s go, leaving x.
-      const mag = Math.abs(step.factor);
-      const fStr = step.factor < 0 ? A.MINUS + mag : String(mag);
-      const strikeF = '<span class="cancel">' + fStr + '</span>';
+      // Each side is drawn with its own factor (opL/opR hold it as a string):
+      // when the two halves differ, which loses the run, the log shows both.
+      const body = (terms, factor) => {
+        const mag = Math.abs(factor);
+        const fStr = factor < 0 ? A.MINUS + mag : String(mag);
+        const cs = A.renderCancelSide(terms, step.op, factor);
+        const f = cs.anyCancel ? '<span class="cancel">' + fStr + '</span>' : fStr;
+        return step.op === '*' ? f + '(' + cs.html + ')' : frac(cs.html, f);
+      };
       if (step.opL) {
-        const cs = A.renderCancelSide(prev.lTerms, step.op, step.factor);
-        const f = cs.anyCancel ? strikeF : fStr;
-        const body = step.op === '*' ? f + '(' + cs.html + ')' : frac(cs.html, f);
-        appendCell(el, row, spanL(cols), cls + ' l', '<span class="op">' + body + '</span>');
+        appendCell(el, row, spanL(cols), cls + ' l', '<span class="op">' + body(prev.lTerms, parseInt(step.opL, 10)) + '</span>');
       } else {
         appendCell(el, row, spanL(cols), cls + ' l dim', prev.l);
       }
       if (step.opR) {
-        const cs = A.renderCancelSide(prev.rTerms, step.op, step.factor);
-        const f = cs.anyCancel ? strikeF : fStr;
-        const body = step.op === '*' ? f + '(' + cs.html + ')' : frac(cs.html, f);
-        appendCell(el, row, spanR(cols), cls + ' r', '<span class="op">' + body + '</span>');
+        appendCell(el, row, spanR(cols), cls + ' r', '<span class="op">' + body(prev.rTerms, parseInt(step.opR, 10)) + '</span>');
       } else {
         appendCell(el, row, spanR(cols), cls + ' r dim', prev.r);
       }
@@ -436,6 +437,37 @@
     gameOver(reason);
   }
 
+  // After a loss, three ways back in. All of them start the streak again from 0.
+  // Last Valid Step: undo back to the last point where he stood level.
+  function lastValidStep() {
+    $('#gameover').classList.add('hide');
+    streak = 0; locked = false;
+    Character.reset();
+    while (!balanced() && undoStack.length) undo();
+    if (!balanced()) return retryEquation();
+    clearInput(true); setMsg('');
+    renderLedger(); updateTilt(); updateHud(); updatePreview();
+  }
+  // Retry: the same equation from the start.
+  function retryEquation() {
+    $('#gameover').classList.add('hide');
+    streak = 0; locked = false;
+    beginRound(start);
+  }
+  // The WIPEOUT panel sits over the work log, so the work shows through it. When
+  // it is taller than the work log (small phones) it grows and slides up to stay
+  // on screen.
+  function placeGameOver() {
+    const o = $('#gameover');
+    if (o.classList.contains('hide')) return;
+    const r = $('#ledgerWrap').getBoundingClientRect();
+    o.style.left = (r.left + scrollX) + 'px';
+    o.style.width = r.width + 'px';
+    o.style.minHeight = r.height + 'px';
+    const below = r.top + o.offsetHeight - innerHeight;
+    o.style.top = (Math.max(0, below > 0 ? r.top - below : r.top) + scrollY) + 'px';
+  }
+
   // ---- actions
   function applyOpStep(sideKey) {
     if (!op) return warn('Pick an operation first');
@@ -590,13 +622,17 @@
       $('#goAnswer').textContent = 'x = ' +
         (xStar < 0 ? A.MINUS + Math.abs(xStar) : xStar);
       $('#gameover').classList.remove('hide');
+      placeGameOver();
     });
   }
 
   // ---- rounds / screens
   function newEquation() {
-    const eq = A.generate(levelFor());
-    xStar = eq.xStar; L = eq.L; R = eq.R;
+    beginRound(A.generate(levelFor()));
+  }
+  function beginRound(eq) {
+    start = { xStar: eq.xStar, L: A.cloneSide(eq.L), R: A.cloneSide(eq.R) };
+    xStar = eq.xStar; L = A.cloneSide(eq.L); R = A.cloneSide(eq.R);
     initial = { l: L.display, r: R.display, lTerms: L.terms, rTerms: R.terms };
     steps = []; openStep = null; actSide = null; broken = false;
     undoStack = [];
@@ -666,8 +702,10 @@
     $('#applyL').addEventListener('click', () => doApply('l'));
     $('#applyR').addEventListener('click', () => doApply('r'));
     $('#btnMenu').addEventListener('click', showMenu);
-    $('#btnRetry').addEventListener('click', () => startGame(mode));
-    $('#btnGoMenu').addEventListener('click', showMenu);
+    $('#btnLastValid').addEventListener('click', lastValidStep);
+    $('#btnRetry').addEventListener('click', retryEquation);
+    $('#btnNewGame').addEventListener('click', () => startGame(mode));
+    window.addEventListener('resize', placeGameOver);
     $('#propToggle').addEventListener('click', () => {
       showProps = !showProps;
       try { localStorage.setItem('eqBalanceShowProps', showProps ? '1' : '0'); } catch (e) {}

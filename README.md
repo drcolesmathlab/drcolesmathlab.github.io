@@ -374,8 +374,9 @@ Then, manually:
   copy them upstream by hand-merging into `game.js`.
 - **Balancing Act's losing rules are ours too, but they live in `game.js`.** SUBMIT a
   wrong x, or take a next step while the figure is tipped, and the run ends, with the
-  WIPEOUT screen saying why (the "losing" section of `apps/balancing-act/js/game.js`,
-  plus the how-to and WIPEOUT lines the vendor script patches into `index.html`).
+  WIPEOUT panel (over the work log) saying why and offering Last Valid Step, Retry or
+  New Game (the "losing" section of `apps/balancing-act/js/game.js`, plus the how-to text
+  and WIPEOUT markup the vendor script patches into `index.html`).
   Upstream does not have them yet, so `tools/vendor-balancing-act.js` refuses to copy an
   upstream `game.js` without `function tippedReason(` — port that section upstream before
   re-vendoring.

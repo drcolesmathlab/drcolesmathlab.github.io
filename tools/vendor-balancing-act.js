@@ -86,6 +86,34 @@ const PALETTE = [
   ['--dim: #5f7ca6',     '--dim: #7a83a8'],   // --mu
 ];
 
+// WIPEOUT: upstream's full-screen dialog, and ours (see the HTML_RULES note in main).
+const GAMEOVER_UPSTREAM = [
+  '<div id="gameover" class="overlay hide">',
+  '  <h1 class="title red">WIPEOUT!</h1>',
+  '  <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>',
+  '  <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>',
+  '  <div class="row">',
+  '    <button id="btnRetry" class="btn c-green">TRY AGAIN</button>',
+  '    <button id="btnGoMenu" class="btn c-dim">MENU</button>',
+  '  </div>',
+  '</div>',
+].join('\n');
+const GAMEOVER_OURS = [
+  '<div id="gameover" class="overlay hide">',
+  '  <div class="go-card">',
+  '    <h1 class="title red">WIPEOUT!</h1>',
+  '    <p id="goReason"></p>',
+  '    <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>',
+  '    <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>',
+  '    <div class="row">',
+  '      <button id="btnLastValid" class="btn c-yel">LAST VALID STEP</button>',
+  '      <button id="btnRetry" class="btn c-green">RETRY</button>',
+  '      <button id="btnNewGame" class="btn c-cyan">NEW GAME</button>',
+  '    </div>',
+  '  </div>',
+  '</div>',
+].join('\n');
+
 function main() {
   console.log('Vendoring apps/balancing-act/ …');
 
@@ -235,7 +263,8 @@ function main() {
   );
 
   // The losing rules (see game.js): the menu's how-to says the next step must match,
-  // and WIPEOUT gets a line for game.js to say which rule ended the run.
+  // and WIPEOUT becomes a panel over the work log with a line saying which rule ended
+  // the run and three ways back in: Last Valid Step, Retry, New Game.
   const HTML_RULES = [
     [
       'then <b>match it on the other side</b> before he tips too far.',
@@ -243,10 +272,7 @@ function main() {
         "    Any other step while he's tipped knocks him off the line.",
     ],
     ['A wrong answer knocks him off the line!', 'A wrong answer knocks him off too!'],
-    [
-      '<h1 class="title red">WIPEOUT!</h1>',
-      '<h1 class="title red">WIPEOUT!</h1>\n  <p id="goReason"></p>',
-    ],
+    [GAMEOVER_UPSTREAM, GAMEOVER_OURS],
   ];
   for (const [from, to] of HTML_RULES) {
     must(html.includes(from), `expected "${from}" in index.html — upstream text may have changed`);
