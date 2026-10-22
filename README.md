@@ -381,7 +381,6 @@ Then, manually:
   upstream `game.js` without `function tippedReason(`. `docs/balancing-act-upstream/` holds
   the patch and CSS to apply upstream first, with steps; the vendor script then goes ahead
   and skips its own `index.html` edits that upstream already has.
-  re-vendoring.
 - **Real Number Monsters is built, not copied.** Upstream
   (`drstockinvesting/real-number-monsters`) is a Vite project of ES modules, and Vite's
   normal output is a `type="module"` script, which does not load from `file://`.
