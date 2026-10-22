@@ -335,10 +335,10 @@
     over.setAttribute('role', 'alertdialog');
     over.setAttribute('aria-modal', 'true');
     over.querySelector('h1').id = 'goTitle';
-    over.querySelector('p').id = 'goText';
+    over.querySelector('p:not(#goReason)').id = 'goText';
     over.querySelector('.final').id = 'goFinal';
     over.setAttribute('aria-labelledby', 'goTitle');
-    over.setAttribute('aria-describedby', 'goText goFinal');
+    over.setAttribute('aria-describedby', 'goReason goText goFinal');
     const watch = new MutationObserver(() => syncOverlays(false));
     watch.observe(menu, { attributes: true, attributeFilter: ['class'] });
     watch.observe(over, { attributes: true, attributeFilter: ['class'] });

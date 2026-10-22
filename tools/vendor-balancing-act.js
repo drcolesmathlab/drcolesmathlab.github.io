@@ -94,6 +94,24 @@ function main() {
     process.exit(1);
   }
 
+  /*
+   * The losing rules are ours, in game.js itself: SUBMIT a wrong x, or take a next
+   * step while the figure is tipped, and the run ends, with the WIPEOUT screen saying
+   * why. They are too woven into the step logic to patch in here, so a re-vendor of
+   * an upstream game.js without them would silently bring back the old rule (only a
+   * wrong answer loses). Port the "losing" section of apps/balancing-act/js/game.js
+   * upstream first; this stops before anything is overwritten.
+   */
+  const upGame = path.join(SRC, 'js/game.js');
+  if (fs.existsSync(upGame) && !fs.readFileSync(upGame, 'utf8').includes('function tippedReason(')) {
+    console.error(
+      '\n✗ Upstream js/game.js lacks the Math Lab losing rules (function tippedReason).\n' +
+      '  Port the "losing" section of apps/balancing-act/js/game.js upstream, then re-run.\n' +
+      '  Nothing was copied.\n'
+    );
+    process.exit(1);
+  }
+
   for (const rel of COPY) {
     const from = path.join(SRC, rel);
     if (!must(fs.existsSync(from), `missing source file: ${rel}`)) continue;
@@ -215,6 +233,25 @@ function main() {
     '<script src="js/game.js"></script>',
     '<script src="js/game.js"></script>\n<script src="js/a11y.js"></script>'
   );
+
+  // The losing rules (see game.js): the menu's how-to says the next step must match,
+  // and WIPEOUT gets a line for game.js to say which rule ended the run.
+  const HTML_RULES = [
+    [
+      'then <b>match it on the other side</b> before he tips too far.',
+      "then <b>match it on the other side</b> as your very next step.\n" +
+        "    Any other step while he's tipped knocks him off the line.",
+    ],
+    ['A wrong answer knocks him off the line!', 'A wrong answer knocks him off too!'],
+    [
+      '<h1 class="title red">WIPEOUT!</h1>',
+      '<h1 class="title red">WIPEOUT!</h1>\n  <p id="goReason"></p>',
+    ],
+  ];
+  for (const [from, to] of HTML_RULES) {
+    must(html.includes(from), `expected "${from}" in index.html — upstream text may have changed`);
+    html = html.replace(from, to);
+  }
 
   must(!/https?:\/\/(?!www\.w3\.org)/.test(html), 'an absolute URL survived in the HTML');
   fs.writeFileSync(htmlPath, html);

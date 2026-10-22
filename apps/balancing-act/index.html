@@ -110,10 +110,11 @@
   <p class="tag">Solve the linear equations. Don't let Stick Man fall.</p>
   <div class="how">
     Pick an operation and number, apply it to one side of the equation —
-    then <b>match it on the other side</b> before he tips too far.
+    then <b>match it on the other side</b> as your very next step.
+    Any other step while he's tipped knocks him off the line.
     Use <b>SIMPLIFY</b> to rewrite a messy side.
     Get to <b>x&nbsp;=&nbsp;▢</b> and hit <b>SUBMIT</b>.
-    A wrong answer knocks him off the line!
+    A wrong answer knocks him off too!
   </div>
   <div class="modes">
     <button class="btn c-cyan" data-mode="one">1-STEP <span class="best"></span></button>
@@ -125,6 +126,7 @@
 
 <div id="gameover" class="overlay hide">
   <h1 class="title red">WIPEOUT!</h1>
+  <p id="goReason"></p>
   <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>
   <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>
   <div class="row">
