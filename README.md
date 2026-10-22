@@ -369,7 +369,7 @@ Then, manually:
 - **Balancing Act's accessibility layer is ours, not upstream.** `apps/balancing-act/a11y.css`
   and `js/a11y.js` add the screen-reader announcements, dialog focus, control names,
   contrast, target size, zoom reflow and the two-column landscape layout (24 px minimum
-  text, from 900 px wide) without touching the game's own files. The vendor
+  text, from 840 px wide) without touching the game's own files. The vendor
   script keeps them, re-links them, and fails if either is missing. Edit them here; never
   copy them upstream by hand-merging into `game.js`.
 - **Balancing Act's losing rules are ours too, but they live in `game.js`.** SUBMIT a
@@ -378,8 +378,9 @@ Then, manually:
   New Game (the "losing" section of `apps/balancing-act/js/game.js`, plus the how-to text
   and WIPEOUT markup the vendor script patches into `index.html`).
   Upstream does not have them yet, so `tools/vendor-balancing-act.js` refuses to copy an
-  upstream `game.js` without `function tippedReason(` — port that section upstream before
-  re-vendoring.
+  upstream `game.js` without `function tippedReason(`. `docs/balancing-act-upstream/` holds
+  the patch and CSS to apply upstream first, with steps; the vendor script then goes ahead
+  and skips its own `index.html` edits that upstream already has.
 - **Real Number Monsters is built, not copied.** Upstream
   (`drstockinvesting/real-number-monsters`) is a Vite project of ES modules, and Vite's
   normal output is a `type="module"` script, which does not load from `file://`.

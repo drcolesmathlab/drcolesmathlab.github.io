@@ -1,0 +1,327 @@
+diff --git a/index.html b/index.html
+index 29ea01b..5e2791c 100644
+--- a/index.html
++++ b/index.html
+@@ -110,10 +110,11 @@
+   <p class="tag">Solve the linear equations. Don't let Stick Man fall.</p>
+   <div class="how">
+     Pick an operation and number, apply it to one side of the equation —
+-    then <b>match it on the other side</b> before he tips too far.
++    then <b>match it on the other side</b> as your very next step.
++    Any other step while he's tipped knocks him off the line.
+     Use <b>SIMPLIFY</b> to rewrite a messy side.
+     Get to <b>x&nbsp;=&nbsp;▢</b> and hit <b>SUBMIT</b>.
+-    A wrong answer knocks him off the line!
++    A wrong answer knocks him off too!
+   </div>
+   <div class="modes">
+     <button class="btn c-cyan" data-mode="one">1-STEP <span class="best"></span></button>
+@@ -124,12 +125,16 @@
+ </div>
+ 
+ <div id="gameover" class="overlay hide">
+-  <h1 class="title red">WIPEOUT!</h1>
+-  <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>
+-  <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>
+-  <div class="row">
+-    <button id="btnRetry" class="btn c-green">TRY AGAIN</button>
+-    <button id="btnGoMenu" class="btn c-dim">MENU</button>
++  <div class="go-card">
++    <h1 class="title red">WIPEOUT!</h1>
++    <p id="goReason"></p>
++    <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>
++    <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>
++    <div class="row">
++      <button id="btnLastValid" class="btn c-yel">LAST VALID STEP</button>
++      <button id="btnRetry" class="btn c-green">RETRY</button>
++      <button id="btnNewGame" class="btn c-cyan">NEW GAME</button>
++    </div>
+   </div>
+ </div>
+ 
+diff --git a/js/game.js b/js/game.js
+index 858b3bf..d421568 100644
+--- a/js/game.js
++++ b/js/game.js
+@@ -13,6 +13,8 @@
+   let initial = null;              // {l, r} display of the starting equation
+   let steps = [], openStep = null; // ledger step list
+   let actSide = null;              // 'l'/'r': side that currently owns the imbalance
++  let broken = false;              // a SIMPLIFY changed a side's value: tipped for the rest of the round
++  let start = null;                // {xStar, L, R}: the round's starting equation, for Retry
+   let op = null, digits = '', varFlag = false, negFlag = false; // op-mode input
+   let simplifyMode = false, sbuf = '';
+   let undoStack = [];              // snapshots for ⌫ undo of applied steps
+@@ -47,7 +49,7 @@
+   // A half-finished move (one side acted on, the other not) is an imbalance even
+   // when the values happen to agree — which they always do for the variable terms
+   // when x* is 0. openStep is non-null exactly while a move awaits its other half.
+-  function balanced() { return diffVal() === 0 && !openStep; }
++  function balanced() { return diffVal() === 0 && !openStep && !broken; }
+   const TILT = 16; // fixed off-balance angle — balance is binary, not a magnitude
+   function updateTilt() {
+     if (balanced()) { Character.setTilt(0); return; }
+@@ -70,7 +72,7 @@
+ 
+   // ---- ledger rendering
+   function stepProperty(s) {
+-    if (s.kind === 'simplify') return 'Simplification';
++    if (s.kind === 'simplify') return s.changed ? 'Invalid' : 'Simplification';
+     // A property of equality only holds once the SAME operation has been applied
+     // to BOTH sides. If the two sides don't match, the step broke the balance.
+     if (s.opL == null || s.opR == null || s.opL !== s.opR) {
+@@ -248,22 +250,22 @@
+     } else if (step.op === '*' || step.op === '/') {
+       // The applied factor digit is struck too, right alongside whichever
+       // term's coefficient it cancels — "2·(x/2)" both 2s go, leaving x.
+-      const mag = Math.abs(step.factor);
+-      const fStr = step.factor < 0 ? A.MINUS + mag : String(mag);
+-      const strikeF = '<span class="cancel">' + fStr + '</span>';
++      // Each side is drawn with its own factor (opL/opR hold it as a string):
++      // when the two halves differ, which loses the run, the log shows both.
++      const body = (terms, factor) => {
++        const mag = Math.abs(factor);
++        const fStr = factor < 0 ? A.MINUS + mag : String(mag);
++        const cs = A.renderCancelSide(terms, step.op, factor);
++        const f = cs.anyCancel ? '<span class="cancel">' + fStr + '</span>' : fStr;
++        return step.op === '*' ? f + '(' + cs.html + ')' : frac(cs.html, f);
++      };
+       if (step.opL) {
+-        const cs = A.renderCancelSide(prev.lTerms, step.op, step.factor);
+-        const f = cs.anyCancel ? strikeF : fStr;
+-        const body = step.op === '*' ? f + '(' + cs.html + ')' : frac(cs.html, f);
+-        appendCell(el, row, spanL(cols), cls + ' l', '<span class="op">' + body + '</span>');
++        appendCell(el, row, spanL(cols), cls + ' l', '<span class="op">' + body(prev.lTerms, parseInt(step.opL, 10)) + '</span>');
+       } else {
+         appendCell(el, row, spanL(cols), cls + ' l dim', prev.l);
+       }
+       if (step.opR) {
+-        const cs = A.renderCancelSide(prev.rTerms, step.op, step.factor);
+-        const f = cs.anyCancel ? strikeF : fStr;
+-        const body = step.op === '*' ? f + '(' + cs.html + ')' : frac(cs.html, f);
+-        appendCell(el, row, spanR(cols), cls + ' r', '<span class="op">' + body + '</span>');
++        appendCell(el, row, spanR(cols), cls + ' r', '<span class="op">' + body(prev.rTerms, parseInt(step.opR, 10)) + '</span>');
+       } else {
+         appendCell(el, row, spanR(cols), cls + ' r dim', prev.r);
+       }
+@@ -317,7 +319,7 @@
+       L: cloneSide(L), R: cloneSide(R),
+       steps: steps.map(cloneStep),
+       openIdx: openStep ? steps.indexOf(openStep) : -1,
+-      actSide: actSide
++      actSide: actSide, broken: broken
+     });
+   }
+   function undo() {
+@@ -325,7 +327,7 @@
+     const s = undoStack.pop();
+     L = s.L; R = s.R; steps = s.steps;
+     openStep = s.openIdx >= 0 ? steps[s.openIdx] : null;
+-    actSide = s.actSide;
++    actSide = s.actSide; broken = s.broken;
+     clearInput(true);
+     renderLedger(); updateTilt(); updatePreview();
+   }
+@@ -407,6 +409,65 @@
+     updatePreview();
+   }
+ 
++  // ---- losing (Math Lab rule, not upstream — tools/vendor-balancing-act.js
++  // refuses an upstream game.js without it)
++  // Two ways to lose: SUBMIT a wrong x, or take a next step while he's tipped.
++  // While a move is half done, the only allowed step is the same operation and
++  // amount on the other side; a different amount or operation there loses at
++  // once. SIMPLIFY and SUBMIT are steps too. ⌫ undo is not a step: it takes the
++  // last one back. The WIPEOUT screen says which rule ended the run.
++  const SIDE = { l: 'left', r: 'right' };
++  function opText(o, v) {   // v as stored in a step's opL/opR
++    if (o === '+' || o === '-') return v;
++    return (o === '*' ? '× ' : '÷ ') + (v.charAt(0) === '-' ? '(' + A.MINUS + v.slice(1) + ')' : v);
++  }
++  function tippedReason() {
++    let why = 'You took a new step before balancing the last one.';
++    if (openStep) {
++      const done = openStep.opL != null ? 'l' : 'r';
++      why += ' The ' + SIDE[done === 'l' ? 'r' : 'l'] + ' side still needed ' +
++        opText(openStep.op, openStep[done === 'l' ? 'opL' : 'opR']) + '.';
++    } else if (broken) {
++      why += ' A rewrite had changed the value of one side.';
++    }
++    return why;
++  }
++  function lose(reason) {
++    Sound.lose();
++    gameOver(reason);
++  }
++
++  // After a loss, three ways back in. All of them start the streak again from 0.
++  // Last Valid Step: undo back to the last point where he stood level.
++  function lastValidStep() {
++    $('#gameover').classList.add('hide');
++    streak = 0; locked = false;
++    Character.reset();
++    while (!balanced() && undoStack.length) undo();
++    if (!balanced()) return retryEquation();
++    clearInput(true); setMsg('');
++    renderLedger(); updateTilt(); updateHud(); updatePreview();
++  }
++  // Retry: the same equation from the start.
++  function retryEquation() {
++    $('#gameover').classList.add('hide');
++    streak = 0; locked = false;
++    beginRound(start);
++  }
++  // The WIPEOUT panel sits over the work log, so the work shows through it. When
++  // it is taller than the work log (small phones) it grows and slides up to stay
++  // on screen.
++  function placeGameOver() {
++    const o = $('#gameover');
++    if (o.classList.contains('hide')) return;
++    const r = $('#ledgerWrap').getBoundingClientRect();
++    o.style.left = (r.left + scrollX) + 'px';
++    o.style.width = r.width + 'px';
++    o.style.minHeight = r.height + 'px';
++    const below = r.top + o.offsetHeight - innerHeight;
++    o.style.top = (Math.max(0, below > 0 ? r.top - below : r.top) + scrollY) + 'px';
++  }
++
+   // ---- actions
+   function applyOpStep(sideKey) {
+     if (!op) return warn('Pick an operation first');
+@@ -434,11 +495,27 @@
+       return warn('Whoa — numbers are getting huge!');
+     }
+ 
++    const slot = sideKey === 'l' ? 'opL' : 'opR';
++    const signChar = op === '+' ? '+' : A.MINUS;
++    const operandDisp = negFlag ? '(' + A.MINUS + absStr + ')' : absStr;
++    const val = (op === '+' || op === '-') ? (signChar + ' ' + operandDisp) : String(coef);
++    // Answering the open move on its other side: it has to be the same step.
++    let mismatch = null;
++    if (openStep && !openStep[slot]) {
++      const done = slot === 'opL' ? 'opR' : 'opL';
++      if (openStep.op !== op || openStep[done] !== val) {
++        const other = sideKey === 'l' ? 'r' : 'l';
++        mismatch = 'The ' + SIDE[other] + ' side got ' + opText(openStep.op, openStep[done]) +
++          ', but the ' + SIDE[sideKey] + ' side got ' + opText(op, val) + '.';
++      }
++    } else if (!balanced()) {
++      return lose(tippedReason());
++    }
++
+     pushUndo();
+     S.a = ns.a; S.b = ns.b; S.terms = ns.terms; S.display = ns.display;
+     Sound.valid();
+ 
+-    const slot = sideKey === 'l' ? 'opL' : 'opR';
+     const matchSlot = sideKey === 'l' ? 'matchL' : 'matchR';
+     const kindSlot = sideKey === 'l' ? 'kindL' : 'kindR';
+     const cancelSlot = sideKey === 'l' ? 'cancelL' : 'cancelR';
+@@ -451,9 +528,7 @@
+       };
+       steps.push(openStep);
+     }
+-    const signChar = op === '+' ? '+' : A.MINUS;
+-    const operandDisp = negFlag ? '(' + A.MINUS + absStr + ')' : absStr;
+-    openStep[slot] = (op === '+' || op === '-') ? (signChar + ' ' + operandDisp) : String(coef);
++    openStep[slot] = val;
+     openStep[matchSlot] = matched;
+     openStep[kindSlot] = kind;
+     openStep[cancelSlot] = canceled;
+@@ -464,25 +539,27 @@
+     actSide = completed ? null : sideKey; // imbalance now belongs to the side just acted on
+     if (completed) clearInput(true);
+     renderLedger(); updateTilt(); updatePreview();
++    if (mismatch) lose(mismatch);   // after drawing it, so the mismatched step shows
+   }
+ 
+   function applyRewrite(sideKey) {
+     const p = A.parseExpr(sbuf);
+     if (!p) return warn('Type an expression like 5x+4');
++    if (!balanced()) return lose(tippedReason());
+     const S = sideKey === 'l' ? L : R;
+     // A rewrite is faithful only if it names the SAME expression — compare the
+     // side's coefficient and constant, not its value at x* (at x* = 0 every
+     // coefficient evaluates alike, so a value check would wave a bad rewrite through).
+-    const wasLevel = balanced();
++    // An unfaithful one tips him, and the next step then loses.
+     const changed = !A.fEq(S.a, p.a) || !A.fEq(S.b, p.b);
+     pushUndo();
+     S.a = p.a; S.b = p.b; S.terms = p.terms; S.display = p.display;
+-    openStep = null;
+-    steps.push({ kind: 'simplify', side: sideKey, result: { l: L.display, r: R.display, lTerms: L.terms, rTerms: R.terms } });
++    steps.push({ kind: 'simplify', side: sideKey, changed: changed, result: { l: L.display, r: R.display, lTerms: L.terms, rTerms: R.terms } });
+     simplifyMode = false; sbuf = '';
+-    actSide = (changed || diffVal() !== 0) ? sideKey : null;
+-    if (wasLevel && changed) warn('Careful — that rewrite changed the value!');
+-    else { if (wasLevel) setMsg('Nice rewrite ✓', 'good'); Sound.valid(); }
++    broken = changed;
++    actSide = changed ? sideKey : null;
++    if (changed) warn('Careful — that rewrite changed the value!');
++    else { setMsg('Nice rewrite ✓', 'good'); Sound.valid(); }
+     renderLedger(); updateTilt(); updatePreview();
+   }
+ 
+@@ -516,6 +593,7 @@
+ 
+   function doSubmit() {
+     if (locked || !mode) return;
++    if (!balanced()) return lose(tippedReason());
+     const n = solvedForm();
+     if (n === null) return warn('Get it to  x = ▢  first!');
+     if (A.fIsInt(n) && n.n === xStar) {
+@@ -528,30 +606,35 @@
+       setMsg('BALANCED! +1', 'good');
+       setTimeout(() => { locked = false; newEquation(); }, 1000);
+     } else {
+-      Sound.lose();
+-      gameOver();
++      const shown = (n.n < 0 ? A.MINUS : '') + Math.abs(n.n) + (n.d === 1 ? '' : '/' + n.d);
++      lose('x = ' + shown + ' does not solve it.');
+     }
+   }
+ 
+-  function gameOver() {
++  function gameOver(reason) {
+     locked = true;
+     setMsg('');
+     Character.fall(() => {
++      $('#goReason').textContent = reason;
+       $('#goScore').textContent = streak;
+       $('#goBest').textContent = best[mode];
+       // match the typographic minus the equation itself is drawn with
+       $('#goAnswer').textContent = 'x = ' +
+         (xStar < 0 ? A.MINUS + Math.abs(xStar) : xStar);
+       $('#gameover').classList.remove('hide');
++      placeGameOver();
+     });
+   }
+ 
+   // ---- rounds / screens
+   function newEquation() {
+-    const eq = A.generate(levelFor());
+-    xStar = eq.xStar; L = eq.L; R = eq.R;
++    beginRound(A.generate(levelFor()));
++  }
++  function beginRound(eq) {
++    start = { xStar: eq.xStar, L: A.cloneSide(eq.L), R: A.cloneSide(eq.R) };
++    xStar = eq.xStar; L = A.cloneSide(eq.L); R = A.cloneSide(eq.R);
+     initial = { l: L.display, r: R.display, lTerms: L.terms, rTerms: R.terms };
+-    steps = []; openStep = null; actSide = null;
++    steps = []; openStep = null; actSide = null; broken = false;
+     undoStack = [];
+     clearInput(true);
+     Character.reset();
+@@ -619,8 +702,10 @@
+     $('#applyL').addEventListener('click', () => doApply('l'));
+     $('#applyR').addEventListener('click', () => doApply('r'));
+     $('#btnMenu').addEventListener('click', showMenu);
+-    $('#btnRetry').addEventListener('click', () => startGame(mode));
+-    $('#btnGoMenu').addEventListener('click', showMenu);
++    $('#btnLastValid').addEventListener('click', lastValidStep);
++    $('#btnRetry').addEventListener('click', retryEquation);
++    $('#btnNewGame').addEventListener('click', () => startGame(mode));
++    window.addEventListener('resize', placeGameOver);
+     $('#propToggle').addEventListener('click', () => {
+       showProps = !showProps;
+       try { localStorage.setItem('eqBalanceShowProps', showProps ? '1' : '0'); } catch (e) {}

@@ -127,14 +127,14 @@ function main() {
    * step while the figure is tipped, and the run ends, with the WIPEOUT screen saying
    * why. They are too woven into the step logic to patch in here, so a re-vendor of
    * an upstream game.js without them would silently bring back the old rule (only a
-   * wrong answer loses). Port the "losing" section of apps/balancing-act/js/game.js
-   * upstream first; this stops before anything is overwritten.
+   * wrong answer loses). Apply docs/balancing-act-upstream/ upstream first; this
+   * stops before anything is overwritten.
    */
   const upGame = path.join(SRC, 'js/game.js');
   if (fs.existsSync(upGame) && !fs.readFileSync(upGame, 'utf8').includes('function tippedReason(')) {
     console.error(
       '\n✗ Upstream js/game.js lacks the Math Lab losing rules (function tippedReason).\n' +
-      '  Port the "losing" section of apps/balancing-act/js/game.js upstream, then re-run.\n' +
+      '  Apply docs/balancing-act-upstream/ to the upstream folder (see its README), then re-run.\n' +
       '  Nothing was copied.\n'
     );
     process.exit(1);
@@ -274,7 +274,10 @@ function main() {
     ['A wrong answer knocks him off the line!', 'A wrong answer knocks him off too!'],
     [GAMEOVER_UPSTREAM, GAMEOVER_OURS],
   ];
+  // Once docs/balancing-act-upstream/ is applied upstream these are already in
+  // place, so each rule is skipped when its result is already there.
   for (const [from, to] of HTML_RULES) {
+    if (html.includes(to)) continue;
     must(html.includes(from), `expected "${from}" in index.html — upstream text may have changed`);
     html = html.replace(from, to);
   }
