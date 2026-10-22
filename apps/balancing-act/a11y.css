@@ -64,3 +64,102 @@
   html, body { height: auto; min-height: 100%; }   /* so the background glow does not tile */
   #ledgerWrap { flex: 0 0 auto; height: 11rem; }
 }
+
+/* ── Landscape layout: laptops, desktops, projectors ──────────────────────────
+   Two columns: the beam, message and work log on the left, LEFT/RIGHT and the
+   keypad on the right. All text is at least 24px (18pt) at 100% zoom, and the
+   glow is taken off text so letter edges stay sharp; borders, the beam and the
+   figure keep their neon. DOM order is unchanged, so tab and reading order are
+   still left column then right. Phones and portrait screens keep the single
+   column above. Under 480px tall the zoom rule above still applies, so the page
+   scrolls rather than squeezing. */
+@media (min-width: 900px) and (orientation: landscape) {
+  #app {
+    width: min(1280px, 100%);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 26rem;
+    grid-template-rows: auto auto auto auto 1fr;
+    grid-template-areas:
+      "hud   hud"
+      "stage apply"
+      "stage pad"
+      "msg   pad"
+      "work  pad";
+    column-gap: 24px; row-gap: 8px;
+    padding: 8px 16px 16px;
+  }
+  #hud { grid-area: hud; font-size: 1.5rem; letter-spacing: .04em; }
+  #stage { grid-area: stage; }
+  #message { grid-area: msg; font-size: 1.5rem; }
+  #ledgerWrap { grid-area: work; }
+  #applyRow { grid-area: apply; }
+  #keypad { grid-area: pad; }
+
+  /* The scene's viewBox has ~60 units of empty sky above the figure (room for
+     the jump) and some below the ground line. Crop it: 62/400 of the width off
+     the top, 14/400 off the bottom, which still clears the jump, the fall and
+     the dazed stars. Width is capped so the beam leaves the work log room on
+     shorter screens. */
+  #stage { overflow: hidden; --w: min(100%, 85vh); }
+  #scene {
+    width: var(--w); max-height: none;
+    margin: calc(var(--w) * -.155) auto calc(var(--w) * -.035);
+  }
+
+  #btnMenu, #soundToggle, #propToggle { font-size: 1.5rem; padding: 2px 14px; white-space: nowrap; }
+  .barhint { font-size: 1.5rem; letter-spacing: .08em; white-space: nowrap; }
+  #ledger { font-size: 1.875rem; column-gap: 12px; row-gap: 2px; }
+  .cell.work { font-size: 1.5rem; }
+  .proplabel { font-size: 1.5rem; white-space: normal; }
+
+  .apply { font-size: 1.5rem; letter-spacing: .02em; padding-inline: 4px; }
+  #preview { font-size: 1.75rem; min-height: 56px; }
+
+  /* Same key positions as the phone keypad; the last column is wider so
+     SIMPLIFY and SUBMIT fit at 24px. Keys grow to fill the column, up to a cap. */
+  #keypad {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 2fr);
+    grid-template-rows: repeat(4, minmax(56px, 1fr));
+    max-height: 36rem;
+  }
+  #keypad .btn { font-size: 2rem; padding: 4px; }
+  #keypad .btn.small-label, #kSubmit { font-size: 1.5rem; letter-spacing: 0; }
+
+  /* Sharp text: no glow behind letters. */
+  .btn, .btn.c-dim, .modes .btn.c-mag,
+  #modeLabel, #scoreBox b, #message.bad, #message.good, #preview,
+  .cell.eq.current, .cell.work .op, .proplabel.invalid,
+  .tag, .final, .glow-yel { text-shadow: none; }
+  /* The title keeps a wide halo, not the tight blur that softened its edges. */
+  .title { text-shadow: 0 0 24px rgba(46, 230, 255, .45); }
+  .title.red { text-shadow: 0 0 24px rgba(255, 59, 92, .45); }
+
+  /* Menu and WIPEOUT. On the menu the title and tagline stay centred across the
+     top; below them the how-to sits on the left, left-aligned since a centred
+     paragraph is harder to track, and the modes on the right. `safe` keeps the
+     top reachable when the menu doesn't fit and scrolls. */
+  .overlay { gap: 20px; }
+  .title { font-size: 3rem; }
+  .tag, .how, .overlay p, .final { font-size: 1.5rem; }
+  .overlay .row .btn, #keysToggle { font-size: 1.5rem; }
+  #menu {
+    display: grid;
+    grid-template-columns: minmax(0, 34rem) minmax(0, 24rem);
+    grid-template-areas:
+      "title title"
+      "tag   tag"
+      "how   modes"
+      "how   keys";
+    column-gap: 56px; row-gap: 20px;
+    justify-content: center;
+    align-content: start; align-content: safe center;
+  }
+  #menu > * { margin: 0; }
+  #menu .title { grid-area: title; }
+  #menu .tag { grid-area: tag; }
+  #menu .how { grid-area: how; max-width: none; line-height: 1.5; text-align: left; }
+  #menu .modes { grid-area: modes; width: 100%; gap: 14px; }
+  #menu #keysToggle { grid-area: keys; justify-self: center; align-self: start; }
+  .modes .btn { font-size: 1.5rem; padding: 10px 18px; }
+  .modes .best { font-size: 1.5rem; }
+}
