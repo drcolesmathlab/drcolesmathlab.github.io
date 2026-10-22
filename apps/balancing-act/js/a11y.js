@@ -178,6 +178,7 @@
     flip = !flip;
   }
   let last = { steps: [], sig: '', current: '', preview: '' }, pending = false;
+  let backIn = null;   // 'last' / 'retry': which WIPEOUT button started this round
   function schedule() {
     if (pending) return;
     pending = true;
@@ -194,6 +195,9 @@
     if (overlayOpen()) { newRound = false; return; }
     if (newRound) {
       newRound = false;
+      const how = backIn; backIn = null;
+      if (how === 'last') { announce('Back to the last balanced step. Now ' + m.current + '. Balanced.'); return; }
+      if (how === 'retry') { announce('Starting this equation again: ' + m.start + '.'); return; }
       const streak = +$('#streakVal').textContent;
       announce((streak ? 'Streak ' + streak + '. ' : '') + 'New equation: ' + m.start + '.');
       return;
@@ -226,7 +230,7 @@
     const was = open;
     open = now;
     if (first) return;   // page load: never pull focus into an embedded iframe
-    if (now === over) $('#btnRetry').focus();
+    if (now === over) over.querySelector('button').focus();
     else if (now === menu) menu.querySelector('[data-mode]').focus();
     else if (was && (document.activeElement === document.body || was.contains(document.activeElement))) {
       $('#ledger').focus({ preventScroll: true });
@@ -335,10 +339,12 @@
     over.setAttribute('role', 'alertdialog');
     over.setAttribute('aria-modal', 'true');
     over.querySelector('h1').id = 'goTitle';
-    over.querySelector('p').id = 'goText';
+    over.querySelector('p:not(#goReason)').id = 'goText';
     over.querySelector('.final').id = 'goFinal';
     over.setAttribute('aria-labelledby', 'goTitle');
-    over.setAttribute('aria-describedby', 'goText goFinal');
+    over.setAttribute('aria-describedby', 'goReason goText goFinal');
+    $('#btnLastValid').addEventListener('click', () => { backIn = 'last'; });
+    $('#btnRetry').addEventListener('click', () => { backIn = 'retry'; });
     const watch = new MutationObserver(() => syncOverlays(false));
     watch.observe(menu, { attributes: true, attributeFilter: ['class'] });
     watch.observe(over, { attributes: true, attributeFilter: ['class'] });

@@ -86,11 +86,57 @@ const PALETTE = [
   ['--dim: #5f7ca6',     '--dim: #7a83a8'],   // --mu
 ];
 
+// WIPEOUT: upstream's full-screen dialog, and ours (see the HTML_RULES note in main).
+const GAMEOVER_UPSTREAM = [
+  '<div id="gameover" class="overlay hide">',
+  '  <h1 class="title red">WIPEOUT!</h1>',
+  '  <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>',
+  '  <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>',
+  '  <div class="row">',
+  '    <button id="btnRetry" class="btn c-green">TRY AGAIN</button>',
+  '    <button id="btnGoMenu" class="btn c-dim">MENU</button>',
+  '  </div>',
+  '</div>',
+].join('\n');
+const GAMEOVER_OURS = [
+  '<div id="gameover" class="overlay hide">',
+  '  <div class="go-card">',
+  '    <h1 class="title red">WIPEOUT!</h1>',
+  '    <p id="goReason"></p>',
+  '    <p>He hit the ground… the answer was <b id="goAnswer" class="glow-yel"></b></p>',
+  '    <div class="final">STREAK <b id="goScore">0</b> · BEST <b id="goBest">0</b></div>',
+  '    <div class="row">',
+  '      <button id="btnLastValid" class="btn c-yel">LAST VALID STEP</button>',
+  '      <button id="btnRetry" class="btn c-green">RETRY</button>',
+  '      <button id="btnNewGame" class="btn c-cyan">NEW GAME</button>',
+  '    </div>',
+  '  </div>',
+  '</div>',
+].join('\n');
+
 function main() {
   console.log('Vendoring apps/balancing-act/ …');
 
   if (!fs.existsSync(SRC)) {
     console.error(`\n✗ Source tree not found:\n  ${SRC}\n`);
+    process.exit(1);
+  }
+
+  /*
+   * The losing rules are ours, in game.js itself: SUBMIT a wrong x, or take a next
+   * step while the figure is tipped, and the run ends, with the WIPEOUT screen saying
+   * why. They are too woven into the step logic to patch in here, so a re-vendor of
+   * an upstream game.js without them would silently bring back the old rule (only a
+   * wrong answer loses). Port the "losing" section of apps/balancing-act/js/game.js
+   * upstream first; this stops before anything is overwritten.
+   */
+  const upGame = path.join(SRC, 'js/game.js');
+  if (fs.existsSync(upGame) && !fs.readFileSync(upGame, 'utf8').includes('function tippedReason(')) {
+    console.error(
+      '\n✗ Upstream js/game.js lacks the Math Lab losing rules (function tippedReason).\n' +
+      '  Port the "losing" section of apps/balancing-act/js/game.js upstream, then re-run.\n' +
+      '  Nothing was copied.\n'
+    );
     process.exit(1);
   }
 
@@ -215,6 +261,23 @@ function main() {
     '<script src="js/game.js"></script>',
     '<script src="js/game.js"></script>\n<script src="js/a11y.js"></script>'
   );
+
+  // The losing rules (see game.js): the menu's how-to says the next step must match,
+  // and WIPEOUT becomes a panel over the work log with a line saying which rule ended
+  // the run and three ways back in: Last Valid Step, Retry, New Game.
+  const HTML_RULES = [
+    [
+      'then <b>match it on the other side</b> before he tips too far.',
+      "then <b>match it on the other side</b> as your very next step.\n" +
+        "    Any other step while he's tipped knocks him off the line.",
+    ],
+    ['A wrong answer knocks him off the line!', 'A wrong answer knocks him off too!'],
+    [GAMEOVER_UPSTREAM, GAMEOVER_OURS],
+  ];
+  for (const [from, to] of HTML_RULES) {
+    must(html.includes(from), `expected "${from}" in index.html — upstream text may have changed`);
+    html = html.replace(from, to);
+  }
 
   must(!/https?:\/\/(?!www\.w3\.org)/.test(html), 'an absolute URL survived in the HTML');
   fs.writeFileSync(htmlPath, html);

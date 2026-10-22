@@ -571,8 +571,11 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
           <li>Apply it to one side with <strong>◀ LEFT</strong> or <strong>RIGHT ▶</strong>.
             <strong>The figure tips</strong>, because you have changed one side and not the
             other.</li>
-          <li>Apply the matching operation to the other side. The figure stands back up.
-            That is the property of equality, and you just did it rather than recited it.</li>
+          <li>Apply the matching operation to the other side, as your very next step. The
+            figure stands back up. That is the property of equality, and you just did it
+            rather than recited it. Do anything else while it tips — a different amount, a
+            different operation, <strong>SIMPLIFY</strong> or <strong>SUBMIT</strong> — and
+            it falls and the run ends.</li>
           <li>Use <strong>SIMPLIFY</strong> to rewrite a messy side yourself — combine
             <span class="mono">2x + 3x + 4</span> into <span class="mono">5x + 4</span>, or
             distribute <span class="mono">2(x + 3)</span> into <span class="mono">2x + 6</span>.
@@ -615,20 +618,29 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
         <ul>
           <li><strong>Standing</strong> — the two sides are equal. Your equation is true.</li>
           <li><strong>Tipping</strong> — you changed one side and have not matched it yet.
-            This is a warning, not a mistake; it is the state you pass through on every
-            legitimate step.</li>
-          <li><strong>Falling, then dazed</strong> — you submitted a wrong answer. The run
-            ends.</li>
+            It is the state you pass through on every legitimate step, but only for one
+            move: the next step has to be the same operation and amount on the other side.
+            <kbd>Backspace</kbd> with nothing typed takes the last step back instead.</li>
+          <li><strong>Falling, then dazed</strong> — you took a new step while it was
+            tipped, answered the other side with a different step, or submitted a wrong
+            answer. The run ends. A WIPEOUT panel over the work log says which step broke
+            it, with three ways back in: <strong>Last Valid Step</strong> (back to the last
+            point where it stood level), <strong>Retry</strong> (the same equation from the
+            start) or <strong>New Game</strong> (a fresh equation).</li>
         </ul>
         <p class="muted">
           The balance is checked against the actual arithmetic, not against a script of
           expected moves — so any valid route to the answer keeps the figure standing, not
-          just the one the author had in mind.
+          just the one the author had in mind. What it insists on is that every step is
+          identical on both sides of the <span class="mono">=</span>: the same operation
+          and the same number, left and right.
         </p>
 
         <h3>Scoring</h3>
         <ul>
-          <li>One point of streak per equation solved. A wrong submission ends the run.</li>
+          <li>One point of streak per equation solved. A wrong submission, or a new step
+            while the figure is tipped, ends the run. Whichever way back in you choose,
+            the streak starts again from 0.</li>
           <li>Best streak is kept per mode and persists between visits.</li>
           <li>There is no timer. You can stare at a problem as long as you like.</li>
         </ul>
@@ -669,7 +681,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
         <ul>
           <li><strong>Let it tip on purpose.</strong> Apply an operation to one side and
             stop. Look at the beam. That lopsided state <em>is</em> the reason both sides
-            have to match — worth sitting in for a second rather than rushing past.</li>
+            have to match — worth sitting in for a second rather than rushing past. Then
+            match it: any other step from there ends the run.</li>
           <li><strong>Undo the addition before the multiplication.</strong> In
             <span class="mono">3x + 6 = 18</span>, subtract 6 first. Dividing first works
             too, but it hands you fractions for no reason.</li>
@@ -702,9 +715,12 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
             each round to a positive, zero or negative answer and guarantees whole-number
             intermediate steps. Real algebra is messier, and it never produces "no
             solution" or "infinitely many" — which are genuinely instructive cases.</li>
-          <li><strong>One wrong answer ends the run.</strong> That makes for a good game
-            and a blunt teaching tool. There is no partial credit, no hint, and no "try
-            that step again".</li>
+          <li><strong>One mistake ends the run</strong> — a wrong answer, or a new step
+            taken while the figure is tipped. The streak goes back to 0 every time. There
+            is no partial credit and no hint beyond naming the step that broke it, though
+            <strong>Last Valid Step</strong> lets you pick the same equation up from the
+            last level point, and <kbd>Backspace</kbd> can take back a half-done move
+            before it costs you.</li>
           <li><strong>It checks your answer, not your reasoning.</strong> Two students can
             reach <span class="mono">x = 4</span> with the same keystrokes, one
             understanding why and one pattern-matching. The app cannot tell them apart.</li>
