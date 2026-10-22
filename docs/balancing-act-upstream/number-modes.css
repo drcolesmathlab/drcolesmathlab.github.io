@@ -1,0 +1,22 @@
+/* ── Number modes (from Dr. Cole's Math Lab) ──────────────────────────────────
+   Append to the end of style.css, with number-modes.patch applied. Same rules
+   as the Math Lab's a11y.css. The three modes sit in a row along the bottom of
+   the menu, the chosen one lit cyan. Decimal and Fraction Modes add a key, the
+   decimal point or the fraction bar, under SUBMIT, which gives up its second
+   row for it. */
+.numbers { display: flex; gap: 8px; width: min(340px, 92%); }
+.numbers .btn { flex: 1 1 0; padding: 10px 4px; font-size: .8rem; letter-spacing: .04em; }
+.numbers .btn.on { color: var(--cyan); }
+/* A cancelled stacked fraction: a line-through does not reach inside the
+   fraction's box, so strike its numerator and denominator themselves. */
+.cancel .fnum, .cancel .fden { text-decoration: line-through; }
+/* The HUD label (e.g. FRACTION · ENDLESS · LVL 2) wraps between parts only. */
+#modeLabel { text-align: center; }
+#modeLabel span { white-space: nowrap; }
+#keypad.with-pt {
+  grid-template-areas:
+    "d7 d8 d9 oDiv back"
+    "d4 d5 d6 oMul simp"
+    "d1 d2 d3 oSub subm"
+    "d0 pm dx oAdd pt";
+}

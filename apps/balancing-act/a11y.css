@@ -99,6 +99,29 @@
 .title { text-shadow: 0 0 24px rgba(46, 230, 255, .45); }
 .title.red { text-shadow: 0 0 24px rgba(255, 59, 92, .45); }
 
+/* ── Number modes: Integer, Decimal, Fraction ─────────────────────────────────
+   Gameplay, not accessibility, but kept here with the WIPEOUT panel rules for
+   the same reason: a re-vendor keeps this file. Upstream gets the same rules
+   from docs/balancing-act-upstream/number-modes.css. The three modes sit in a
+   row along the bottom of the menu, the chosen one lit cyan. Decimal and
+   Fraction Modes add a key, the decimal point or the fraction bar, under
+   SUBMIT, which gives up its second row for it. */
+.numbers { display: flex; gap: 8px; width: min(340px, 92%); }
+.numbers .btn { flex: 1 1 0; padding: 10px 4px; font-size: .8rem; letter-spacing: .04em; }
+.numbers .btn.on { color: var(--cyan); }
+/* A cancelled stacked fraction: a line-through does not reach inside the
+   fraction's box, so strike its numerator and denominator themselves. */
+.cancel .fnum, .cancel .fden { text-decoration: line-through; }
+#modeLabel { text-align: center; }
+#modeLabel span { white-space: nowrap; }
+#keypad.with-pt {
+  grid-template-areas:
+    "d7 d8 d9 oDiv back"
+    "d4 d5 d6 oMul simp"
+    "d1 d2 d3 oSub subm"
+    "d0 pm dx oAdd pt";
+}
+
 /* ── Landscape layout: laptops, desktops, projectors ──────────────────────────
    Two columns: the beam, message and work log on the left; the input box,
    LEFT/RIGHT and the keypad on the right, with ⌫, SIMPLIFY and SUBMIT in a row
@@ -177,6 +200,16 @@
       "back back back back simp simp simp simp subm subm subm subm";
     max-height: 36rem;
   }
+  /* Decimal and Fraction Modes: their extra key joins the bottom row, it and ⌫
+     narrow (one glyph each), SIMPLIFY and SUBMIT keeping room for their words. */
+  #keypad.with-pt {
+    grid-template-areas:
+      "d7   d7   d7   d8   d8   d8   d9   d9   d9   oDiv oDiv oDiv"
+      "d4   d4   d4   d5   d5   d5   d6   d6   d6   oMul oMul oMul"
+      "d1   d1   d1   d2   d2   d2   d3   d3   d3   oSub oSub oSub"
+      "d0   d0   d0   pm   pm   pm   dx   dx   dx   oAdd oAdd oAdd"
+      "pt   pt   back back simp simp simp simp subm subm subm subm";
+  }
   #keypad .btn { font-size: 2rem; padding: 4px; }
   #keypad .btn.small-label, #kSubmit { font-size: 1.5rem; letter-spacing: 0; }
 
@@ -195,7 +228,8 @@
       "title title"
       "tag   tag"
       "how   modes"
-      "how   keys";
+      "how   keys"
+      "nums  nums";
     column-gap: 56px; row-gap: 20px;
     justify-content: center;
     align-content: start; align-content: safe center;
@@ -206,6 +240,8 @@
   #menu .how { grid-area: how; max-width: none; line-height: 1.5; text-align: left; }
   #menu .modes { grid-area: modes; width: 100%; gap: 14px; }
   #menu #keysToggle { grid-area: keys; justify-self: center; align-self: start; }
+  #menu .numbers { grid-area: nums; width: 100%; max-width: 40rem; justify-self: center; gap: 14px; }
+  .numbers .btn { font-size: 1.5rem; padding: 10px 8px; }
   .modes .btn { font-size: 1.5rem; padding: 10px 18px; }
   .modes .best { font-size: 1.5rem; }
 }

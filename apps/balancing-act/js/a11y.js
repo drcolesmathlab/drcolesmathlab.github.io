@@ -31,7 +31,8 @@
     if (node.nodeType === 3) return node.nodeValue;
     if (node.nodeType !== 1 || node.classList.contains('sr-only')) return '';
     if (node.classList.contains('frac')) {
-      const num = mathText(node.querySelector(':scope > .fnum')).trim();
+      // a whole bracketed group over a number, (x + 1) over 4, needs no brackets read
+      const num = mathText(node.querySelector(':scope > .fnum')).trim().replace(/^\((.*)\)$/, '$1');
       const den = mathText(node.querySelector(':scope > .fden')).trim();
       return ' ' + (/[+−] /.test(num) ? 'the quantity ' + num + ', all' : num) + ' over ' + den + ' ';
     }
@@ -68,9 +69,13 @@
     const t = cell.textContent.replace(/\s+/g, ' ').trim();
     if (t === '✎') return 'rewritten';
     const side = cell.classList.contains('l') ? 'l' : 'r';
-    let m = t.match(/^([+−]) ?\(?(−?)([\dx]+)\)?$/);
-    if (m) {
-      let d = (m[1] === '+' ? 'add ' : 'subtract ') + (m[2] ? 'negative ' : '') + m[3];
+    // "+ 3", "− (−2.5)", "+ x over 3": read through mathText so a stacked
+    // fraction operand says "1 over 2"
+    if (/^[+−] /.test(t)) {
+      let v = mathText(cell).replace(/\s+/g, ' ').trim().slice(1).trim();
+      const neg = /^\(\s*−/.test(v);
+      v = v.replace(/^\(\s*−?\s*/, '').replace(/\s*\)$/, '');
+      let d = (t[0] === '+' ? 'add ' : 'subtract ') + (neg ? 'negative ' : '') + words(v);
       const gone = cell.classList.contains('cancel') &&
         before.find(c => c.classList.contains('cancel') && c.classList.contains(side));
       if (gone) d += ', cancelling ' + speakTerm(gone);
@@ -83,11 +88,13 @@
     const whole = op && op.childNodes.length === 1 && op.firstChild.classList &&
       op.firstChild.classList.contains('frac') ? op.firstChild : null;
     if (whole) {
-      const k = whole.querySelector(':scope > .fden').textContent.trim();
-      return 'divide by ' + words(k) + (struck && struck + k.replace('−', ''));
+      const k = mathText(whole.querySelector(':scope > .fden')).replace(/\s+/g, ' ').trim();
+      return 'divide by ' + words(k) + (struck && struck + k.replace('−', '').trim());
     }
-    m = t.match(/^(−?\d+)\(/);
-    if (m) return 'multiply by ' + words(m[1]) + (struck && struck + m[1].replace('−', ''));
+    // a whole or decimal factor, "2(", or a stacked fraction one, "2 over 3 ("
+    const m = (op && mathText(op).replace(/\s+/g, ' ').trim().match(/^(−? ?[\d.]+ over [\d.]+) ?\(/)) ||
+      t.match(/^(−?[\d.]+)\(/);
+    if (m) return 'multiply by ' + words(m[1]) + (struck && struck + m[1].replace('−', '').trim());
     return words(t);
   }
   function readLedger() {
@@ -167,7 +174,9 @@
     const m = t.match(/^([+−×/]) (.*)$/);
     if (!m) return 'Entered: ' + words(t);
     const OP = { '+': 'add', '−': 'subtract', '×': 'multiply by', '/': 'divide by' };
-    return 'Entered: ' + OP[m[1]] + ' ' + (m[2] === '▢' ? 'no number yet' : words(m[2]));
+    // a typed fraction (Fraction Mode) reads "3 over 4"
+    const v = m[2].replace(/(\d)\/(\d|$)/g, '$1 over $2');
+    return 'Entered: ' + OP[m[1]] + ' ' + (m[2] === '▢' ? 'no number yet' : words(v));
   }
 
   // ---- announcements: one polite live region, outside #app so it still
@@ -240,7 +249,7 @@
   // ---- keyboard
   // Single-character shortcuts can be switched off (WCAG 2.1.4); the setting
   // lives on the menu and persists like the game's own sound setting.
-  const CHAR_KEYS = /^[0-9+\-*/xsn]$/;
+  const CHAR_KEYS = /^[0-9+\-*/xsn.]$/;
   let keysOn = true;
   try { keysOn = localStorage.getItem('mathlab.balancing-act.keys') !== '0'; } catch (e) {}
   // Which element the keyboard last moved focus to. :focus-visible can't tell
@@ -264,7 +273,7 @@
 
   // ---- names and states for controls whose label is a symbol
   const KEY_NAMES = { '/': 'divide', '*': 'multiply', '-': 'subtract', '+': 'add',
-    back: 'Backspace', sign: 'negative', x: 'variable x' };
+    back: 'Backspace', sign: 'negative', x: 'variable x', pt: 'decimal point', bar: 'fraction bar' };
   const TOGGLES = ['/', '*', '-', '+', 'sign', 'simplify'];
 
   function init() {
@@ -295,6 +304,11 @@
     });
     new MutationObserver(syncPressed).observe($('#keypad'), { subtree: true, attributes: true, attributeFilter: ['class'] });
     syncPressed();
+    // the number modes along the bottom of the menu: one is pressed
+    const numBtns = Array.from(menu.querySelectorAll('[data-nums]'));
+    const syncNums = () => numBtns.forEach(b => b.setAttribute('aria-pressed', String(b.classList.contains('on'))));
+    numBtns.forEach(b => new MutationObserver(syncNums).observe(b, { attributes: true, attributeFilter: ['class'] }));
+    syncNums();
     const sound = $('#soundToggle');
     const syncSound = () => sound.setAttribute('aria-label', 'Sound: ' + (sound.classList.contains('on') ? 'on' : 'off'));
     new MutationObserver(syncSound).observe(sound, { attributes: true, attributeFilter: ['class'] });

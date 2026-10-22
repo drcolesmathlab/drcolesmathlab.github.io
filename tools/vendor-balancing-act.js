@@ -140,6 +140,22 @@ function main() {
     process.exit(1);
   }
 
+  /*
+   * The number modes (Integer, Decimal, Fraction) are ours too, across algebra.js,
+   * game.js and index.html. An upstream algebra.js without them would silently take
+   * the Decimal and Fraction Modes away. Same remedy: apply docs/balancing-act-upstream/
+   * number-modes.patch and number-modes.css upstream first.
+   */
+  const upAlgebra = path.join(SRC, 'js/algebra.js');
+  if (fs.existsSync(upAlgebra) && !fs.readFileSync(upAlgebra, 'utf8').includes('function setNumbers(')) {
+    console.error(
+      '\n✗ Upstream js/algebra.js lacks the Math Lab number modes (function setNumbers).\n' +
+      '  Apply docs/balancing-act-upstream/ to the upstream folder (see its README), then re-run.\n' +
+      '  Nothing was copied.\n'
+    );
+    process.exit(1);
+  }
+
   for (const rel of COPY) {
     const from = path.join(SRC, rel);
     if (!must(fs.existsSync(from), `missing source file: ${rel}`)) continue;
