@@ -1,0 +1,26 @@
+diff --git a/js/algebra.js b/js/algebra.js
+--- a/js/algebra.js
++++ b/js/algebra.js
+@@ -204,16 +204,14 @@
+   // render a whole side for a ×/÷ step, marking any term that exactly
+   // cancels to identity — the per-term building block behind the struck-
+   // through "2·(x/2) -> x" display for that operation. coef is a number or a
+-  // fraction.
++  // fraction. Nothing is struck unless EVERY term cancels: the factor still
++  // has to be distributed to any term it doesn't cancel, so 5(x/5 + 3) can't
++  // strike the 5 — the 3 still needs it.
+   function renderCancelSide(terms, op, coef) {
+     const k = typeof coef === 'number' ? fInt(coef) : coef;
+-    const parts = [];
+-    let anyCancel = false;
+-    for (const t of terms) {
+-      if (t.t !== 'g' && t.c.n === 0) continue;
+-      if (cancelsToUnit(t, op, k)) { anyCancel = true; parts.push(renderTermCellCancel(t, op, k)); }
+-      else parts.push(renderTermCell(t));
+-    }
++    const shown = terms.filter(t => t.t === 'g' || t.c.n !== 0);
++    const anyCancel = shown.length > 0 && shown.every(t => cancelsToUnit(t, op, k));
++    const parts = shown.map(t => anyCancel ? renderTermCellCancel(t, op, k) : renderTermCell(t));
+     return { html: joinTerms(parts), anyCancel };
+   }
+   // A group with outer coefficient +1 is redundant grouping — 1·(x + m) is just
