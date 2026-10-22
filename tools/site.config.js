@@ -323,11 +323,12 @@ module.exports = {
           'cancelling negative 7”). The work log has a plain-text version for screen ' +
           'readers, the menu and WIPEOUT screens are proper dialogs that take focus, Enter ' +
           'presses whichever button you tabbed to, and the single-key shortcuts can be ' +
-          'switched off from the menu. Faded text now meets AA contrast and the page ' +
-          'scrolls instead of clipping at 200% zoom. The gaps: this was checked with ' +
-          'automated tests and scripted browser runs, not yet with a screen reader in a ' +
-          'real lesson, so the wording may be wordier than it needs to be; and the ' +
-          'Show Property button’s tap area is about 37 px tall, short of 44.',
+          'switched off from the menu. Faded text now meets AA contrast, the game scrolls ' +
+          'instead of clipping at 200% zoom, the menu screens scroll whenever they do not ' +
+          'fit, and every small button has a 44 px tap ' +
+          'area. The gap: this was checked with automated tests and scripted browser ' +
+          'runs, not yet with a screen reader in a real lesson, so the wording may be ' +
+          'wordier than it needs to be.',
       },
 
       og: {
