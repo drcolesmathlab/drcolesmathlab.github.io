@@ -13,6 +13,7 @@ re-vendor can't silently bring back the old rules.
 | `wipeout-panel.css` | end of `style.css` | Makes WIPEOUT a panel over the work log instead of a full-screen overlay |
 | `number-modes.patch` | `js/algebra.js`, `js/game.js`, `index.html` | Integer, Decimal and Fraction Modes. Apply **after** `losing-rules.patch` |
 | `number-modes.css` | end of `style.css` | The mode row on the menu, the decimal point / fraction bar key, struck fractions |
+| `cancel-only-when-all-cancel.patch` | `js/algebra.js` | A × / ÷ step strikes the factor only when it cancels every term. Apply **after** `number-modes.patch` |
 
 `losing-rules.patch` is made against the upstream files exactly as they were last
 vendored, so it applies cleanly as long as upstream `js/game.js` and the menu and WIPEOUT
@@ -50,6 +51,14 @@ What the number-modes patch changes:
 - **Exact arithmetic everywhere.** The balance check works in fractions, so decimals
   never drift, and 0.5 typed on one side matches .50 on the other.
 
+What the cancel patch changes:
+
+- **No strike-through while a factor still has to be distributed.** Multiplying
+  x/5 + 3 by 5 used to show 5(x/5 + 3) with both 5s struck, which leaves nothing to
+  multiply the 3 by. Now the work log strikes the factor and the coefficient only
+  when the factor cancels every term on that side (5 · x/5, or 3(x + 2) ÷ 3). The
+  same holds for ÷: (5x + 15) ÷ 5 strikes nothing.
+
 ## How to apply
 
 From the upstream folder, with this repository checked out next to it at
@@ -66,6 +75,9 @@ cat "$P/wipeout-panel.css" >> style.css
 patch -p1 --dry-run < "$P/number-modes.patch"
 patch -p1 < "$P/number-modes.patch"
 cat "$P/number-modes.css" >> style.css
+
+patch -p1 --dry-run < "$P/cancel-only-when-all-cancel.patch"
+patch -p1 < "$P/cancel-only-when-all-cancel.patch"
 ```
 
 If the upstream folder is a git repository, `git apply` works too, in the same order.
@@ -85,7 +97,8 @@ node tools/apply-site-chrome.js
 git diff --stat
 ```
 
-The vendor script now sees the rules and the number modes upstream and goes ahead.
+The vendor script now sees the rules, the number modes and the cancel fix upstream and
+goes ahead.
 `git diff` should show no change to `apps/balancing-act/js/algebra.js`, `game.js` or
 `index.html`; `style.css` gains the panel and number-mode rules, which `a11y.css` also
 has, so nothing looks different.

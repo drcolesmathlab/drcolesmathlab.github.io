@@ -156,6 +156,21 @@ function main() {
     process.exit(1);
   }
 
+  /*
+   * A × / ÷ step strikes the factor only when it cancels every term on the side:
+   * 5(x/5 + 3) can't strike the 5, because the 3 still needs it. An upstream
+   * algebra.js without this would bring back the struck 5. Same remedy: apply
+   * docs/balancing-act-upstream/cancel-only-when-all-cancel.patch upstream first.
+   */
+  if (fs.existsSync(upAlgebra) && !fs.readFileSync(upAlgebra, 'utf8').includes('shown.every(t => cancelsToUnit(')) {
+    console.error(
+      '\n✗ Upstream js/algebra.js still strikes a factor that has to be distributed (renderCancelSide).\n' +
+      '  Apply docs/balancing-act-upstream/ to the upstream folder (see its README), then re-run.\n' +
+      '  Nothing was copied.\n'
+    );
+    process.exit(1);
+  }
+
   for (const rel of COPY) {
     const from = path.join(SRC, rel);
     if (!must(fs.existsSync(from), `missing source file: ${rel}`)) continue;
