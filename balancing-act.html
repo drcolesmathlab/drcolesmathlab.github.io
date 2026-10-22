@@ -585,16 +585,34 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
         </ol>
 
         <h3>Modes</h3>
+        <p>Pick <strong>Integer</strong>, <strong>Decimal</strong> or
+          <strong>Fraction</strong> along the bottom of the menu (the game remembers your
+          choice). Each one has the same four ways to play:</p>
         <ul>
           <li><strong>1-step</strong> and <strong>2-step</strong> — the basic shapes.</li>
           <li><strong>Multi-step</strong> — combining like terms, distribution, and
             variables on both sides.</li>
           <li><strong>Endless</strong> — difficulty ramps with your streak.</li>
         </ul>
+        <ul>
+          <li><strong>Integer</strong> — whole numbers throughout.</li>
+          <li><strong>Decimal</strong> — the equation has decimals to the hundredths, and
+            the answer ends by the thousandths. Work with the decimals as they are, or
+            multiply both sides by 10 or 100 so only whole numbers remain. You choose each
+            step and the app does the arithmetic. A value that would repeat is shown as a
+            fraction, never rounded.</li>
+          <li><strong>Fraction</strong> — whole-number numerators and denominators, like
+            <span class="mono">2x/3</span>, <span class="mono">(x + 1)/4</span> or a fraction
+            on each side. Solve with the fractions, or multiply both sides by any common
+            multiple of the denominators to clear them. The <strong>a/b</strong> key types a
+            fraction. Answers can be any rational number, shown fully reduced.</li>
+        </ul>
 
         <h3>Keyboard</h3>
         <p class="muted">
-          Digits and <kbd>x</kbd> to build a number · <kbd>+</kbd> <kbd>−</kbd>
+          Digits and <kbd>x</kbd> to build a number (<kbd>.</kbd> for a decimal point in
+          Decimal mode; in Fraction mode, <kbd>/</kbd> right after a number is its fraction
+          bar) · <kbd>+</kbd> <kbd>−</kbd>
           <kbd>*</kbd> <kbd>/</kbd> to pick an operation · <kbd>s</kbd> to simplify ·
           <kbd>←</kbd> <kbd>→</kbd> to apply to a side · <kbd>Enter</kbd> to submit ·
           <kbd>Backspace</kbd> to delete. If you tab to a button, <kbd>Enter</kbd> presses
@@ -641,7 +659,8 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
           <li>One point of streak per equation solved. A wrong submission, or a new step
             while the figure is tipped, ends the run. Whichever way back in you choose,
             the streak starts again from 0.</li>
-          <li>Best streak is kept per mode and persists between visits.</li>
+          <li>Best streak is kept for each mode and each way to play, and persists
+            between visits.</li>
           <li>There is no timer. You can stare at a problem as long as you like.</li>
         </ul>
       </div>
@@ -733,7 +752,7 @@ footer.site{position:relative;z-index:1;margin-top:46px;padding-bottom:44px}
 <h3>Accessibility, honestly</h3>
 <p>The page around this app meets <strong>WCAG 2.1 AA</strong>: a skip link as the first focusable element, a "skip past the interactive app" link before the frame so keyboard users are never trapped inside it, verified colour contrast on every token pair, visible focus rings, 44&nbsp;px touch targets, and full <code>prefers-reduced-motion</code> support.</p>
 <p>The app itself is an existing project embedded here, and it does not meet that bar in full. Specifically: of the apps here it comes closest. Every control is a real button with a spoken name, there is no timer, and each step is announced in words — what you did to which side, the new equation, and whether the beam is balanced or tipped, with the streak read out at each new equation. Struck-through cancellations are spoken too (“add 7, cancelling negative 7”). The work log has a plain-text version for screen readers, the menu and WIPEOUT screens are proper dialogs that take focus, Enter presses whichever button you tabbed to, and the single-key shortcuts can be switched off from the menu. Faded text now meets AA contrast, the game scrolls instead of clipping at 200% zoom, the menu screens scroll whenever they do not fit, and every small button has a 44 px tap area. Text has no glow behind its letters, and on a screen at least 840 px wide in landscape the game switches to two columns with every piece of text at 24 px (18 pt) or larger. The gap: this was checked with automated tests and scripted browser runs, not yet with a screen reader in a real lesson, so the wording may be wordier than it needs to be.</p>
-<p class="muted">This app saves progress in your browser's local storage (<code>eqBalanceBest</code>, <code>eqBalanceSound</code>, <code>eqBalanceShowProps</code>, <code>mathlab.balancing-act.keys</code>). Nothing is sent anywhere. Safari clears script-written storage after about a week without a visit, so saved scores can disappear there — that is a browser policy, not a bug I can fix.</p>
+<p class="muted">This app saves progress in your browser's local storage (<code>eqBalanceBest</code>, <code>eqBalanceSound</code>, <code>eqBalanceShowProps</code>, <code>mathlab.balancing-act.keys</code>, <code>mathlab.balancing-act.numbers</code>). Nothing is sent anywhere. Safari clears script-written storage after about a week without a visit, so saved scores can disappear there — that is a browser policy, not a bug I can fix.</p>
 <!-- A11Y:END -->
       </div>
     </section>

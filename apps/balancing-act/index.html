@@ -102,6 +102,8 @@
     <button class="btn c-yel" data-k="sign" style="grid-area:pm">±</button>
     <button class="btn c-yel" data-k="x" style="grid-area:dx">x</button>
     <button class="btn c-mag" data-k="+" style="grid-area:oAdd">+</button>
+    <button class="btn c-cyan hide" id="kPoint" data-k="pt" style="grid-area:pt">.</button>
+    <button class="btn c-cyan small-label hide" id="kBar" data-k="bar" style="grid-area:pt">a/b</button>
   </div>
 </div>
 
@@ -115,12 +117,18 @@
     Use <b>SIMPLIFY</b> to rewrite a messy side.
     Get to <b>x&nbsp;=&nbsp;▢</b> and hit <b>SUBMIT</b>.
     A wrong answer knocks him off too!
+    <span id="proTip" class="hide"><br><b>Pro tip:</b> multiplying both sides by the LCM first means no more fractions!</span>
   </div>
   <div class="modes">
     <button class="btn c-cyan" data-mode="one">1-STEP <span class="best"></span></button>
     <button class="btn c-mag" data-mode="two">2-STEP <span class="best"></span></button>
     <button class="btn c-yel" data-mode="multi">MULTI-STEP <span class="best"></span></button>
     <button class="btn c-green" data-mode="endless">ENDLESS <span class="best"></span></button>
+  </div>
+  <div class="numbers" role="group" aria-label="Mode">
+    <button class="btn c-dim" data-nums="integer">INTEGER</button>
+    <button class="btn c-dim" data-nums="decimal">DECIMAL</button>
+    <button class="btn c-dim" data-nums="fraction">FRACTION</button>
   </div>
 </div>
 

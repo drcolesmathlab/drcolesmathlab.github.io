@@ -310,7 +310,7 @@ module.exports = {
       // Narrower than that, the app's own single column centres inside the frame.
       frame: { height: 'clamp(600px, 84vh, 900px)' },
 
-      storageKeys: ['eqBalanceBest', 'eqBalanceSound', 'eqBalanceShowProps', 'mathlab.balancing-act.keys'],
+      storageKeys: ['eqBalanceBest', 'eqBalanceSound', 'eqBalanceShowProps', 'mathlab.balancing-act.keys', 'mathlab.balancing-act.numbers'],
       thirdParty: [],
 
       a11y: {

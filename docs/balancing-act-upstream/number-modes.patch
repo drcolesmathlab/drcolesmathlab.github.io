@@ -1,0 +1,909 @@
+diff --git a/index.html b/index.html
+index 5e2791c..3df5611 100644
+--- a/index.html
++++ b/index.html
+@@ -102,6 +102,8 @@
+     <button class="btn c-yel" data-k="sign" style="grid-area:pm">±</button>
+     <button class="btn c-yel" data-k="x" style="grid-area:dx">x</button>
+     <button class="btn c-mag" data-k="+" style="grid-area:oAdd">+</button>
++    <button class="btn c-cyan hide" id="kPoint" data-k="pt" style="grid-area:pt">.</button>
++    <button class="btn c-cyan small-label hide" id="kBar" data-k="bar" style="grid-area:pt">a/b</button>
+   </div>
+ </div>
+ 
+@@ -115,6 +117,7 @@
+     Use <b>SIMPLIFY</b> to rewrite a messy side.
+     Get to <b>x&nbsp;=&nbsp;▢</b> and hit <b>SUBMIT</b>.
+     A wrong answer knocks him off too!
++    <span id="proTip" class="hide"><br><b>Pro tip:</b> multiplying both sides by the LCM first means no more fractions!</span>
+   </div>
+   <div class="modes">
+     <button class="btn c-cyan" data-mode="one">1-STEP <span class="best"></span></button>
+@@ -122,6 +125,11 @@
+     <button class="btn c-yel" data-mode="multi">MULTI-STEP <span class="best"></span></button>
+     <button class="btn c-green" data-mode="endless">ENDLESS <span class="best"></span></button>
+   </div>
++  <div class="numbers" role="group" aria-label="Mode">
++    <button class="btn c-dim" data-nums="integer">INTEGER</button>
++    <button class="btn c-dim" data-nums="decimal">DECIMAL</button>
++    <button class="btn c-dim" data-nums="fraction">FRACTION</button>
++  </div>
+ </div>
+ 
+ <div id="gameover" class="overlay hide">
+diff --git a/js/algebra.js b/js/algebra.js
+index 6a0196d..2bd230c 100644
+--- a/js/algebra.js
++++ b/js/algebra.js
+@@ -24,6 +24,32 @@
+   const fIsZero = x => x.n === 0;
+   const fVal = x => x.n / x.d;
+ 
++  // ---------- number modes ----------
++  // Integer Mode is the original game. Decimal Mode gives decimals (no more than
++  // hundredths) and shows any value that terminates as a decimal; a value that
++  // would repeat is shown as a fraction instead, never rounded. Fraction Mode
++  // gives fractions with integer numerators and denominators. The mode only
++  // changes how numbers are generated, typed and shown: the arithmetic is exact
++  // fractions throughout, in every mode.
++  let numbers = 'integer';
++  function setNumbers(m) { numbers = m; }
++
++  // decimal places a value needs, or Infinity if it repeats (or needs > 6)
++  function places(f) {
++    let p = 1;
++    for (let k = 0; k <= 6; k++, p *= 10) if (p % f.d === 0) return k;
++    return Infinity;
++  }
++  // |f| as a decimal string, e.g. 3/8 -> "0.375"
++  function decStr(f) {
++    const k = places(f), p = Math.pow(10, k);
++    const big = Math.abs(f.n) * (p / f.d);
++    const whole = Math.floor(big / p);
++    if (!k) return String(whole);
++    return whole + '.' + String(big % p).padStart(k, '0');
++  }
++  const showsDecimal = f => numbers === 'decimal' && f.d !== 1 && places(f) !== Infinity;
++
+   // ---------- rendering ----------
+   const MINUS = '−';
+ 
+@@ -33,26 +59,51 @@
+     return '<span class="frac"><span class="fnum">' + num + '</span>' +
+       '<span class="fden">' + den + '</span></span>';
+   }
++  // |f| as markup: an integer, a decimal (Decimal Mode), or a stacked fraction.
++  // struck draws it cancelled; a stacked fraction is struck inside its numerator
++  // and denominator, since a line-through on its box would not show.
++  function numCore(f, struck) {
++    const w = s => struck ? '<span class="cancel">' + s + '</span>' : s;
++    if (f.d === 1) return w(String(Math.abs(f.n)));
++    if (showsDecimal(f)) return w(decStr(f));
++    return fracHTML(w(String(Math.abs(f.n))), w(String(f.d)));
++  }
++  // f as plain text, for messages: "−3", "2.25", "5/6"
++  function numText(f) {
++    const s = f.n < 0 ? MINUS : '';
++    if (f.d === 1 || showsDecimal(f)) return s + decStr(f);
++    return s + Math.abs(f.n) + '/' + f.d;
++  }
+ 
+-  // coefficient term for x: handles 1, -1, fractions like 1/3 -> x over 3
+-  function xTerm(a) {
++  // coefficient term for x: handles 1, -1, fractions like 1/3 -> x over 3.
++  // style s: 'c' draws a fraction as a coefficient, (2/3)x, instead of 2x over 3;
++  // 'o' keeps x over a even in Decimal Mode (the x/a = c shapes).
++  function xTerm(a, s) {
+     const n = Math.abs(a.n), d = a.d;
++    if (d !== 1 && s !== 'o' && showsDecimal(a)) return { neg: a.n < 0, core: decStr(a) + 'x' };
++    if (d !== 1 && s === 'c') return { neg: a.n < 0, core: fracHTML(String(n), String(d)) + 'x' };
+     const xt = (n === 1 ? 'x' : n + 'x');
+     const core = d === 1 ? xt : fracHTML(xt, String(d));
+     return { neg: a.n < 0, core };
+   }
+   function numTerm(b) {
+-    const n = Math.abs(b.n);
+-    return { neg: b.n < 0, core: b.d === 1 ? String(n) : fracHTML(String(n), String(b.d)) };
++    return { neg: b.n < 0, core: numCore(b) };
+   }
+-  // a factored group term: c(x + m), preserved verbatim through operations
++  // a factored group term: c(x + m), preserved verbatim through operations.
++  // Outside Integer Mode a fractional c is drawn with the group over the
++  // denominator, so 1/4·(x + 1) reads (x + 1) over 4.
+   function groupTerm(t) {
+     const cAbs = { n: Math.abs(t.c.n), d: t.c.d };
++    const inner = '(' + renderSide(fInt(1), t.m) + ')';
+     let coefStr;
+     if (cAbs.n === cAbs.d) coefStr = '';                    // |c| === 1
+     else if (cAbs.d === 1) coefStr = String(cAbs.n);
++    else if (showsDecimal(cAbs)) coefStr = decStr(cAbs);
++    else if (numbers !== 'integer') {
++      return { neg: t.c.n < 0, core: fracHTML((cAbs.n === 1 ? '' : cAbs.n) + inner, String(cAbs.d)) };
++    }
+     else coefStr = fracHTML(String(cAbs.n), String(cAbs.d));
+-    return { neg: t.c.n < 0, core: coefStr + '(' + renderSide(fInt(1), t.m) + ')' };
++    return { neg: t.c.n < 0, core: coefStr + inner };
+   }
+   function joinTerms(parts) {
+     if (!parts.length) return '0';
+@@ -90,59 +141,77 @@
+   // render a single term to {neg, core} — the per-term building block the
+   // ledger uses to lay out each term in its own aligned grid column.
+   function renderTermCell(t) {
+-    if (t.t === 'x') return xTerm(t.c);
++    if (t.t === 'x') return xTerm(t.c, t.s);
+     if (t.t === 'n') return numTerm(t.c);
+     return groupTerm(t);
+   }
+   function renderTerms(terms) {
+     const parts = [];
+     for (const t of terms) {
+-      if (t.t === 'x') { if (t.c.n !== 0) parts.push(xTerm(t.c)); }
++      if (t.t === 'x') { if (t.c.n !== 0) parts.push(xTerm(t.c, t.s)); }
+       else if (t.t === 'n') { if (t.c.n !== 0) parts.push(numTerm(t.c)); }
+       else parts.push(groupTerm(t));
+     }
+     return joinTerms(parts);
+   }
+-  // Whether ×/÷-ing term t by coef exactly reduces its coefficient magnitude
+-  // to 1, e.g. (x/2)·2 -> x, or 2x÷2 -> x. Fractions are always stored in
+-  // lowest terms, so this is only possible when the "other half" of the
+-  // reduction is already a unit — |n|=1 with d=coef (·), or d=1 with |n|=coef
+-  // (÷) — which is what makes the cancelling glyph unambiguous to point at.
++  // Whether ×/÷-ing term t by k exactly reduces its coefficient magnitude to 1,
++  // e.g. (x/2)·2 -> x, 2x÷2 -> x, 0.5x·2 -> x, or (2/3)x ÷ (2/3) -> x — which is
++  // what makes the cancelling coefficient unambiguous to point at. Fractions
++  // are always stored in lowest terms, so with a whole-number k (all Integer
++  // Mode ever has) this is only possible when the "other half" is already a
++  // unit: |n|=1 with d=k (·), or d=1 with |n|=k (÷).
+   // Constants are excluded: unlike x/g terms there's no bare glyph left
+   // behind to show (6÷6 becomes the digit 1, not an identity), so there's
+   // nothing sensible to strike through.
+-  function cancelsToUnit(t, op, coef) {
++  function cancelsToUnit(t, op, k) {
+     if (t.t !== 'x' && t.t !== 'g') return false;
+-    const k = Math.abs(coef);
+-    if (op === '*') return Math.abs(t.c.n) === 1 && t.c.d === k;
+-    if (op === '/') return t.c.d === 1 && Math.abs(t.c.n) === k;
+-    return false;
+-  }
+-  // render a cancelling x/g term with the vanishing coefficient digit(s)
+-  // wrapped in a struck-through span, leaving the bare variable/group visible.
+-  function renderTermCellCancel(t, op) {
++    const after = op === '*' ? fMul(t.c, k) : fDiv(t.c, k);
++    return Math.abs(after.n) === 1 && after.d === 1;
++  }
++  // render a cancelling x/g term with the vanishing coefficient wrapped in a
++  // struck-through span, leaving the bare variable/group visible. With a
++  // whole-number factor on a coefficient drawn as a fraction or integer, only
++  // the one digit that goes is struck (the original game's look); otherwise
++  // (a decimal, or a fractional factor) the whole coefficient is.
++  function renderTermCellCancel(t, op, k) {
+     const strike = s => '<span class="cancel">' + s + '</span>';
++    const c = t.c, n = Math.abs(c.n);
++    const dec = (t.t === 'g' || t.s !== 'o') && showsDecimal(c);
++    const digit = k.d === 1 && !dec;
+     if (t.t === 'x') {
+-      const core = op === '*'
+-        ? (t.c.d === 1 ? 'x' : fracHTML('x', strike(t.c.d)))
+-        : strike(Math.abs(t.c.n)) + 'x';
+-      return { neg: t.c.n < 0, core };
++      let core;
++      if (digit && op === '*') {
++        core = c.d === 1 ? 'x' : t.s === 'c' ? fracHTML('1', strike(c.d)) + 'x' : fracHTML('x', strike(c.d));
++      } else if (digit) core = strike(n) + 'x';
++      else if (dec) core = strike(decStr(c)) + 'x';
++      else if (c.d === 1) core = strike(n) + 'x';
++      else if (t.s === 'c') core = fracHTML(strike(n), strike(c.d)) + 'x';
++      else core = fracHTML((n === 1 ? '' : strike(n)) + 'x', strike(c.d));
++      return { neg: c.n < 0, core };
+     }
+-    const inner = renderSide(fInt(1), t.m);
+-    const coefStr = op === '*'
+-      ? (t.c.d === 1 ? '' : fracHTML('1', strike(t.c.d)))
+-      : strike(Math.abs(t.c.n));
+-    return { neg: t.c.n < 0, core: coefStr + '(' + inner + ')' };
++    const inner = '(' + renderSide(fInt(1), t.m) + ')';
++    const over = numbers !== 'integer' && c.d !== 1 && !dec;   // drawn as (x + m) over d
++    let core;
++    if (digit && op === '*') {
++      core = c.d === 1 ? inner : over ? fracHTML(inner, strike(c.d)) : fracHTML('1', strike(c.d)) + inner;
++    } else if (digit) core = strike(n) + inner;
++    else if (dec) core = strike(decStr(c)) + inner;
++    else if (c.d === 1) core = strike(n) + inner;
++    else if (over) core = fracHTML((n === 1 ? '' : strike(n)) + inner, strike(c.d));
++    else core = fracHTML(strike(n), strike(c.d)) + inner;
++    return { neg: c.n < 0, core };
+   }
+   // render a whole side for a ×/÷ step, marking any term that exactly
+   // cancels to identity — the per-term building block behind the struck-
+-  // through "2·(x/2) -> x" display for that operation.
++  // through "2·(x/2) -> x" display for that operation. coef is a number or a
++  // fraction.
+   function renderCancelSide(terms, op, coef) {
++    const k = typeof coef === 'number' ? fInt(coef) : coef;
+     const parts = [];
+     let anyCancel = false;
+     for (const t of terms) {
+       if (t.t !== 'g' && t.c.n === 0) continue;
+-      if (cancelsToUnit(t, op, coef)) { anyCancel = true; parts.push(renderTermCellCancel(t, op)); }
++      if (cancelsToUnit(t, op, k)) { anyCancel = true; parts.push(renderTermCellCancel(t, op, k)); }
+       else parts.push(renderTermCell(t));
+     }
+     return { html: joinTerms(parts), anyCancel };
+@@ -151,8 +220,9 @@
+   // x + m, with nothing to distribute — so drop the parentheses, expanding it
+   // into the loose terms x and m. A coefficient of −1 is NOT dropped: the
+   // leading minus still has to be distributed to each term, −(x + 2) -> −x − 2,
+-  // and that is the player's step to make. (The generator never emits |c| < 2,
+-  // so this only fires after the player scales a group down, e.g. 3(x+2) ÷ 3.)
++  // and that is the player's step to make. (The generators never emit c = ±1,
++  // so this only fires after the player scales a group, e.g. 3(x+2) ÷ 3, or
++  // (x + 1)/4 · 4 in Fraction Mode.)
+   function expandUnitGroups(terms) {
+     const out = [];
+     for (const t of terms) {
+@@ -172,8 +242,10 @@
+   function cloneTerms(terms) {
+     return terms.map(t => t.t === 'g'
+       ? { t: 'g', c: { n: t.c.n, d: t.c.d }, m: { n: t.m.n, d: t.m.d } }
+-      : { t: t.t, c: { n: t.c.n, d: t.c.d } });
++      : withStyle({ t: t.t, c: { n: t.c.n, d: t.c.d } }, t.s));
+   }
++  // an x term keeps its drawing style ('c' or 'o', see xTerm) through operations
++  function withStyle(t, s) { if (s) t.s = s; return t; }
+   function cloneSide(S) {
+     return { a: { n: S.a.n, d: S.a.d }, b: { n: S.b.n, d: S.b.d }, terms: cloneTerms(S.terms), display: S.display };
+   }
+@@ -195,7 +267,7 @@
+     let idx = -1;
+     for (const t of terms) {
+       if (t.t === kind) {
+-        if (idx < 0) { idx = out.length; out.push({ t: kind, c: t.c }); }
++        if (idx < 0) { idx = out.length; out.push(withStyle({ t: kind, c: t.c }, t.s)); }
+         else out[idx].c = fAdd(out[idx].c, t.c);
+       } else out.push(t);
+     }
+@@ -205,16 +277,17 @@
+   function scaleTerms(terms, k) {
+     return terms.map(t => t.t === 'g'
+       ? { t: 'g', c: fMul(t.c, k), m: t.m }
+-      : { t: t.t, c: fMul(t.c, k) });
++      : withStyle({ t: t.t, c: fMul(t.c, k) }, t.s));
+   }
+   // apply one operation to a side, returning a new finalized side.
+   // +/- only touch the loose term of the matching kind; ×/÷ scale every term's
+   // coefficient (a group stays factored, e.g. 3(x+2) ÷ 3 -> (x+2)).
++  // coef is a number or a fraction.
+   function opSide(S, op, coef, varFlag) {
+     let terms = cloneTerms(S.terms);
+-    const k = fInt(coef);
++    const k = typeof coef === 'number' ? fInt(coef) : coef;
+     if (op === '+' || op === '-') {
+-      const signed = op === '+' ? k : fInt(-coef);
++      const signed = op === '+' ? k : frac(-k.n, k.d);
+       terms.push(varFlag ? { t: 'x', c: signed } : { t: 'n', c: signed });
+       terms = mergeKind(terms, varFlag ? 'x' : 'n');
+     } else if (op === '*') {
+@@ -225,26 +298,49 @@
+     return finalizeSide(terms);
+   }
+ 
+-  // ---------- expression parsing (for SIMPLIFY input) ----------
+-  // input uses ASCII: digits, 'x', '+', '-'. Returns a finalized side or null.
++  // ---------- number and expression parsing ----------
++  // A typed magnitude: "12" in every mode, "2.5" in Decimal Mode, "3/4" in
++  // Decimal and Fraction Modes (Decimal Mode shows repeating values as
++  // fractions, so a rewrite there may need one). A fraction, or null.
++  function parseNum(s) {
++    let m = s.match(/^(\d{1,5})\/(\d{1,4})$/);
++    if (m) {
++      const d = parseInt(m[2], 10);
++      return numbers !== 'integer' && d ? frac(parseInt(m[1], 10), d) : null;
++    }
++    m = s.match(/^(\d{0,5})\.(\d{1,6})$/);
++    if (m) return numbers === 'decimal' ? frac(parseInt((m[1] || '0') + m[2], 10), Math.pow(10, m[2].length)) : null;
++    return /^\d{1,5}$/.test(s) ? fInt(parseInt(s, 10)) : null;
++  }
++  // SIMPLIFY input uses ASCII: digits, 'x', '+', '-', and where parseNum allows
++  // them '.' and '/': "2.5x", "3/4x" (drawn (3/4)x), "3x/4" and "x/4" (drawn
++  // over 4), "1/2". Returns a finalized side or null.
+   // Each typed chunk becomes its own term, so the player's rewrite is shown
+   // exactly as entered (e.g. "3x+2x" stays "3x + 2x").
+   function parseExpr(str) {
+-    if (!str || !/^[0-9x+\-]+$/.test(str)) return null;
++    if (!str || !/^[0-9x+\-./]+$/.test(str)) return null;
+     const chunks = str.match(/[+-]?[^+-]+/g);
+     if (!chunks || chunks.length > 6) return null;
+     if (chunks.join('') !== str) return null; // stray "+-" etc.
+     const terms = [];
+     for (const ch of chunks) {
+-      const m = ch.match(/^([+-]?)(\d*)(x?)$/);
+-      if (!m) return null;
+-      const sign = m[1] === '-' ? -1 : 1;
+-      const ds = m[2], hasX = m[3] === 'x';
+-      if (!ds && !hasX) return null;
+-      const mag = ds ? parseInt(ds, 10) : 1;
+-      if (mag > 9999) return null;
+-      const coef = fInt(sign * mag);
+-      terms.push(hasX ? { t: 'x', c: coef } : { t: 'n', c: coef });
++      const sign = ch[0] === '-' ? -1 : 1;
++      const body = ch.replace(/^[+-]/, '');
++      let coef, hasX = false, style, m;
++      if ((m = body.match(/^([\d.]*)x\/(\d+)$/))) {          // 3x/4, x/4
++        const top = parseNum(m[1] || '1'), d = parseNum(m[2]);
++        if (!top || !d || !d.n || numbers === 'integer') return null;
++        coef = fDiv(top, d); hasX = true;
++      } else if ((m = body.match(/^(\d+\/\d+)x$/))) {         // 3/4x
++        coef = parseNum(m[1]); hasX = true; style = 'c';
++      } else if ((m = body.match(/^([\d./]*)(x?)$/))) {        // 5, 2.5, 1/2, 3x, x
++        hasX = m[2] === 'x';
++        if (!m[1] && !hasX) return null;
++        coef = m[1] ? parseNum(m[1]) : fInt(1);
++      } else return null;
++      if (!coef || Math.abs(coef.n) > 9999 || coef.d > 9999) return null;
++      coef = frac(sign * coef.n, coef.d);
++      terms.push(hasX ? withStyle({ t: 'x', c: coef }, style) : { t: 'n', c: coef });
+     }
+     return finalizeSide(terms);
+   }
+@@ -405,15 +501,185 @@
+     return { xStar: x, L, R };
+   }
+ 
++  // ---------- Decimal and Fraction Mode generators ----------
++  // The same shapes as Integer Mode at each step count. Each template draws its
++  // given numbers at random; x* is then solved for exactly, and the equation is
++  // kept only if everything fits the mode (see decimalOk / fractionOk).
++  const X = (c, s) => withStyle({ t: 'x', c }, s);
++  const N = c => ({ t: 'n', c });
++  const G = (c, m) => ({ t: 'g', c, m });
++  const neg = f => frac(-f.n, f.d);
++  const signed = (f, p) => (Math.random() < (p === undefined ? 0.35 : p) ? neg(f) : f);
++  const ONE = fInt(1);
++  // two x-terms and an optional constant, in a random left-to-right order
++  function mixTerms(x1, x2, n) {
++    if (!n) return Math.random() < 0.5 ? [x1, x2] : [x2, x1];
++    return pick([[x1, x2, n], [x1, n, x2]]);
++  }
++  // put a compound expression on one side and a plain number on the other, or
++  // (shapes that allow it) compounds on both sides
++  function place(compound, flat) {
++    return Math.random() < 0.5 ? [compound, [N(flat)]] : [[N(flat)], compound];
++  }
++
++  // a decimal in [lo, hi] with one or two places, the hundredths mostly
++  // landing on 0 or 5 (2.25, 0.75, 1.4) so the arithmetic stays human
++  function rdec(lo, hi) {
++    const p = Math.random() < 0.5 ? 10 : 100;
++    let n = ri(Math.ceil(lo * p), Math.floor(hi * p));
++    if (p === 100 && Math.random() < 0.8) n = Math.max(5, Math.round(n / 5) * 5);
++    return frac(n, p);
++  }
++  const D = (lo, hi, p) => signed(rdec(lo, hi), p);
++  // a coefficient other than ±1, as Integer Mode's a x and k(x + m) never are
++  function DK(lo, hi, p) {
++    let f;
++    do f = rdec(lo, hi); while (f.n === f.d);
++    return signed(f, p);
++  }
++  const DEC_T = [
++    [ // 1-step: x + b = c, x − b = c, a x = c, x/a = c
++      () => [[X(ONE), N(rdec(0.1, 15))], [N(D(0.1, 20, 0.2))]],
++      () => [[X(ONE), N(neg(rdec(0.1, 15)))], [N(D(0.1, 20, 0.2))]],
++      () => [[X(DK(0.1, 9.9))], [N(D(0.1, 40, 0.2))]],
++      () => [[X(frac(1, ri(2, 6)), 'o')], [N(D(0.1, 12))]],
++    ],
++    [ // 2-step: a x ± b = c, x/a ± b = c
++      () => [[X(DK(0.2, 9.9)), N(rdec(0.1, 15))], [N(D(0.1, 30, 0.2))]],
++      () => [[X(DK(0.2, 9.9)), N(neg(rdec(0.1, 15)))], [N(D(0.1, 30, 0.2))]],
++      () => [[X(frac(1, ri(2, 5)), 'o'), N(rdec(0.1, 12))], [N(D(0.1, 20, 0.2))]],
++      () => [[X(frac(1, ri(2, 5)), 'o'), N(neg(rdec(0.1, 12)))], [N(D(0.1, 20, 0.2))]],
++    ],
++    [ // multi-step
++      () => {   // combine like terms
++        const side = () => mixTerms(X(rdec(0.5, 6)), X(rdec(0.1, 5)), N(rdec(0.1, 12)));
++        return pickPlacement() === 'both' ? [side(), side()] : place(side(), D(0.1, 40, 0.2));
++      },
++      () => {   // distribute: k(x + m) = c
++        if (pickPlacement() !== 'both') return place([G(DK(0.2, 6), rdec(0.1, 9))], D(0.1, 40, 0.2));
++        const R = [G(DK(0.2, 6), rdec(0.1, 9))];
++        if (Math.random() < 0.7) R.push(N(D(0.1, 20, 0.5)));
++        return [[G(DK(0.2, 6), rdec(0.1, 9))], R];
++      },
++      () => {   // k(x + m) + d = c
++        const side = () => [G(DK(0.2, 5), rdec(0.1, 6)), N(D(0.1, 12, 0.3))];
++        return pickPlacement() === 'both' ? [side(), side()] : place(side(), D(0.1, 40, 0.2));
++      },
++      () => [[X(rdec(0.2, 9)), N(D(0.1, 9, 0.5))], [X(rdec(0.1, 9)), N(D(0.1, 20, 0.5))]],
++    ],
++  ];
++
++  // a positive fraction below `whole` that is not a whole number
++  const DENS = [2, 3, 4, 5, 6, 8, 10, 12];
++  function rfrac(whole) {
++    const d = pick(DENS);
++    let n;
++    do { n = ri(1, d * whole - 1); } while (n % d === 0);
++    return frac(n, d);
++  }
++  // a fraction or (sometimes) a whole number, either sign
++  const rval = (whole, p) => signed(Math.random() < 0.35 ? fInt(ri(1, whole)) : rfrac(whole), p);
++  // a fractional x-coefficient, drawn either (2/3)x or 2x over 3
++  const fx = (whole, p) => X(signed(rfrac(whole), p === undefined ? 0 : p), Math.random() < 0.5 ? 'c' : undefined);
++  // (x + m) over d
++  const fg = d => G(frac(1, d), fInt(signed(fInt(ri(1, 9)), 0.3).n));
++  const FRAC_T = [
++    [ // 1-step: x ± p/q = r/s, (a/b)x = c, x/a = p/q
++      () => [[X(ONE), N(rfrac(6))], [N(rval(9, 0.2))]],
++      () => [[X(ONE), N(neg(rfrac(6)))], [N(rval(9, 0.2))]],
++      () => [[fx(3, 0.25)], [N(rval(12, 0.2))]],
++      () => [[X(frac(1, ri(2, 9)))], [N(signed(rfrac(5), 0.2))]],
++    ],
++    [ // 2-step: (a/b)x ± p/q = r/s, x/a + p/q = r/s, (x + m)/d = c
++      () => [[fx(3, 0.25), N(rfrac(6))], [N(rval(12, 0.2))]],
++      () => [[fx(3, 0.25), N(neg(rfrac(6)))], [N(rval(12, 0.2))]],
++      () => [[X(frac(1, ri(2, 8))), N(rfrac(5))], [N(rval(9, 0.2))]],
++      () => [[fg(ri(2, 8))], [N(rval(9, 0.2))]],
++    ],
++    [ // multi-step
++      () => {   // combine like terms: x/a + x/b + p/q = c
++        const side = () => mixTerms(X(frac(1, ri(2, 6))), fx(2), N(rval(6, 0.3)));
++        return pickPlacement() === 'both' ? [side(), side()] : place(side(), rval(12, 0.2));
++      },
++      () => {   // distribute: (a/b)(x + m) = c, or (x + m)/d on both sides
++        if (pickPlacement() !== 'both') return place([G(rfrac(3), fInt(ri(1, 9)))], rval(12, 0.2));
++        return [[fg(ri(2, 8))], [fg(ri(2, 8))]];
++      },
++      () => {   // (x + m)/d + p/q = c
++        if (pickPlacement() !== 'both') return place([fg(ri(2, 8)), N(rval(5, 0.3))], rval(9, 0.2));
++        return [[fg(ri(2, 8)), N(rval(5, 0.3))], [fg(ri(2, 8)), N(rval(5, 0.3))]];
++      },
++      () => [[fx(3), N(rval(6, 0.4))], [fx(3), N(rval(9, 0.4))]],
++    ],
++  ];
++
++  // every given number in a list of terms
++  function givens(terms) {
++    const out = [];
++    for (const t of terms) { out.push(t.c); if (t.t === 'g') out.push(t.m); }
++    return out;
++  }
++  function lcm(a, b) { return a / gcd(a, b) * b; }
++  // Decimal Mode: no given number past the hundredths, at least one of them
++  // not whole, and an answer that ends by the thousandths. (x over a counts
++  // its two integers, not the repeating 1/a.)
++  function decimalOk(x, terms) {
++    let anyDec = false;
++    for (const t of terms) {
++      if (t.s === 'o') continue;
++      for (const v of givens([t])) {
++        if (places(v) > 2 || Math.abs(fVal(v)) > 100) return false;
++        if (v.d !== 1) anyDec = true;
++      }
++    }
++    return anyDec && places(x) <= 3 && Math.abs(fVal(x)) <= 60;
++  }
++  // Fraction Mode: integer numerators and denominators (always, as fractions),
++  // at least one not whole, denominators kept small enough to clear by hand.
++  // The answer may be any rational number, shown fully reduced.
++  function fractionOk(x, terms) {
++    let anyFrac = false, l = 1;
++    for (const v of givens(terms)) {
++      if (v.d > 12 || Math.abs(v.n) > 99) return false;
++      if (v.d !== 1) anyFrac = true;
++      l = lcm(l, v.d);
++    }
++    return anyFrac && l <= 60 && x.d <= 12 && Math.abs(x.n) <= 60 && Math.abs(fVal(x)) <= 30;
++  }
++  // Draw from a step count's templates until one fits. s is the round's sign
++  // class for x* (1 or −1; 0 is let through whenever it comes up), and whole
++  // asks for a whole-number answer, so not every answer is a decimal or fraction.
++  function generateMode(level, s, whole) {
++    const T = (numbers === 'decimal' ? DEC_T : FRAC_T)[Math.min(level, 3) - 1];
++    const ok = numbers === 'decimal' ? decimalOk : fractionOk;
++    for (let i = 0; i < 5000; i++) {
++      const sides = pick(T)();
++      const L = sideTerms(sides[0]), R = sideTerms(sides[1]);
++      const da = fSub(L.a, R.a);
++      if (fIsZero(da)) continue;
++      const x = fDiv(fSub(R.b, L.b), da);
++      if (x.n !== 0 && Math.sign(x.n) !== s) continue;
++      if (whole && x.d !== 1) continue;
++      if (ok(x, sides[0].concat(sides[1]))) return { xStar: x, L, R };
++    }
++    return null;
++  }
++
+   function generate(level) {
++    if (numbers !== 'integer') {
++      let eq = null;
++      while (!eq) eq = generateMode(level, Math.random() < 0.3 ? -1 : 1, Math.random() < 0.25);
++      return eq;
++    }
+     const s = pickClass(level);
+-    if (level <= 1) return gen1(s);
+-    if (level === 2) return gen2(s);
+-    return gen3(s);
++    const eq = level <= 1 ? gen1(s) : level === 2 ? gen2(s) : gen3(s);
++    eq.xStar = fInt(eq.xStar);   // x* is a fraction in every mode
++    return eq;
+   }
+ 
+   window.Algebra = {
+     frac, fInt, fAdd, fSub, fMul, fDiv, fEq, fIsInt, fIsZero, fVal,
++    setNumbers, numCore, numText, parseNum,
+     renderSide, renderTermCell, renderCancelSide, parseExpr, generate, opSide, cloneSide, MINUS
+   };
+ })();
+diff --git a/js/game.js b/js/game.js
+index d421568..c340892 100644
+--- a/js/game.js
++++ b/js/game.js
+@@ -5,10 +5,15 @@
+   const $ = s => document.querySelector(s);
+   const OPS = { '+': '+', '-': A.MINUS, '*': '×', '/': '/' };
+   const MODE_LABEL = { one: '1-STEP', two: '2-STEP', multi: 'MULTI-STEP', endless: 'ENDLESS' };
++  // Number modes, chosen along the bottom of the menu and remembered. Each has
++  // all four step modes above, with its own bests.
++  const NUM_LABEL = { integer: 'INTEGER', decimal: 'DECIMAL', fraction: 'FRACTION' };
++  const NUMS_KEY = 'mathlab.balancing-act.numbers';
+ 
+   // ---- state
+   let mode = null;
+-  let xStar = 0;
++  let nums = loadNums();           // 'integer' / 'decimal' / 'fraction'
++  let xStar = null;                // the answer, as a fraction
+   let L = null, R = null;          // {a, b, display} — the working equation sides
+   let initial = null;              // {l, r} display of the starting equation
+   let steps = [], openStep = null; // ledger step list
+@@ -24,11 +29,18 @@
+   let msgTimer = null;
+   let best = loadBest();
+ 
++  // Integer Mode keeps the original keys (one, two, …), so bests saved before
++  // the number modes existed carry over; the others are e.g. 'decimal-two'.
++  function bestKey(m, n) { return n === 'integer' ? m : n + '-' + m; }
+   function loadBest() {
++    const zero = {};
++    for (const n in NUM_LABEL) for (const m in MODE_LABEL) zero[bestKey(m, n)] = 0;
+     try {
+-      return Object.assign({ one: 0, two: 0, multi: 0, endless: 0 },
+-        JSON.parse(localStorage.getItem('eqBalanceBest') || '{}'));
+-    } catch (e) { return { one: 0, two: 0, multi: 0, endless: 0 }; }
++      return Object.assign(zero, JSON.parse(localStorage.getItem('eqBalanceBest') || '{}'));
++    } catch (e) { return zero; }
++  }
++  function loadNums() {
++    try { const v = localStorage.getItem(NUMS_KEY); return NUM_LABEL[v] ? v : 'integer'; } catch (e) { return 'integer'; }
+   }
+   function saveBest() { localStorage.setItem('eqBalanceBest', JSON.stringify(best)); }
+   function loadShowProps() {
+@@ -42,19 +54,19 @@
+     return streak < 3 ? 1 : streak < 7 ? 2 : 3; // endless ramp
+   }
+ 
+-  // ---- balance
++  // ---- balance (exact: decimals would drift in floating point)
+   function diffVal() {
+-    return (A.fVal(L.a) * xStar + A.fVal(L.b)) - (A.fVal(R.a) * xStar + A.fVal(R.b));
++    return A.fSub(A.fAdd(A.fMul(L.a, xStar), L.b), A.fAdd(A.fMul(R.a, xStar), R.b));
+   }
+   // A half-finished move (one side acted on, the other not) is an imbalance even
+   // when the values happen to agree — which they always do for the variable terms
+   // when x* is 0. openStep is non-null exactly while a move awaits its other half.
+-  function balanced() { return diffVal() === 0 && !openStep && !broken; }
++  function balanced() { return A.fIsZero(diffVal()) && !openStep && !broken; }
+   const TILT = 16; // fixed off-balance angle — balance is binary, not a magnitude
+   function updateTilt() {
+     if (balanced()) { Character.setTilt(0); return; }
+     // Lean toward whichever side received the value-changing action.
+-    const side = actSide || (diffVal() > 0 ? 'l' : 'r');
++    const side = actSide || (A.fVal(diffVal()) > 0 ? 'l' : 'r');
+     Character.setTilt(side === 'l' ? -TILT : TILT); // left acted -> left end dips
+   }
+ 
+@@ -241,31 +253,32 @@
+     } else if (step.op === '+' || step.op === '-') {
+       if (step.opL != null) {
+         const col = step.matchL ? cols.lBase + findMatchSlot(prev.lTerms, step.kindL) : cols.lExtraCol;
+-        appendCell(el, row, col, cls + ' l' + (step.cancelL ? ' cancel' : ''), '<span class="op">' + step.opL + '</span>');
++        appendCell(el, row, col, cls + ' l' + (step.cancelL ? ' cancel' : ''), '<span class="op">' + step.dispL + '</span>');
+       }
+       if (step.opR != null) {
+         const col = step.matchR ? cols.rBase + findMatchSlot(prev.rTerms, step.kindR) : cols.rExtraCol;
+-        appendCell(el, row, col, cls + ' r' + (step.cancelR ? ' cancel' : ''), '<span class="op">' + step.opR + '</span>');
++        appendCell(el, row, col, cls + ' r' + (step.cancelR ? ' cancel' : ''), '<span class="op">' + step.dispR + '</span>');
+       }
+     } else if (step.op === '*' || step.op === '/') {
+       // The applied factor digit is struck too, right alongside whichever
+       // term's coefficient it cancels — "2·(x/2)" both 2s go, leaving x.
+-      // Each side is drawn with its own factor (opL/opR hold it as a string):
+-      // when the two halves differ, which loses the run, the log shows both.
++      // Each side is drawn with its own factor (fL/fR, as fractions): when the
++      // two halves differ, which loses the run, the log shows both.
+       const body = (terms, factor) => {
+-        const mag = Math.abs(factor);
+-        const fStr = factor < 0 ? A.MINUS + mag : String(mag);
+         const cs = A.renderCancelSide(terms, step.op, factor);
+-        const f = cs.anyCancel ? '<span class="cancel">' + fStr + '</span>' : fStr;
++        const sign = factor.n < 0 ? A.MINUS : '';
++        const f = !cs.anyCancel ? sign + A.numCore(factor)
++          : factor.d === 1 ? '<span class="cancel">' + sign + A.numCore(factor) + '</span>'
++          : (sign && '<span class="cancel">' + sign + '</span>') + A.numCore(factor, true);
+         return step.op === '*' ? f + '(' + cs.html + ')' : frac(cs.html, f);
+       };
+       if (step.opL) {
+-        appendCell(el, row, spanL(cols), cls + ' l', '<span class="op">' + body(prev.lTerms, parseInt(step.opL, 10)) + '</span>');
++        appendCell(el, row, spanL(cols), cls + ' l', '<span class="op">' + body(prev.lTerms, step.fL) + '</span>');
+       } else {
+         appendCell(el, row, spanL(cols), cls + ' l dim', prev.l);
+       }
+       if (step.opR) {
+-        appendCell(el, row, spanR(cols), cls + ' r', '<span class="op">' + body(prev.rTerms, parseInt(step.opR, 10)) + '</span>');
++        appendCell(el, row, spanR(cols), cls + ' r', '<span class="op">' + body(prev.rTerms, step.fR) + '</span>');
+       } else {
+         appendCell(el, row, spanR(cols), cls + ' r dim', prev.r);
+       }
+@@ -341,7 +354,7 @@
+ 
+   function operandValid() {
+     if (simplifyMode) return !!A.parseExpr(sbuf);
+-    return !!op && (digits !== '' || varFlag);
++    return !!op && (digits === '' ? varFlag : !!A.parseNum(digits));
+   }
+ 
+   function updatePreview() {
+@@ -366,7 +379,32 @@
+   function pressDigit(d) {
+     if (locked) return;
+     if (simplifyMode) { if (sbuf.length < 24) sbuf += d; }
+-    else if (digits.length < 3 && !varFlag) digits += d;
++    else if (!varFlag && digitRoom()) digits += d;
++    updatePreview();
++  }
++  // How long a typed number may be: 3 digits in Integer Mode; in Decimal Mode
++  // 4 before the point and 3 after; in Fraction Mode 3 above and 3 below.
++  function digitRoom() {
++    if (nums === 'decimal') {
++      const p = digits.split('.');
++      return p.length === 1 ? p[0].length < 4 : p[1].length < 3;
++    }
++    if (nums === 'fraction') return digits.split('/').pop().length < 3;
++    return digits.length < 3;
++  }
++  function pressPoint() {
++    if (locked || nums !== 'decimal') return;
++    if (simplifyMode) { if (sbuf.length < 24) sbuf += '.'; }
++    else if (!varFlag && digits.indexOf('.') < 0) digits += digits ? '.' : '0.';
++    updatePreview();
++  }
++  // The fraction bar: Fraction Mode types a number as numerator/denominator.
++  // In a rewrite it works in Decimal Mode too, where a repeating value is
++  // shown as a fraction.
++  function pressBar() {
++    if (locked || nums === 'integer') return;
++    if (simplifyMode) { if (sbuf.length < 24) sbuf += '/'; }
++    else if (nums === 'fraction' && !varFlag && digits && digits.indexOf('/') < 0) digits += '/';
+     updatePreview();
+   }
+   function pressX() {
+@@ -395,6 +433,7 @@
+     if (locked) return;
+     if (simplifyMode) {
+       if (o === '+' || o === '-') { if (sbuf.length < 24) sbuf += o; }
++      else if (o === '/' && nums !== 'integer') { pressBar(); return; }
+       else warn('Only + and − inside an expression');
+     } else {
+       op = o;
+@@ -417,16 +456,12 @@
+   // once. SIMPLIFY and SUBMIT are steps too. ⌫ undo is not a step: it takes the
+   // last one back. The WIPEOUT screen says which rule ended the run.
+   const SIDE = { l: 'left', r: 'right' };
+-  function opText(o, v) {   // v as stored in a step's opL/opR
+-    if (o === '+' || o === '-') return v;
+-    return (o === '*' ? '× ' : '÷ ') + (v.charAt(0) === '-' ? '(' + A.MINUS + v.slice(1) + ')' : v);
+-  }
+   function tippedReason() {
+     let why = 'You took a new step before balancing the last one.';
+     if (openStep) {
+       const done = openStep.opL != null ? 'l' : 'r';
+       why += ' The ' + SIDE[done === 'l' ? 'r' : 'l'] + ' side still needed ' +
+-        opText(openStep.op, openStep[done === 'l' ? 'opL' : 'opR']) + '.';
++        openStep[done === 'l' ? 'txtL' : 'txtR'] + '.';
+     } else if (broken) {
+       why += ' A rewrite had changed the value of one side.';
+     }
+@@ -471,12 +506,12 @@
+   // ---- actions
+   function applyOpStep(sideKey) {
+     if (!op) return warn('Pick an operation first');
+-    const absStr = digits + (varFlag ? 'x' : '');
+-    if (!absStr) return warn('Enter a number');
+-    const mag = digits === '' ? 1 : parseInt(digits, 10);
+-    if (mag === 0) return warn(op === '+' || op === '-' ? 'Adding 0 changes nothing' : "Can't use zero there");
++    if (digits === '' && !varFlag) return warn('Enter a number');
++    const mag = digits === '' ? A.fInt(1) : A.parseNum(digits);
++    if (!mag) return warn('Finish the number first');
++    if (A.fIsZero(mag)) return warn(op === '+' || op === '-' ? 'Adding 0 changes nothing' : "Can't use zero there");
+     if (varFlag && (op === '*' || op === '/')) return warn('Multiply or divide by a constant, not the variable');
+-    const coef = (negFlag ? -1 : 1) * mag;
++    const coef = negFlag ? A.frac(-mag.n, mag.d) : mag;   // a fraction
+ 
+     const S = sideKey === 'l' ? L : R;
+     const kind = varFlag ? 'x' : 'n';
+@@ -491,22 +526,31 @@
+     // the operation there is none — it summed to exactly zero rather than
+     // just changing value.
+     const canceled = matched === true && !ns.terms.some(t => t.t === kind);
+-    if (Math.abs(ns.a.n) > 9999 || Math.abs(ns.b.n) > 9999 || ns.a.d > 999 || ns.b.d > 999) {
++    const big = nums === 'integer' ? [9999, 999] : [99999, 9999];
++    if (Math.abs(ns.a.n) > big[0] || Math.abs(ns.b.n) > big[0] || ns.a.d > big[1] || ns.b.d > big[1]) {
+       return warn('Whoa — numbers are getting huge!');
+     }
+ 
++    // A step's opL/opR is its key: the operation and the exact value, so .5
++    // and 0.50 typed on the two sides are the same step. disp is the ledger's
++    // markup for a +/- operand, txt the plain words for the WIPEOUT reason.
+     const slot = sideKey === 'l' ? 'opL' : 'opR';
+-    const signChar = op === '+' ? '+' : A.MINUS;
+-    const operandDisp = negFlag ? '(' + A.MINUS + absStr + ')' : absStr;
+-    const val = (op === '+' || op === '-') ? (signChar + ' ' + operandDisp) : String(coef);
++    const additive = op === '+' || op === '-';
++    const val = op + ' ' + kind + ' ' + coef.n + '/' + coef.d;
++    const wrap = s => negFlag ? '(' + A.MINUS + s + ')' : s;
++    const unitX = varFlag && A.fEq(mag, A.fInt(1));
++    const absTxt = (unitX ? '' : A.numText(mag)) + (varFlag ? 'x' : '');
++    const disp = additive
++      ? (op === '+' ? '+' : A.MINUS) + ' ' + wrap(A.renderTermCell({ t: kind, c: mag }).core) : null;
++    const txt = (additive ? (op === '+' ? '+ ' : A.MINUS + ' ') : (op === '*' ? '× ' : '÷ ')) + wrap(absTxt);
+     // Answering the open move on its other side: it has to be the same step.
+     let mismatch = null;
+     if (openStep && !openStep[slot]) {
+       const done = slot === 'opL' ? 'opR' : 'opL';
+       if (openStep.op !== op || openStep[done] !== val) {
+         const other = sideKey === 'l' ? 'r' : 'l';
+-        mismatch = 'The ' + SIDE[other] + ' side got ' + opText(openStep.op, openStep[done]) +
+-          ', but the ' + SIDE[sideKey] + ' side got ' + opText(op, val) + '.';
++        mismatch = 'The ' + SIDE[other] + ' side got ' + openStep[other === 'l' ? 'txtL' : 'txtR'] +
++          ', but the ' + SIDE[sideKey] + ' side got ' + txt + '.';
+       }
+     } else if (!balanced()) {
+       return lose(tippedReason());
+@@ -521,14 +565,18 @@
+     const cancelSlot = sideKey === 'l' ? 'cancelL' : 'cancelR';
+     if (!openStep || openStep[slot] || openStep.op !== op) {
+       openStep = {
+-        kind: 'op', op: op, factor: (op === '*' || op === '/') ? coef : null,
+-        opL: null, opR: null, matchL: null, matchR: null, kindL: null, kindR: null,
++        kind: 'op', op: op, factor: additive ? null : coef,
++        opL: null, opR: null, dispL: null, dispR: null, txtL: null, txtR: null, fL: null, fR: null,
++        matchL: null, matchR: null, kindL: null, kindR: null,
+         cancelL: false, cancelR: false,
+         result: { l: L.display, r: R.display, lTerms: L.terms, rTerms: R.terms }
+       };
+       steps.push(openStep);
+     }
+     openStep[slot] = val;
++    openStep[sideKey === 'l' ? 'dispL' : 'dispR'] = disp;
++    openStep[sideKey === 'l' ? 'txtL' : 'txtR'] = txt;
++    openStep[sideKey === 'l' ? 'fL' : 'fR'] = coef;
+     openStep[matchSlot] = matched;
+     openStep[kindSlot] = kind;
+     openStep[cancelSlot] = canceled;
+@@ -596,18 +644,17 @@
+     if (!balanced()) return lose(tippedReason());
+     const n = solvedForm();
+     if (n === null) return warn('Get it to  x = ▢  first!');
+-    if (A.fIsInt(n) && n.n === xStar) {
++    if (A.fEq(n, xStar)) {
+       locked = true;
+       streak++;
+-      if (streak > best[mode]) { best[mode] = streak; saveBest(); }
++      if (streak > best[bestKey(mode, nums)]) { best[bestKey(mode, nums)] = streak; saveBest(); }
+       updateHud();
+       Character.celebrate();
+       Sound.win();
+       setMsg('BALANCED! +1', 'good');
+       setTimeout(() => { locked = false; newEquation(); }, 1000);
+     } else {
+-      const shown = (n.n < 0 ? A.MINUS : '') + Math.abs(n.n) + (n.d === 1 ? '' : '/' + n.d);
+-      lose('x = ' + shown + ' does not solve it.');
++      lose('x = ' + A.numText(n) + ' does not solve it.');
+     }
+   }
+ 
+@@ -617,10 +664,10 @@
+     Character.fall(() => {
+       $('#goReason').textContent = reason;
+       $('#goScore').textContent = streak;
+-      $('#goBest').textContent = best[mode];
+-      // match the typographic minus the equation itself is drawn with
+-      $('#goAnswer').textContent = 'x = ' +
+-        (xStar < 0 ? A.MINUS + Math.abs(xStar) : xStar);
++      $('#goBest').textContent = best[bestKey(mode, nums)];
++      // match the typographic minus the equation itself is drawn with; a
++      // repeating answer is given as a fraction, never rounded
++      $('#goAnswer').textContent = 'x = ' + A.numText(xStar);
+       $('#gameover').classList.remove('hide');
+       placeGameOver();
+     });
+@@ -643,17 +690,34 @@
+   }
+ 
+   function updateHud() {
+-    $('#modeLabel').textContent = mode
+-      ? MODE_LABEL[mode] + (mode === 'endless' ? ' · LVL ' + levelFor() : '')
+-      : '';
++    // each part unbroken, so on a phone the label wraps between parts only
++    const parts = mode ? [NUM_LABEL[nums], MODE_LABEL[mode]].concat(mode === 'endless' ? ['LVL ' + levelFor()] : []) : [];
++    $('#modeLabel').innerHTML = parts.map((p, i) => '<span>' + p + (i < parts.length - 1 ? ' ·' : '') + '</span>').join(' ');
+     $('#streakVal').textContent = streak;
+-    $('#bestVal').textContent = mode ? best[mode] : 0;
++    $('#bestVal').textContent = mode ? best[bestKey(mode, nums)] : 0;
+   }
+ 
+-  function showMenu() {
++  function showBests() {
+     document.querySelectorAll('#menu [data-mode]').forEach(b => {
+-      b.querySelector('.best').textContent = 'best ' + best[b.dataset.mode];
++      b.querySelector('.best').textContent = 'best ' + best[bestKey(b.dataset.mode, nums)];
+     });
++  }
++  // Pick a number mode: the menu's bests, its pro tip, and the keypad's
++  // decimal point or fraction bar key follow it.
++  function setNums(n, remember) {
++    nums = n;
++    A.setNumbers(n);
++    if (remember) { try { localStorage.setItem(NUMS_KEY, n); } catch (e) {} }
++    document.querySelectorAll('#menu [data-nums]').forEach(b => b.classList.toggle('on', b.dataset.nums === n));
++    $('#proTip').classList.toggle('hide', n !== 'fraction');
++    $('#kPoint').classList.toggle('hide', n !== 'decimal');
++    $('#kBar').classList.toggle('hide', n !== 'fraction');
++    $('#keypad').classList.toggle('with-pt', n !== 'integer');
++    showBests();
++  }
++
++  function showMenu() {
++    showBests();
+     $('#menu').classList.remove('hide');
+     $('#gameover').classList.add('hide');
+     locked = true;
+@@ -691,6 +755,8 @@
+     else if (k === 'sign') pressSign();
+     else if (OPS[k]) pressOp(k);
+     else if (k === 'simplify') toggleSimplify();
++    else if (k === 'pt') pressPoint();
++    else if (k === 'bar') pressBar();
+   }
+ 
+   function init() {
+@@ -720,19 +786,27 @@
+     document.querySelectorAll('#menu [data-mode]').forEach(b => {
+       b.addEventListener('click', () => startGame(b.dataset.mode));
+     });
++    document.querySelectorAll('#menu [data-nums]').forEach(b => {
++      b.addEventListener('click', () => setNums(b.dataset.nums, true));
++    });
+     document.addEventListener('keydown', e => {
+       if (e.metaKey || e.ctrlKey || e.altKey) return;
+       const map = {
+         Backspace: 'back', Enter: 'submit',
+-        '+': '+', '-': '-', '*': '*', '/': '/', x: 'x', s: 'simplify', n: 'sign'
++        '+': '+', '-': '-', '*': '*', '/': '/', x: 'x', s: 'simplify', n: 'sign', '.': 'pt'
+       };
++      // In Fraction Mode, / right after a typed number is its fraction bar.
++      const bar = e.key === '/' && nums === 'fraction' && !simplifyMode && op && digits &&
++        digits.indexOf('/') < 0 && !varFlag;
+       if (/^[0-9]$/.test(e.key)) { onKey(e.key); e.preventDefault(); }
++      else if (bar) { onKey('bar'); e.preventDefault(); }
+       else if (map[e.key] !== undefined) { onKey(map[e.key]); e.preventDefault(); }
+       else if (e.key === 'ArrowLeft') { doApply('l'); e.preventDefault(); }
+       else if (e.key === 'ArrowRight') { doApply('r'); e.preventDefault(); }
+     });
+     setPropToggle();
+     setSoundToggle();
++    setNums(nums, false);
+     updateHud();
+     updatePreview();
+     showMenu();

@@ -5,10 +5,15 @@
   const $ = s => document.querySelector(s);
   const OPS = { '+': '+', '-': A.MINUS, '*': '×', '/': '/' };
   const MODE_LABEL = { one: '1-STEP', two: '2-STEP', multi: 'MULTI-STEP', endless: 'ENDLESS' };
+  // Number modes, chosen along the bottom of the menu and remembered. Each has
+  // all four step modes above, with its own bests.
+  const NUM_LABEL = { integer: 'INTEGER', decimal: 'DECIMAL', fraction: 'FRACTION' };
+  const NUMS_KEY = 'mathlab.balancing-act.numbers';
 
   // ---- state
   let mode = null;
-  let xStar = 0;
+  let nums = loadNums();           // 'integer' / 'decimal' / 'fraction'
+  let xStar = null;                // the answer, as a fraction
   let L = null, R = null;          // {a, b, display} — the working equation sides
   let initial = null;              // {l, r} display of the starting equation
   let steps = [], openStep = null; // ledger step list
@@ -24,11 +29,18 @@
   let msgTimer = null;
   let best = loadBest();
 
+  // Integer Mode keeps the original keys (one, two, …), so bests saved before
+  // the number modes existed carry over; the others are e.g. 'decimal-two'.
+  function bestKey(m, n) { return n === 'integer' ? m : n + '-' + m; }
   function loadBest() {
+    const zero = {};
+    for (const n in NUM_LABEL) for (const m in MODE_LABEL) zero[bestKey(m, n)] = 0;
     try {
-      return Object.assign({ one: 0, two: 0, multi: 0, endless: 0 },
-        JSON.parse(localStorage.getItem('eqBalanceBest') || '{}'));
-    } catch (e) { return { one: 0, two: 0, multi: 0, endless: 0 }; }
+      return Object.assign(zero, JSON.parse(localStorage.getItem('eqBalanceBest') || '{}'));
+    } catch (e) { return zero; }
+  }
+  function loadNums() {
+    try { const v = localStorage.getItem(NUMS_KEY); return NUM_LABEL[v] ? v : 'integer'; } catch (e) { return 'integer'; }
   }
   function saveBest() { localStorage.setItem('eqBalanceBest', JSON.stringify(best)); }
   function loadShowProps() {
@@ -42,19 +54,19 @@
     return streak < 3 ? 1 : streak < 7 ? 2 : 3; // endless ramp
   }
 
-  // ---- balance
+  // ---- balance (exact: decimals would drift in floating point)
   function diffVal() {
-    return (A.fVal(L.a) * xStar + A.fVal(L.b)) - (A.fVal(R.a) * xStar + A.fVal(R.b));
+    return A.fSub(A.fAdd(A.fMul(L.a, xStar), L.b), A.fAdd(A.fMul(R.a, xStar), R.b));
   }
   // A half-finished move (one side acted on, the other not) is an imbalance even
   // when the values happen to agree — which they always do for the variable terms
   // when x* is 0. openStep is non-null exactly while a move awaits its other half.
-  function balanced() { return diffVal() === 0 && !openStep && !broken; }
+  function balanced() { return A.fIsZero(diffVal()) && !openStep && !broken; }
   const TILT = 16; // fixed off-balance angle — balance is binary, not a magnitude
   function updateTilt() {
     if (balanced()) { Character.setTilt(0); return; }
     // Lean toward whichever side received the value-changing action.
-    const side = actSide || (diffVal() > 0 ? 'l' : 'r');
+    const side = actSide || (A.fVal(diffVal()) > 0 ? 'l' : 'r');
     Character.setTilt(side === 'l' ? -TILT : TILT); // left acted -> left end dips
   }
 
@@ -241,31 +253,32 @@
     } else if (step.op === '+' || step.op === '-') {
       if (step.opL != null) {
         const col = step.matchL ? cols.lBase + findMatchSlot(prev.lTerms, step.kindL) : cols.lExtraCol;
-        appendCell(el, row, col, cls + ' l' + (step.cancelL ? ' cancel' : ''), '<span class="op">' + step.opL + '</span>');
+        appendCell(el, row, col, cls + ' l' + (step.cancelL ? ' cancel' : ''), '<span class="op">' + step.dispL + '</span>');
       }
       if (step.opR != null) {
         const col = step.matchR ? cols.rBase + findMatchSlot(prev.rTerms, step.kindR) : cols.rExtraCol;
-        appendCell(el, row, col, cls + ' r' + (step.cancelR ? ' cancel' : ''), '<span class="op">' + step.opR + '</span>');
+        appendCell(el, row, col, cls + ' r' + (step.cancelR ? ' cancel' : ''), '<span class="op">' + step.dispR + '</span>');
       }
     } else if (step.op === '*' || step.op === '/') {
       // The applied factor digit is struck too, right alongside whichever
       // term's coefficient it cancels — "2·(x/2)" both 2s go, leaving x.
-      // Each side is drawn with its own factor (opL/opR hold it as a string):
-      // when the two halves differ, which loses the run, the log shows both.
+      // Each side is drawn with its own factor (fL/fR, as fractions): when the
+      // two halves differ, which loses the run, the log shows both.
       const body = (terms, factor) => {
-        const mag = Math.abs(factor);
-        const fStr = factor < 0 ? A.MINUS + mag : String(mag);
         const cs = A.renderCancelSide(terms, step.op, factor);
-        const f = cs.anyCancel ? '<span class="cancel">' + fStr + '</span>' : fStr;
+        const sign = factor.n < 0 ? A.MINUS : '';
+        const f = !cs.anyCancel ? sign + A.numCore(factor)
+          : factor.d === 1 ? '<span class="cancel">' + sign + A.numCore(factor) + '</span>'
+          : (sign && '<span class="cancel">' + sign + '</span>') + A.numCore(factor, true);
         return step.op === '*' ? f + '(' + cs.html + ')' : frac(cs.html, f);
       };
       if (step.opL) {
-        appendCell(el, row, spanL(cols), cls + ' l', '<span class="op">' + body(prev.lTerms, parseInt(step.opL, 10)) + '</span>');
+        appendCell(el, row, spanL(cols), cls + ' l', '<span class="op">' + body(prev.lTerms, step.fL) + '</span>');
       } else {
         appendCell(el, row, spanL(cols), cls + ' l dim', prev.l);
       }
       if (step.opR) {
-        appendCell(el, row, spanR(cols), cls + ' r', '<span class="op">' + body(prev.rTerms, parseInt(step.opR, 10)) + '</span>');
+        appendCell(el, row, spanR(cols), cls + ' r', '<span class="op">' + body(prev.rTerms, step.fR) + '</span>');
       } else {
         appendCell(el, row, spanR(cols), cls + ' r dim', prev.r);
       }
@@ -341,7 +354,7 @@
 
   function operandValid() {
     if (simplifyMode) return !!A.parseExpr(sbuf);
-    return !!op && (digits !== '' || varFlag);
+    return !!op && (digits === '' ? varFlag : !!A.parseNum(digits));
   }
 
   function updatePreview() {
@@ -366,7 +379,32 @@
   function pressDigit(d) {
     if (locked) return;
     if (simplifyMode) { if (sbuf.length < 24) sbuf += d; }
-    else if (digits.length < 3 && !varFlag) digits += d;
+    else if (!varFlag && digitRoom()) digits += d;
+    updatePreview();
+  }
+  // How long a typed number may be: 3 digits in Integer Mode; in Decimal Mode
+  // 4 before the point and 3 after; in Fraction Mode 3 above and 3 below.
+  function digitRoom() {
+    if (nums === 'decimal') {
+      const p = digits.split('.');
+      return p.length === 1 ? p[0].length < 4 : p[1].length < 3;
+    }
+    if (nums === 'fraction') return digits.split('/').pop().length < 3;
+    return digits.length < 3;
+  }
+  function pressPoint() {
+    if (locked || nums !== 'decimal') return;
+    if (simplifyMode) { if (sbuf.length < 24) sbuf += '.'; }
+    else if (!varFlag && digits.indexOf('.') < 0) digits += digits ? '.' : '0.';
+    updatePreview();
+  }
+  // The fraction bar: Fraction Mode types a number as numerator/denominator.
+  // In a rewrite it works in Decimal Mode too, where a repeating value is
+  // shown as a fraction.
+  function pressBar() {
+    if (locked || nums === 'integer') return;
+    if (simplifyMode) { if (sbuf.length < 24) sbuf += '/'; }
+    else if (nums === 'fraction' && !varFlag && digits && digits.indexOf('/') < 0) digits += '/';
     updatePreview();
   }
   function pressX() {
@@ -395,6 +433,7 @@
     if (locked) return;
     if (simplifyMode) {
       if (o === '+' || o === '-') { if (sbuf.length < 24) sbuf += o; }
+      else if (o === '/' && nums !== 'integer') { pressBar(); return; }
       else warn('Only + and − inside an expression');
     } else {
       op = o;
@@ -417,16 +456,12 @@
   // once. SIMPLIFY and SUBMIT are steps too. ⌫ undo is not a step: it takes the
   // last one back. The WIPEOUT screen says which rule ended the run.
   const SIDE = { l: 'left', r: 'right' };
-  function opText(o, v) {   // v as stored in a step's opL/opR
-    if (o === '+' || o === '-') return v;
-    return (o === '*' ? '× ' : '÷ ') + (v.charAt(0) === '-' ? '(' + A.MINUS + v.slice(1) + ')' : v);
-  }
   function tippedReason() {
     let why = 'You took a new step before balancing the last one.';
     if (openStep) {
       const done = openStep.opL != null ? 'l' : 'r';
       why += ' The ' + SIDE[done === 'l' ? 'r' : 'l'] + ' side still needed ' +
-        opText(openStep.op, openStep[done === 'l' ? 'opL' : 'opR']) + '.';
+        openStep[done === 'l' ? 'txtL' : 'txtR'] + '.';
     } else if (broken) {
       why += ' A rewrite had changed the value of one side.';
     }
@@ -471,12 +506,12 @@
   // ---- actions
   function applyOpStep(sideKey) {
     if (!op) return warn('Pick an operation first');
-    const absStr = digits + (varFlag ? 'x' : '');
-    if (!absStr) return warn('Enter a number');
-    const mag = digits === '' ? 1 : parseInt(digits, 10);
-    if (mag === 0) return warn(op === '+' || op === '-' ? 'Adding 0 changes nothing' : "Can't use zero there");
+    if (digits === '' && !varFlag) return warn('Enter a number');
+    const mag = digits === '' ? A.fInt(1) : A.parseNum(digits);
+    if (!mag) return warn('Finish the number first');
+    if (A.fIsZero(mag)) return warn(op === '+' || op === '-' ? 'Adding 0 changes nothing' : "Can't use zero there");
     if (varFlag && (op === '*' || op === '/')) return warn('Multiply or divide by a constant, not the variable');
-    const coef = (negFlag ? -1 : 1) * mag;
+    const coef = negFlag ? A.frac(-mag.n, mag.d) : mag;   // a fraction
 
     const S = sideKey === 'l' ? L : R;
     const kind = varFlag ? 'x' : 'n';
@@ -491,22 +526,31 @@
     // the operation there is none — it summed to exactly zero rather than
     // just changing value.
     const canceled = matched === true && !ns.terms.some(t => t.t === kind);
-    if (Math.abs(ns.a.n) > 9999 || Math.abs(ns.b.n) > 9999 || ns.a.d > 999 || ns.b.d > 999) {
+    const big = nums === 'integer' ? [9999, 999] : [99999, 9999];
+    if (Math.abs(ns.a.n) > big[0] || Math.abs(ns.b.n) > big[0] || ns.a.d > big[1] || ns.b.d > big[1]) {
       return warn('Whoa — numbers are getting huge!');
     }
 
+    // A step's opL/opR is its key: the operation and the exact value, so .5
+    // and 0.50 typed on the two sides are the same step. disp is the ledger's
+    // markup for a +/- operand, txt the plain words for the WIPEOUT reason.
     const slot = sideKey === 'l' ? 'opL' : 'opR';
-    const signChar = op === '+' ? '+' : A.MINUS;
-    const operandDisp = negFlag ? '(' + A.MINUS + absStr + ')' : absStr;
-    const val = (op === '+' || op === '-') ? (signChar + ' ' + operandDisp) : String(coef);
+    const additive = op === '+' || op === '-';
+    const val = op + ' ' + kind + ' ' + coef.n + '/' + coef.d;
+    const wrap = s => negFlag ? '(' + A.MINUS + s + ')' : s;
+    const unitX = varFlag && A.fEq(mag, A.fInt(1));
+    const absTxt = (unitX ? '' : A.numText(mag)) + (varFlag ? 'x' : '');
+    const disp = additive
+      ? (op === '+' ? '+' : A.MINUS) + ' ' + wrap(A.renderTermCell({ t: kind, c: mag }).core) : null;
+    const txt = (additive ? (op === '+' ? '+ ' : A.MINUS + ' ') : (op === '*' ? '× ' : '÷ ')) + wrap(absTxt);
     // Answering the open move on its other side: it has to be the same step.
     let mismatch = null;
     if (openStep && !openStep[slot]) {
       const done = slot === 'opL' ? 'opR' : 'opL';
       if (openStep.op !== op || openStep[done] !== val) {
         const other = sideKey === 'l' ? 'r' : 'l';
-        mismatch = 'The ' + SIDE[other] + ' side got ' + opText(openStep.op, openStep[done]) +
-          ', but the ' + SIDE[sideKey] + ' side got ' + opText(op, val) + '.';
+        mismatch = 'The ' + SIDE[other] + ' side got ' + openStep[other === 'l' ? 'txtL' : 'txtR'] +
+          ', but the ' + SIDE[sideKey] + ' side got ' + txt + '.';
       }
     } else if (!balanced()) {
       return lose(tippedReason());
@@ -521,14 +565,18 @@
     const cancelSlot = sideKey === 'l' ? 'cancelL' : 'cancelR';
     if (!openStep || openStep[slot] || openStep.op !== op) {
       openStep = {
-        kind: 'op', op: op, factor: (op === '*' || op === '/') ? coef : null,
-        opL: null, opR: null, matchL: null, matchR: null, kindL: null, kindR: null,
+        kind: 'op', op: op, factor: additive ? null : coef,
+        opL: null, opR: null, dispL: null, dispR: null, txtL: null, txtR: null, fL: null, fR: null,
+        matchL: null, matchR: null, kindL: null, kindR: null,
         cancelL: false, cancelR: false,
         result: { l: L.display, r: R.display, lTerms: L.terms, rTerms: R.terms }
       };
       steps.push(openStep);
     }
     openStep[slot] = val;
+    openStep[sideKey === 'l' ? 'dispL' : 'dispR'] = disp;
+    openStep[sideKey === 'l' ? 'txtL' : 'txtR'] = txt;
+    openStep[sideKey === 'l' ? 'fL' : 'fR'] = coef;
     openStep[matchSlot] = matched;
     openStep[kindSlot] = kind;
     openStep[cancelSlot] = canceled;
@@ -596,18 +644,17 @@
     if (!balanced()) return lose(tippedReason());
     const n = solvedForm();
     if (n === null) return warn('Get it to  x = ▢  first!');
-    if (A.fIsInt(n) && n.n === xStar) {
+    if (A.fEq(n, xStar)) {
       locked = true;
       streak++;
-      if (streak > best[mode]) { best[mode] = streak; saveBest(); }
+      if (streak > best[bestKey(mode, nums)]) { best[bestKey(mode, nums)] = streak; saveBest(); }
       updateHud();
       Character.celebrate();
       Sound.win();
       setMsg('BALANCED! +1', 'good');
       setTimeout(() => { locked = false; newEquation(); }, 1000);
     } else {
-      const shown = (n.n < 0 ? A.MINUS : '') + Math.abs(n.n) + (n.d === 1 ? '' : '/' + n.d);
-      lose('x = ' + shown + ' does not solve it.');
+      lose('x = ' + A.numText(n) + ' does not solve it.');
     }
   }
 
@@ -617,10 +664,10 @@
     Character.fall(() => {
       $('#goReason').textContent = reason;
       $('#goScore').textContent = streak;
-      $('#goBest').textContent = best[mode];
-      // match the typographic minus the equation itself is drawn with
-      $('#goAnswer').textContent = 'x = ' +
-        (xStar < 0 ? A.MINUS + Math.abs(xStar) : xStar);
+      $('#goBest').textContent = best[bestKey(mode, nums)];
+      // match the typographic minus the equation itself is drawn with; a
+      // repeating answer is given as a fraction, never rounded
+      $('#goAnswer').textContent = 'x = ' + A.numText(xStar);
       $('#gameover').classList.remove('hide');
       placeGameOver();
     });
@@ -643,17 +690,34 @@
   }
 
   function updateHud() {
-    $('#modeLabel').textContent = mode
-      ? MODE_LABEL[mode] + (mode === 'endless' ? ' · LVL ' + levelFor() : '')
-      : '';
+    // each part unbroken, so on a phone the label wraps between parts only
+    const parts = mode ? [NUM_LABEL[nums], MODE_LABEL[mode]].concat(mode === 'endless' ? ['LVL ' + levelFor()] : []) : [];
+    $('#modeLabel').innerHTML = parts.map((p, i) => '<span>' + p + (i < parts.length - 1 ? ' ·' : '') + '</span>').join(' ');
     $('#streakVal').textContent = streak;
-    $('#bestVal').textContent = mode ? best[mode] : 0;
+    $('#bestVal').textContent = mode ? best[bestKey(mode, nums)] : 0;
+  }
+
+  function showBests() {
+    document.querySelectorAll('#menu [data-mode]').forEach(b => {
+      b.querySelector('.best').textContent = 'best ' + best[bestKey(b.dataset.mode, nums)];
+    });
+  }
+  // Pick a number mode: the menu's bests, its pro tip, and the keypad's
+  // decimal point or fraction bar key follow it.
+  function setNums(n, remember) {
+    nums = n;
+    A.setNumbers(n);
+    if (remember) { try { localStorage.setItem(NUMS_KEY, n); } catch (e) {} }
+    document.querySelectorAll('#menu [data-nums]').forEach(b => b.classList.toggle('on', b.dataset.nums === n));
+    $('#proTip').classList.toggle('hide', n !== 'fraction');
+    $('#kPoint').classList.toggle('hide', n !== 'decimal');
+    $('#kBar').classList.toggle('hide', n !== 'fraction');
+    $('#keypad').classList.toggle('with-pt', n !== 'integer');
+    showBests();
   }
 
   function showMenu() {
-    document.querySelectorAll('#menu [data-mode]').forEach(b => {
-      b.querySelector('.best').textContent = 'best ' + best[b.dataset.mode];
-    });
+    showBests();
     $('#menu').classList.remove('hide');
     $('#gameover').classList.add('hide');
     locked = true;
@@ -691,6 +755,8 @@
     else if (k === 'sign') pressSign();
     else if (OPS[k]) pressOp(k);
     else if (k === 'simplify') toggleSimplify();
+    else if (k === 'pt') pressPoint();
+    else if (k === 'bar') pressBar();
   }
 
   function init() {
@@ -720,19 +786,27 @@
     document.querySelectorAll('#menu [data-mode]').forEach(b => {
       b.addEventListener('click', () => startGame(b.dataset.mode));
     });
+    document.querySelectorAll('#menu [data-nums]').forEach(b => {
+      b.addEventListener('click', () => setNums(b.dataset.nums, true));
+    });
     document.addEventListener('keydown', e => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const map = {
         Backspace: 'back', Enter: 'submit',
-        '+': '+', '-': '-', '*': '*', '/': '/', x: 'x', s: 'simplify', n: 'sign'
+        '+': '+', '-': '-', '*': '*', '/': '/', x: 'x', s: 'simplify', n: 'sign', '.': 'pt'
       };
+      // In Fraction Mode, / right after a typed number is its fraction bar.
+      const bar = e.key === '/' && nums === 'fraction' && !simplifyMode && op && digits &&
+        digits.indexOf('/') < 0 && !varFlag;
       if (/^[0-9]$/.test(e.key)) { onKey(e.key); e.preventDefault(); }
+      else if (bar) { onKey('bar'); e.preventDefault(); }
       else if (map[e.key] !== undefined) { onKey(map[e.key]); e.preventDefault(); }
       else if (e.key === 'ArrowLeft') { doApply('l'); e.preventDefault(); }
       else if (e.key === 'ArrowRight') { doApply('r'); e.preventDefault(); }
     });
     setPropToggle();
     setSoundToggle();
+    setNums(nums, false);
     updateHud();
     updatePreview();
     showMenu();

@@ -381,6 +381,12 @@ Then, manually:
   upstream `game.js` without `function tippedReason(`. `docs/balancing-act-upstream/` holds
   the patch and CSS to apply upstream first, with steps; the vendor script then goes ahead
   and skips its own `index.html` edits that upstream already has.
+- **Balancing Act's number modes are ours too** (Integer, Decimal and Fraction, chosen
+  along the bottom of the menu; `js/algebra.js`, `js/game.js`, `index.html`, and their
+  styles in `a11y.css`). The vendor script likewise refuses an upstream `algebra.js`
+  without `function setNumbers(`; `docs/balancing-act-upstream/number-modes.patch` and
+  `number-modes.css` carry them upstream. The chosen mode is saved under
+  `mathlab.balancing-act.numbers`.
 - **Real Number Monsters is built, not copied.** Upstream
   (`drstockinvesting/real-number-monsters`) is a Vite project of ES modules, and Vite's
   normal output is a `type="module"` script, which does not load from `file://`.
