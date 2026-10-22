@@ -305,7 +305,7 @@ module.exports = {
       tags: ['Linear equations', 'Inverse operations', 'Properties of equality'],
 
       payload: 'apps/balancing-act/index.html',
-      // Full width: from 900px wide in landscape the app switches to two columns (beam
+      // Full width: from 840px wide in landscape the app switches to two columns (beam
       // and work log | keypad), so a 560px frame would only ever show the phone layout.
       // Narrower than that, the app's own single column centres inside the frame.
       frame: { height: 'clamp(600px, 84vh, 900px)' },
@@ -327,9 +327,9 @@ module.exports = {
           'switched off from the menu. Faded text now meets AA contrast, the game scrolls ' +
           'instead of clipping at 200% zoom, the menu screens scroll whenever they do not ' +
           'fit, and every small button has a 44 px tap ' +
-          'area. On a screen at least 900 px wide in landscape the game switches to two ' +
-          'columns with every piece of text at 24 px (18 pt) or larger and no glow behind ' +
-          'letters. The gap: this was checked with automated tests and scripted browser ' +
+          'area. Text has no glow behind its letters, and on a screen at least 840 px wide in ' +
+          'landscape the game switches to two columns with every piece of text at 24 px ' +
+          '(18 pt) or larger. The gap: this was checked with automated tests and scripted browser ' +
           'runs, not yet with a screen reader in a real lesson, so the wording may be ' +
           'wordier than it needs to be.',
       },

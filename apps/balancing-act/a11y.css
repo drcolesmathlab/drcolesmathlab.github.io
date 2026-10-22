@@ -88,20 +88,31 @@
   #ledgerWrap { flex: 0 0 auto; height: 11rem; }
 }
 
+/* Sharp text on every screen size: no glow behind letters, which softened their
+   edges. Borders, the beam and the figure keep their neon. Specific enough to
+   beat the per-element glows above (.btn.c-dim, .modes .btn.c-mag). */
+.btn, .btn.c-dim, .modes .btn.c-mag,
+#modeLabel, #scoreBox b, #message.bad, #message.good, #preview,
+.cell.eq.current, .cell.work .op, .proplabel.invalid,
+.tag, .final, .glow-yel { text-shadow: none; }
+/* The title keeps a wide halo, not the tight blur. */
+.title { text-shadow: 0 0 24px rgba(46, 230, 255, .45); }
+.title.red { text-shadow: 0 0 24px rgba(255, 59, 92, .45); }
+
 /* ── Landscape layout: laptops, desktops, projectors ──────────────────────────
    Two columns: the beam, message and work log on the left; the input box,
    LEFT/RIGHT and the keypad on the right, with ⌫, SIMPLIFY and SUBMIT in a row
-   along the bottom. All text is at least 24px (18pt) at 100% zoom, and the
-   glow is taken off text so letter edges stay sharp; borders, the beam and the
-   figure keep their neon. Tab order is left column then right: a11y.js moves
+   along the bottom. All text is at least 24px (18pt) at 100% zoom. Tab order is left column then right: a11y.js moves
    ⌫, SIMPLIFY and SUBMIT to the end of the keypad's DOM to match the bottom
-   row. Phones and portrait screens keep the single column above. Under 480px tall the zoom rule above still applies, so the page
-   scrolls rather than squeezing. */
-@media (min-width: 900px) and (orientation: landscape) {
+   row. From 840px, so a 1366px laptop at 150% zoom still gets it inside the
+   site's frame. Phones and portrait screens keep the single column above. Under
+   480px tall the zoom rule above still applies, so the page scrolls rather than
+   squeezing. */
+@media (min-width: 840px) and (orientation: landscape) {
   #app {
     width: min(1280px, 100%);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 26rem;
+    grid-template-columns: minmax(0, 1fr) 25rem;
     grid-template-rows: auto auto auto 1fr;
     grid-template-areas:
       "hud   hud"
@@ -168,15 +179,6 @@
   }
   #keypad .btn { font-size: 2rem; padding: 4px; }
   #keypad .btn.small-label, #kSubmit { font-size: 1.5rem; letter-spacing: 0; }
-
-  /* Sharp text: no glow behind letters. */
-  .btn, .btn.c-dim, .modes .btn.c-mag,
-  #modeLabel, #scoreBox b, #message.bad, #message.good, #preview,
-  .cell.eq.current, .cell.work .op, .proplabel.invalid,
-  .tag, .final, .glow-yel { text-shadow: none; }
-  /* The title keeps a wide halo, not the tight blur that softened its edges. */
-  .title { text-shadow: 0 0 24px rgba(46, 230, 255, .45); }
-  .title.red { text-shadow: 0 0 24px rgba(255, 59, 92, .45); }
 
   /* Menu and WIPEOUT. On the menu the title and tagline stay centred across the
      top; below them the how-to sits on the left, left-aligned since a centred

@@ -1,0 +1,26 @@
+/* ── WIPEOUT panel (from Dr. Cole's Math Lab) ───────────────────────────────
+   Append to the end of style.css. Same rules as the Math Lab's a11y.css, with
+   the card colour set to this project's --panel (#0a0a16). */
+
+/* WIPEOUT is a panel over the work log, not the whole screen: game.js sets its
+   top, left, width and min-height to the work log's box. The dimming is light
+   and unblurred so the work that went wrong shows through; the text sits on a
+   near-opaque card, so its contrast does not depend on what is behind it. */
+#gameover {
+  position: absolute; inset: auto;
+  background: rgba(3, 3, 10, .55); backdrop-filter: none;
+  padding: 8px; border-radius: 10px; overflow: visible;
+}
+.go-card {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  width: 100%; max-width: 36rem; padding: 12px;
+  background: rgba(10, 10, 22, .92); border: 1px solid var(--edge); border-radius: 12px;
+}
+/* The card sits at the bottom of the panel and stays compact, so the top of the
+   work log (where the work starts) stays readable through the dimming. */
+#gameover > .go-card { margin: auto 0 0; }
+.go-card > * { margin: 0; }
+.go-card .title { font-size: 2rem; }
+.go-card .row { flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
+.go-card .row .btn { padding: 12px 14px; letter-spacing: 0; }
+#goAnswer { white-space: nowrap; }
